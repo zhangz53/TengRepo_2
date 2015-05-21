@@ -21,7 +21,7 @@ class SerialDataCapture{
 	public static Vector3 acc2;
 	
 	//data log for plot
-	public static int logSize = 250 * 5; //250hz for 5 secs
+	public static int logSize = 65*10; //250hz for 5 secs
 	public static ArrayList<Vector3> acc1Log;
 	public static ArrayList<Vector3> acc2Log;
 	

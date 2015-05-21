@@ -13,8 +13,7 @@ import com.teng.math.Quaternion;
 import com.teng.math.Vector3;
 import com.teng.phdata.DataStorage;
 
-public class v4DataRecorderDouble {
-
+class SerialDataCap{
 	private static CommPort commPort;
 	private static String outputString = new String();
 	public static Quaternion quat1;
@@ -29,16 +28,15 @@ public class v4DataRecorderDouble {
 	
 	//data log
 	public static DataStorage dataStorage;
+	public static double sampleCount = 0.0;
+	public static boolean isRecording = false;
 	
-	public v4DataRecorderDouble()
+	public SerialDataCap()
 	{
-		super();
-		
 		acc1 = new Vector3();
 		acc2 = new Vector3();
 		
 		dataStorage = DataStorage.getInstance();
-		
 		
 	}
 	
@@ -109,7 +107,7 @@ public class v4DataRecorderDouble {
             int len = -1;
             try
             {
-                while ( ( len = this.in.read(buffer)) > -1 )
+                while ( ( len = this.in.read(buffer)) > -1)
                 {
                 	//read single byte
                     for(int itrl = 0; itrl < len; itrl++ )
@@ -138,8 +136,12 @@ public class v4DataRecorderDouble {
                     						decodeFloat(outPutStringArr[5])/100.0);
                     				
                     				//record
-                    				DataStorage.AddSampleF(1.0, acc1.x, acc1.y, acc1.z, acc2.x, acc2.y, acc2.z,
-                    						0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+                    				if(isRecording)
+                    				{
+                    					DataStorage.AddSampleF(sampleCount, acc1.x, acc1.y, acc1.z, acc2.x, acc2.y, acc2.z,
+                        						0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+                    				}
+                    				
                     			}
                     			
                     		}
@@ -172,26 +174,100 @@ public class v4DataRecorderDouble {
 		int intbits = (inData[3] << 24) | ((inData[2] & 0xff) << 16) | ((inData[1] & 0xff) << 8) | (inData[0] & 0xff);
 		return Float.intBitsToFloat(intbits);
 	}
-	
-	public static final void main(String args[]) throws Exception{
-		v4DataRecorderDouble recorder = new v4DataRecorderDouble();
-		recorder.connect("COM11");
-		
-		System.out.println("Recording... Press to Stop");
-		System.in.read();
-		recorder.disConnect();
-		
-		System.exit(0);
-	}
-	
 }
 
-
-
-
-
-
-
-
-
-
+public class DataCollection extends PApplet{
+	
+	public SerialDataCap mSerial;
+	public String indicator;
+	public int[] rgb;
+	private int countNumber;
+	private int savedTime;
+	private int oneSecond = 1000;   //1 second
+	private int twoSecond = 1500;  //1.5seconds
+	
+	public void setup()
+	{
+		mSerial = new SerialDataCap();
+		try {
+			mSerial.connect("COM11");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		countNumber = 3;
+		indicator = str(countNumber);
+		rgb = new int[]{200, 200, 0};
+		savedTime = millis();
+		size(1000, 1000);
+		background(250);
+	}
+	
+	public void draw()
+	{
+		background(250);
+		
+		//update indicator
+		{
+			int passedTime = millis() - savedTime;
+			
+			if(countNumber == 0)
+			{
+				if(passedTime > twoSecond)
+				{
+					countNumber = 3;
+					indicator = str(countNumber);
+					rgb[0] = 200; rgb[1] = 200; rgb[2] = 0;
+					mSerial.isRecording = false;
+					savedTime = millis();
+				}
+			}else
+			{
+				if(passedTime > oneSecond)
+				{
+					countNumber--;
+					if(countNumber == 0)
+					{
+						indicator = "R";
+						rgb[0] = 0; rgb[1] = 200; rgb[2] = 0;
+						mSerial.isRecording = true;
+						mSerial.sampleCount++;
+					}else
+					{
+						indicator = str(countNumber);
+					}
+					
+					savedTime = millis();
+				}
+			}
+			
+		}
+		
+		//draw indications, iterate loops for users performing the gesture
+		{
+			pushMatrix();
+			
+			fill(rgb[0], rgb[1], rgb[2], 150);
+			noStroke();
+			ellipse(500, 500, 200, 200);
+			
+			textSize(64);
+			fill(250, 250, 250);
+			text(indicator, 480, 525);
+			popMatrix();
+		}
+	}
+	
+	public void keyPressed()
+	{
+		if(key == 'q'){
+			mSerial.disConnect();
+			exit();
+		}
+	}
+	
+	public static final void main(String args[]){
+		PApplet.main(new String[] {"--present", "com.teng.imuv4.DataCollection"});
+	}
+}

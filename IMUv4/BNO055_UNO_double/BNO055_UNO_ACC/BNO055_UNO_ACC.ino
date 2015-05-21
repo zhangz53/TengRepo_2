@@ -324,7 +324,7 @@ void loop()
   //gravityVec();
   //eulerHead();
   
-  delay(4); //250hz
+  delay(10); //100hz
 }
 
 void acc(){
