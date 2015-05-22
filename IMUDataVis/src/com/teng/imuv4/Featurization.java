@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import com.teng.math.Vector3;
+import com.teng.phdata.DataStorage;
 
 public class Featurization {
 
@@ -21,10 +22,14 @@ public class Featurization {
 	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\1432240953238_preprocess_sample.csv";
 	private int index = 1;  //start from 1
 	
+	public DataStorage dataStorage;
+	
 	public Featurization()
 	{
 		acc1 = new ArrayList<Vector3>();
 		acc2 = new ArrayList<Vector3>();
+		
+		dataStorage = DataStorage.getInstance();
 	}
 	
 	public void getFeatures()
@@ -73,6 +78,7 @@ public class Featurization {
 			e.printStackTrace();
 		}
 		
+		dataStorage.savex();
 	}
 	
 	//calculate all the needed features and storage them
@@ -80,7 +86,7 @@ public class Featurization {
 	{
 		//ac1 local peaks (1st and 2nd)
 		int[] peakIndex = localPeakIndex(ac1);
-		System.out.println("local peak index: " + peakIndex[0] + ",  and   " + peakIndex[1]);
+		//System.out.println("local peak index: " + peakIndex[0] + ",  and   " + peakIndex[1]);
 		
 		//feature 1: 1st peak is behind the 2nd peak, and dominate values on axis are inversed
 		double f1 = 0.0;
@@ -107,12 +113,53 @@ public class Featurization {
 		////////////////////////brute force features
 		
 		//feature 8-13: mean of acc1 and acc2
+		double[] means1 = meanAxes(acc1);
+		double f8 = means1[0];
+		double f9 = means1[1];
+		double f10 = means1[2];
 		
+		double[] means2 = meanAxes(acc2);
+		double f11 = means2[0];
+		double f12 = means2[1];
+		double f13 = means2[2];
 		
 		//feature 14-19: standard dev of acc1 and acc2
+		double[] stdvs1 = stdvAxes(acc1, means1);
+		double f14 = stdvs1[0];
+		double f15 = stdvs1[1];
+		double f16 = stdvs1[2];
 		
+		double[] stdvs2 = stdvAxes(acc2, means2);
+		double f17 = stdvs2[0];
+		double f18 = stdvs2[1];
+		double f19 = stdvs2[2];
 		
+		//feature 20-25: skewness of acc1 and acc2
+		double[] skews1 = skewnessAxes(acc1, means1, stdvs1);
+		double f20 = skews1[0];
+		double f21 = skews1[1];
+		double f22 = skews1[2];
 		
+		double[] skews2 = skewnessAxes(acc2, means2, stdvs2);
+		double f23 = skews2[0];
+		double f24 = skews2[1];
+		double f25 = skews2[2];
+		
+		//feature 26-31: kurtosis of acc1 and acc2
+		double[] kurs1 = kurtosisAxes(acc1, means1, stdvs1);
+		double f26 = kurs1[0];
+		double f27 = kurs1[1];
+		double f28 = kurs1[2];
+		
+		double[] kurs2 = kurtosisAxes(acc2, means2, stdvs2);
+		double f29 = kurs2[0];
+		double f30 = kurs2[1];
+		double f31 = kurs2[2];
+		
+		DataStorage.AddSampleX(1.0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, 
+				f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, 
+				f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, 
+				f31);
 	}
 	
 	private int[] localPeakIndex(ArrayList<Vector3> list){
@@ -180,28 +227,96 @@ public class Featurization {
 	
 	private double[] meanAxes(ArrayList<Vector3> list)
 	{
+		double[] axeValues = new double[3];
+		axeValues[0] = 0.0;
+		axeValues[1] = 0.0;
+		axeValues[2] = 0.0;
 		
+		int sz = list.size();
+		for(Vector3 acc : list)
+		{
+			axeValues[0] += acc.x;
+			axeValues[1] += acc.y;
+			axeValues[2] += acc.z;
+		}
+		
+		axeValues[0] = axeValues[0] / sz;
+		axeValues[1] = axeValues[1] / sz;
+		axeValues[2] = axeValues[2] / sz;
+		
+		return axeValues;
 	}
 	
+	private double[] stdvAxes(ArrayList<Vector3> list, double[] mean)
+	{
+		double[] axeValues = new double[3];
+		axeValues[0] = 0.0;
+		axeValues[1] = 0.0;
+		axeValues[2] = 0.0;
+		
+		int sz = list.size();
+		for(Vector3 acc : list)
+		{
+			axeValues[0] += ((acc.x - mean[0]) * (acc.x - mean[0]));
+			axeValues[1] += ((acc.y - mean[1]) * (acc.y - mean[1]));
+			axeValues[2] += ((acc.z - mean[2]) * (acc.z - mean[2]));
+		}
+		
+		axeValues[0] = Math.sqrt( axeValues[0] / sz);
+		axeValues[1] = Math.sqrt( axeValues[1] / sz);
+		axeValues[2] = Math.sqrt( axeValues[2] / sz);
+		
+		return axeValues;
+	}
 	
+	private double[] skewnessAxes(ArrayList<Vector3> list, double[] mean, double[] stdv)
+	{
+		double[] axeValues = new double[3];
+		axeValues[0] = 0.0;
+		axeValues[1] = 0.0;
+		axeValues[2] = 0.0;
+		
+		int sz = list.size();
+		for(Vector3 acc : list)
+		{
+			axeValues[0] += ((acc.x - mean[0]) * (acc.x - mean[0]) * (acc.x - mean[0]));
+			axeValues[1] += ((acc.y - mean[1]) * (acc.y - mean[1]) * (acc.y - mean[1]));
+			axeValues[2] += ((acc.z - mean[2]) * (acc.z - mean[2]) * (acc.z - mean[2]));
+		}
+		
+		axeValues[0] = (axeValues[0] / sz) / (stdv[0] * stdv[0] * stdv[0]);
+		axeValues[1] = (axeValues[1] / sz) / (stdv[1] * stdv[1] * stdv[1]);
+		axeValues[2] = (axeValues[2] / sz) / (stdv[2] * stdv[2] * stdv[2]);
 	
+		//double para = Math.sqrt(sz * (sz - 1)) / (sz - 1);
+		//axeValues[0] = axeValues[0] * para;
+		//axeValues[1] = axeValues[1] * para;
+		//axeValues[2] = axeValues[2] * para;
+		
+		return axeValues;
+	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	private double[] kurtosisAxes(ArrayList<Vector3> list, double[] mean, double[] stdv)
+	{
+		double[] axeValues = new double[3];
+		axeValues[0] = 0.0;
+		axeValues[1] = 0.0;
+		axeValues[2] = 0.0;
+		
+		int sz = list.size();
+		for(Vector3 acc : list)
+		{
+			axeValues[0] += ((acc.x - mean[0]) * (acc.x - mean[0]) * (acc.x - mean[0]) * (acc.x - mean[0]));
+			axeValues[1] += ((acc.y - mean[1]) * (acc.y - mean[1]) * (acc.y - mean[1]) * (acc.x - mean[1]));
+			axeValues[2] += ((acc.z - mean[2]) * (acc.z - mean[2]) * (acc.z - mean[2]) * (acc.x - mean[2]));
+		}
+		
+		axeValues[0] = (axeValues[0] / sz) / (stdv[0] * stdv[0] * stdv[0] * stdv[0]) - 3.0;
+		axeValues[1] = (axeValues[1] / sz) / (stdv[1] * stdv[1] * stdv[1] * stdv[0]) - 3.0;
+		axeValues[2] = (axeValues[2] / sz) / (stdv[2] * stdv[2] * stdv[2] * stdv[0]) - 3.0;
+		
+		return axeValues;
+	}
 	
 	
 	
