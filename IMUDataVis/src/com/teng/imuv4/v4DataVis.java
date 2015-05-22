@@ -17,6 +17,7 @@ import com.teng.math.Vector3;
 import com.teng.phdata.DataStorage;
 
 //works with two IMUs
+//for tap on segments
 //class to grab data from serial port
 class SerialData {
 	CommPort commPort;
@@ -32,7 +33,7 @@ class SerialData {
 	public static ArrayList<Quaternion> kNNSamples;  
 	public static int predictionFingerSegment;
 	
-	public static DataStorage dataStorage;
+	//public static DataStorage dataStorage;
 	public static SerialData instance;
 	public static SerialData getSharedInstance()
 	{
@@ -49,7 +50,7 @@ class SerialData {
 		quat1 = new Quaternion();  //imu 1
 		quat2 = new Quaternion();  //imu 2
 		quat3 = new Quaternion();  //imu 1+2
-		dataStorage = DataStorage.getInstance();
+		//dataStorage = DataStorage.getInstance();
 		kNNSamples = new ArrayList<Quaternion>();
 		instance = this;
 	}
@@ -163,11 +164,12 @@ class SerialData {
                 					
                 					if(isRecording && dataTrained == false)
                 					{
+                						/*
                 						DataStorage.AddSampleF(typeValue, 
                 								quat1.w, quat1.x, quat1.y, quat1.z, 
                 								quat2.w, quat2.x, quat2.y, quat2.z, 
                 								quat3.w, quat3.x, quat3.y, quat3.z);
-                						
+                						*/
                 						//record each type with one sample for 1NN
                 						if(typeValue > kNNSamples.size())
                 						{
@@ -462,7 +464,7 @@ public class v4DataVis extends PApplet{
 					
 					if(imgIndex == 14)
 					{
-						mSerialData.dataStorage.savef();
+						//mSerialData.dataStorage.savef();
 						mSerialData.dataTrained = true;	
 					}
 				}	

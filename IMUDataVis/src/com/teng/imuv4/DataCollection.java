@@ -183,8 +183,8 @@ public class DataCollection extends PApplet{
 	public int[] rgb;
 	private int countNumber;
 	private int savedTime;
-	private int oneSecond = 1000;   //1 second
-	private int twoSecond = 1500;  //1.5seconds
+	private int oneSecond = 1000;   //1 second  //1000
+	private int twoSecond = 1500;  //1.5seconds  //1500
 	
 	public void setup()
 	{

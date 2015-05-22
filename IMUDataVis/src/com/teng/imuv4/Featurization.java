@@ -19,7 +19,7 @@ public class Featurization {
 	public ArrayList<Vector3> acc1;
 	public ArrayList<Vector3> acc2;
 	
-	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\1432240953238_preprocess_sample.csv";
+	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\1432263548379_preprocess_sample.csv";
 	private int index = 1;  //start from 1
 	
 	public DataStorage dataStorage;
