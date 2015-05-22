@@ -32,6 +32,11 @@ public class Featurization {
 		dataStorage = DataStorage.getInstance();
 	}
 	
+	public Featurization(int purpose)
+	{
+		//to be used by other class
+	}
+	
 	public void getFeatures()
 	{
 		try {
@@ -89,7 +94,7 @@ public class Featurization {
 		//System.out.println("local peak index: " + peakIndex[0] + ",  and   " + peakIndex[1]);
 		
 		//feature 1: 1st peak is behind the 2nd peak, and dominate values on axis are inversed
-		double f1 = 0.0;
+		double f1 = -1.0;
 		if(peakIndex[0] > peakIndex[1])
 		{
 			if(ac1.get(peakIndex[0]).hasOppositeDirection( ac1.get(peakIndex[1])))
@@ -113,45 +118,45 @@ public class Featurization {
 		////////////////////////brute force features
 		
 		//feature 8-13: mean of acc1 and acc2
-		double[] means1 = meanAxes(acc1);
+		double[] means1 = meanAxes(ac1);
 		double f8 = means1[0];
 		double f9 = means1[1];
 		double f10 = means1[2];
 		
-		double[] means2 = meanAxes(acc2);
+		double[] means2 = meanAxes(ac2);
 		double f11 = means2[0];
 		double f12 = means2[1];
 		double f13 = means2[2];
 		
 		//feature 14-19: standard dev of acc1 and acc2
-		double[] stdvs1 = stdvAxes(acc1, means1);
+		double[] stdvs1 = stdvAxes(ac1, means1);
 		double f14 = stdvs1[0];
 		double f15 = stdvs1[1];
 		double f16 = stdvs1[2];
 		
-		double[] stdvs2 = stdvAxes(acc2, means2);
+		double[] stdvs2 = stdvAxes(ac2, means2);
 		double f17 = stdvs2[0];
 		double f18 = stdvs2[1];
 		double f19 = stdvs2[2];
 		
 		//feature 20-25: skewness of acc1 and acc2
-		double[] skews1 = skewnessAxes(acc1, means1, stdvs1);
+		double[] skews1 = skewnessAxes(ac1, means1, stdvs1);
 		double f20 = skews1[0];
 		double f21 = skews1[1];
 		double f22 = skews1[2];
 		
-		double[] skews2 = skewnessAxes(acc2, means2, stdvs2);
+		double[] skews2 = skewnessAxes(ac2, means2, stdvs2);
 		double f23 = skews2[0];
 		double f24 = skews2[1];
 		double f25 = skews2[2];
 		
 		//feature 26-31: kurtosis of acc1 and acc2
-		double[] kurs1 = kurtosisAxes(acc1, means1, stdvs1);
+		double[] kurs1 = kurtosisAxes(ac1, means1, stdvs1);
 		double f26 = kurs1[0];
 		double f27 = kurs1[1];
 		double f28 = kurs1[2];
 		
-		double[] kurs2 = kurtosisAxes(acc2, means2, stdvs2);
+		double[] kurs2 = kurtosisAxes(ac2, means2, stdvs2);
 		double f29 = kurs2[0];
 		double f30 = kurs2[1];
 		double f31 = kurs2[2];
@@ -162,7 +167,7 @@ public class Featurization {
 				f31);
 	}
 	
-	private int[] localPeakIndex(ArrayList<Vector3> list){
+	public int[] localPeakIndex(ArrayList<Vector3> list){
 		
 		//get the 1st and 2nd peak index
 		int sz = list.size();
@@ -208,7 +213,7 @@ public class Featurization {
 		return result;
 	}
 	
-	private int getLargestInList(ArrayList<Double> list)
+	public int getLargestInList(ArrayList<Double> list)
 	{
 		double temp = 0.0;
 		int target = 0;
@@ -225,7 +230,7 @@ public class Featurization {
 		return target;
 	}
 	
-	private double[] meanAxes(ArrayList<Vector3> list)
+	public double[] meanAxes(ArrayList<Vector3> list)
 	{
 		double[] axeValues = new double[3];
 		axeValues[0] = 0.0;
@@ -247,7 +252,7 @@ public class Featurization {
 		return axeValues;
 	}
 	
-	private double[] stdvAxes(ArrayList<Vector3> list, double[] mean)
+	public double[] stdvAxes(ArrayList<Vector3> list, double[] mean)
 	{
 		double[] axeValues = new double[3];
 		axeValues[0] = 0.0;
@@ -269,7 +274,7 @@ public class Featurization {
 		return axeValues;
 	}
 	
-	private double[] skewnessAxes(ArrayList<Vector3> list, double[] mean, double[] stdv)
+	public double[] skewnessAxes(ArrayList<Vector3> list, double[] mean, double[] stdv)
 	{
 		double[] axeValues = new double[3];
 		axeValues[0] = 0.0;
@@ -296,7 +301,7 @@ public class Featurization {
 		return axeValues;
 	}
 	
-	private double[] kurtosisAxes(ArrayList<Vector3> list, double[] mean, double[] stdv)
+	public double[] kurtosisAxes(ArrayList<Vector3> list, double[] mean, double[] stdv)
 	{
 		double[] axeValues = new double[3];
 		axeValues[0] = 0.0;
