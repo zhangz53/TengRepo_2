@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 import libsvm.svm;
 import libsvm.svm_model;
@@ -18,23 +19,167 @@ public class PredictSVM {
 	public Featurization featurization;
 	public double[] feature_max;
 	public double[] feature_min;
+	private double y_lower;
+	private double y_upper;
+	private boolean y_scaling = false;
+	private double y_max = -Double.MAX_VALUE;
+	private double y_min = Double.MAX_VALUE;
+	public int maxIndex;
+	public BufferedReader fp_restore = null;
 	public double lower = -1.0;
 	public double upper = 1.0;
 	
 	public PredictSVM()
 	{
 		featurization = new Featurization(1);
-		linear_model = loadModel("C:\\Users\\Teng\\Documents\\matlab-workspace\\MLToolbox\\libsvm-3.20\\matlab\\linear_model_pilot.model");
-	
-		//just for now
-		feature_max = new double[]{1, 1, 3.11382, 2.86537, 3.13689, 3.12249, 3.14159, 3.06354, 1.49167, 0.817333, 0.610667, 1.60867,
-				0.848, 1.03633, 3.45228, 2.02518, 3.34926, 5.48354, 6.14244, 9.712210000000001, 4.48168, 3.62476, 4.26625, 4.84796,
-				2.59108, 4.85818, 22.1457, 20.8762, 15.1993, 22.5061, 16.6794, 23.3872};
+		linear_model = loadModel("C:\\Users\\Teng\\Desktop\\dataset\\526\\linear_model_pilot.model");
 		
-		feature_min = new double[]{-1, -1, -3.10882, -2.96007, -3.13216, -3.04491, -3.09617, -3.09617, -0.814333, -1.567,
-				-1.985, -0.787, -1.56367, -1.945, 0.140896, 0.0393616, 0.09303889999999999, 0.131354, 0.09184530000000001,
-				0.0814105, -4.77007, -4.7536, -3.62855, -3.90524, -4.59617, -3.18207, -1.33319, -10.6843, -26.0035, -1.45346,
-				-26.0471, -23.4418};
+		//load scale range file
+		getScaleRange("C:\\Users\\Teng\\Desktop\\dataset\\526\\range");
+	}
+	
+	private BufferedReader rewind(BufferedReader fp, String filename) throws IOException
+	{
+		fp.close();
+		return new BufferedReader(new FileReader(filename));
+	}
+	
+	private void getScaleRange(String rangeFile)
+	{
+		maxIndex = 0;
+		
+		//get max index size
+		if(rangeFile != null)
+		{
+			int idx, c;
+
+			try {
+				fp_restore = new BufferedReader(new FileReader(rangeFile));
+			}
+			catch (Exception e) {
+				System.err.println("can't open file " + rangeFile);
+				System.exit(1);
+			}
+			try {
+				if((c = fp_restore.read()) == 'y')
+				{
+					fp_restore.readLine();
+					fp_restore.readLine();		
+					fp_restore.readLine();		
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			try {
+				fp_restore.readLine();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			try {
+				fp_restore.readLine();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			String restore_line = null;
+			try {
+				while((restore_line = fp_restore.readLine())!=null)
+				{
+					StringTokenizer st2 = new StringTokenizer(restore_line);
+					idx = Integer.parseInt(st2.nextToken());
+					maxIndex = Math.max(maxIndex, idx);
+				}
+			} catch (NumberFormatException | IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			try {
+				fp_restore = rewind(fp_restore, rangeFile);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		try {
+			feature_max = new double[(maxIndex+1)];
+			feature_min = new double[(maxIndex+1)];
+		} catch(OutOfMemoryError e) {
+			System.err.println("can't allocate enough memory");
+			System.exit(1);
+		}
+		
+		for(int i=0;i<=maxIndex;i++)
+		{
+			feature_max[i] = -Double.MAX_VALUE;
+			feature_min[i] = Double.MAX_VALUE;
+		}
+		
+		if(rangeFile != null)
+		{
+			// fp_restore rewinded in finding max_index 
+			int idx, c;
+			double fmin, fmax;
+
+			try {
+				fp_restore.mark(2);
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}				// for reset
+			try {
+				if((c = fp_restore.read()) == 'y')
+				{
+					fp_restore.readLine();		// pass the '\n' after 'y'
+					StringTokenizer st = new StringTokenizer(fp_restore.readLine());
+					y_lower = Double.parseDouble(st.nextToken());
+					y_upper = Double.parseDouble(st.nextToken());
+					st = new StringTokenizer(fp_restore.readLine());
+					y_min = Double.parseDouble(st.nextToken());
+					y_max = Double.parseDouble(st.nextToken());
+					y_scaling = true;
+				}
+				else
+					fp_restore.reset();
+			} catch (NumberFormatException | IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+
+			try {
+				if(fp_restore.read() == 'x') {
+					fp_restore.readLine();		// pass the '\n' after 'x'
+					StringTokenizer st = new StringTokenizer(fp_restore.readLine());
+					lower = Double.parseDouble(st.nextToken());
+					upper = Double.parseDouble(st.nextToken());
+					String restore_line = null;
+					while((restore_line = fp_restore.readLine())!=null)
+					{
+						StringTokenizer st2 = new StringTokenizer(restore_line);
+						idx = Integer.parseInt(st2.nextToken());
+						fmin = Double.parseDouble(st2.nextToken());
+						fmax = Double.parseDouble(st2.nextToken());
+						if (idx <= maxIndex)
+						{
+							feature_min[idx] = fmin;
+							feature_max[idx] = fmax;
+						}
+					}
+				}
+			} catch (NumberFormatException | IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			try {
+				fp_restore.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	public svm_model trainModel()  

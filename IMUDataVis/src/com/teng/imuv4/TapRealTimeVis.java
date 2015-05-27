@@ -4,22 +4,33 @@ import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import processing.core.PApplet;
 import processing.core.PImage;
 
-import com.teng.imuv4.v4DataRecorderDouble.CloseThread;
 import com.teng.math.Quaternion;
 import com.teng.math.Vector3;
-import com.teng.phdata.DataStorage;
 
-//works with two IMUs
-//for tap on segments
-//class to grab data from serial port
-class SerialData {
+class kNNSample{
+	
+	public int label;
+	public Quaternion quat;
+	
+	public kNNSample(int _label, Quaternion _quat)
+	{
+		label = _label;
+		quat = new Quaternion(_quat.x, _quat.y, _quat.z, _quat.w);
+	}
+}
+
+class DataSerial {
 	CommPort commPort;
 	private static String quatString = new String();
 	public static Quaternion quat1;
@@ -30,30 +41,63 @@ class SerialData {
 	public static boolean dataTrained = false;
 	
 	//knn sample
-	public static ArrayList<Quaternion> kNNSamples;  
+	public static ArrayList<kNNSample> kNNSamples;  
 	public static int predictionFingerSegment;
+	public static int paramK = 10;
 	
-	public static DataStorage dataStorage;
-	
-	public static SerialData instance;
-	public static SerialData getSharedInstance()
+	public static DataSerial instance;
+	public static DataSerial getSharedInstance()
 	{
 		if(instance == null)
 		{
-			instance = new SerialData();
+			instance = new DataSerial();
 		}
 		return instance;
 	}
 	
-	public SerialData()
+	public DataSerial()
 	{
 		super();
 		quat1 = new Quaternion();  //imu 1
 		quat2 = new Quaternion();  //imu 2
 		quat3 = new Quaternion();  //imu 1+2
-		dataStorage = DataStorage.getInstance();
-		kNNSamples = new ArrayList<Quaternion>();
+		kNNSamples = new ArrayList<kNNSample>();
+		
+		//load knnsamples
+		loadkNNSamples(kNNSamples);
+		
 		instance = this;
+	}
+	
+	private void loadkNNSamples(ArrayList<kNNSample> list)
+	{
+		String line = "";
+		String splitBy = ",";
+		BufferedReader br = null;
+		String dataFile = "C:\\Users\\Teng\\Desktop\\dataset\\526\\knnsamples.csv";
+		try {
+			br = new BufferedReader(new FileReader(dataFile));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		try {
+			while((line = br.readLine()) != null)
+			{
+				String[] values = line.split(splitBy);
+				
+				if(values.length == 13)
+				{
+					int kNNLabel = Integer.parseInt(values[0]);
+					Quaternion kNNQuat = new Quaternion(Double.parseDouble(values[1]), Double.parseDouble(values[2]),Double.parseDouble(values[3]),Double.parseDouble(values[4]));  //x y z w
+					list.add(new kNNSample(kNNLabel, kNNQuat));
+				}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	void connect (String portName) throws Exception
@@ -163,41 +207,12 @@ class SerialData {
                 					tempQuat.Nor();
                 					quat3.Set(tempQuat);
                 					
-                					if(isRecording && dataTrained == false)
+                					//start recognition
+                					if(kNNSamples.size() == 140)  //current 10 times
                 					{
-                						/*
-                						DataStorage.AddSampleF(typeValue, 
-                								quat1.w, quat1.x, quat1.y, quat1.z, 
-                								quat2.w, quat2.x, quat2.y, quat2.z, 
-                								quat3.w, quat3.x, quat3.y, quat3.z);
-                						*/
-                						//record each type with one sample for 1NN
-                						if(typeValue > kNNSamples.size())
-                						{
-                							kNNSamples.add(new Quaternion(quat3));
-                							
-                							if(kNNSamples.size() == 14)
-                							{
-                								//save the parameters to a file
-                								for(Quaternion quat : kNNSamples)
-                								{
-                									DataStorage.AddSampleF(1.0, quat.x, quat.y, quat.z, quat.w, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-                								}
-                								
-                								dataStorage.savef();
-                								
-                							}
-                						}
-                						
-                					}else if(dataTrained)
-                					{
-                						//start recognition
-                						if(kNNSamples.size() == 14)
-                						{
-                							predictionFingerSegment = predictFingerSeg(quat3, kNNSamples);
-                						}
-                						
-                					}
+                						predictionFingerSegment = predictFingerSeg(quat3, kNNSamples, paramK);
+                					}	
+                					
                 				}
                     			
                     		}
@@ -231,17 +246,52 @@ class SerialData {
 		return Float.intBitsToFloat(intbits);
 	}
 	
-	private static int predictFingerSeg(Quaternion test, ArrayList<Quaternion> samples)
+	private static int predictFingerSeg(Quaternion test, ArrayList<kNNSample> samples, int k)
 	{
 		int predictResult = 0;
-		double dis = 1.0;
-		for(int itrs = 0; itrs<samples.size(); itrs++)
+		double dis_threshold = 0.01;  // here to set the threshold
+		ArrayList<Integer> topTenMinLabel = new ArrayList<Integer>();
+		ArrayList<Double> topTenMinValues = new ArrayList<Double>();
+		for(int itrt = 0; itrt < k; itrt++)
 		{
-			double tempDis = 1 - test.dot(samples.get(itrs));
-			if(tempDis < dis)
+			topTenMinLabel.add(0);
+			topTenMinValues.add(dis_threshold);
+		}
+		
+		for(kNNSample sample : samples)
+		{
+			double tempDis = 1.0 - test.dot(sample.quat);
+			
+			for(int itr = 0; itr < k; itr++)
 			{
-				dis = tempDis;
-				predictResult = itrs + 1;
+				if(tempDis < topTenMinValues.get(itr))
+				{
+					//push back the rest
+					topTenMinValues.add(itr, tempDis);
+					int szv = topTenMinValues.size();
+					topTenMinValues.remove(szv - 1);
+					topTenMinLabel.add(itr, sample.label);
+					int szl = topTenMinLabel.size();
+					topTenMinLabel.remove(szl - 1);
+					//out of the for loop
+					break;
+				}
+			}
+			
+		}
+		
+		//System.out.println(" " + topTenMinValues.get(0) + ", " + topTenMinValues.get(1) + ", " + topTenMinValues.get(2) + ", " + topTenMinValues.get(3) + ", " + topTenMinValues.get(4) + ", " + topTenMinValues.get(5) + ", " + topTenMinValues.get(6) + ", " + topTenMinValues.get(7) + ", " + topTenMinValues.get(8) + ", " + topTenMinValues.get(9));
+		
+		//get the labels with highest frequency
+		int maxoccur = 0;
+		for(int itrl = 0; itrl < 15; itrl++)
+		{
+			int occur = Collections.frequency(topTenMinLabel, itrl);
+			
+			if(occur > maxoccur)
+			{
+				predictResult = itrl;
+				maxoccur = occur;
 			}
 		}
 		
@@ -249,13 +299,11 @@ class SerialData {
 		return predictResult;
 		
 	}
-	
 }
 
-
-public class v4DataVis extends PApplet{
-
-	public SerialData mSerialData;
+public class TapRealTimeVis extends PApplet{
+	
+	public DataSerial mSerialData;
 	
 	Quaternion firstQuat = new Quaternion();
 	Vector3 firstEuler = new Vector3();
@@ -276,7 +324,8 @@ public class v4DataVis extends PApplet{
 	public void setup()
 	{
 		//initialize COM port, zigbee to be COM11
-		mSerialData = new SerialData();
+		mSerialData = new DataSerial();
+		
 		try {
 			mSerialData.connect("COM11");
 		} catch (Exception e) {
@@ -332,27 +381,7 @@ public class v4DataVis extends PApplet{
 	{
 		background(250);
 		
-		//coordinates
-		/*
-		{
-			pushMatrix();
-			translate(width/2, height*3/5, 0);
-			noFill();
-			stroke(100, 0, 200);
-			for(int itrz = 0; itrz < 500; itrz+=100)
-			{
-				line(-350, 0, itrz, 350, 0, itrz);
-			}
-			
-			stroke(100, 200, 0);
-			for(int itry = 0; itry > -500; itry-=100)
-			{
-				line(-350, itry, 0, 350, itry, 0);
-			}
-			popMatrix();
-		}
-		*/
-		//draw hand/fingers
+		//hand pics
 		{
 			pushMatrix();				
 			lights();
@@ -362,20 +391,7 @@ public class v4DataVis extends PApplet{
 			
 			beginShape();
 			PImage curImage;
-			
-			if(mSerialData.dataTrained)
-			{
-				curImage = imgs.get(mSerialData.predictionFingerSegment);
-			}else
-			{
-				if(mSerialData.isRecording)
-				{
-					curImage = imgs.get(imgIndex);
-				}else
-				{
-					curImage = imgs.get(0);
-				}
-			}
+			curImage = imgs.get(mSerialData.predictionFingerSegment);
 			
 			texture(curImage);
 			vertex(-298, -438, 50, 0, 0);
@@ -387,76 +403,6 @@ public class v4DataVis extends PApplet{
 			popMatrix();
 		}
 		
-		
-		//draw status
-		{
-			pushMatrix();
-			textSize(32);
-			fill(0, 102, 153);
-			
-			if(mSerialData.dataTrained)
-			{
-				text("Predicting ...", 10, 120);
-			}else
-			{
-				if(mSerialData.isRecording)
-				{
-					text("Recording ...", 10, 120);
-				}else
-				{
-					text("Not Recording", 10, 120);
-				}
-			}
-			
-			popMatrix();
-		}
-		
-		//
-		if(ready4Interpolate)
-		{
-			/*
-			curEuler.Set(mSerialData.quat.getPitchRad(), mSerialData.quat.getYawRad(), mSerialData.quat.getRollRad());
-			double xInter = (curEuler.x - firstEuler.x) / (secondEuler.x - firstEuler.x);
-			double yInter = (curEuler.y - firstEuler.y) / (secondEuler.y - firstEuler.y);
-			double zInter = (curEuler.z - firstEuler.z) / (secondEuler.z - firstEuler.z);
-			
-			double firstInter = Math.sqrt(xInter * xInter + yInter * yInter + zInter * zInter )/3;
-			
-			//xInter = (curEuler.x - secondEuler.x) / (thirdEuler.x - secondEuler.x);
-			//yInter = (curEuler.y - secondEuler.y) / (thirdEuler.y - secondEuler.y);
-			//zInter = (curEuler.z - secondEuler.z) / (thirdEuler.z - secondEuler.z);
-			
-			//double secondInter = Math.sqrt(xInter * xInter + yInter * yInter + zInter * zInter )/3;
-			
-			pushMatrix();
-			fill(100, 50, 75);
-			lights();
-			translate(width/2  + 300.0f * (float)firstInter , height*3/5 , 0);  //- 100.f * (float)secondInter
-			noStroke();
-			sphere(30); 
-			popMatrix();
-			*/
-			
-			Quaternion tempQuat =   (firstQuat.conjugate()).mul(mSerialData.quat1) ;
-			
-			Vector3 tempVec = new Vector3();
-			tempVec.Set(tempQuat.getPitchRad(), tempQuat.getYawRad(), tempQuat.getRollRad());
-			//xInter = (curEuler.x - secondEuler.x) / (thirdEuler.x - secondEuler.x);
-			//yInter = (curEuler.y - secondEuler.y) / (thirdEuler.y - secondEuler.y);
-			//zInter = (curEuler.z - secondEuler.z) / (thirdEuler.z - secondEuler.z);
-			
-			//double secondInter = Math.sqrt(xInter * xInter + yInter * yInter + zInter * zInter )/3;
-			
-			pushMatrix();
-			fill(100, 50, 75);
-			lights();
-			translate(width/2  + 300.0f * (float)tempVec.x, height*3/5 - 300.0f * (float)tempVec.z, 300.f * (float)tempVec.y);  //- 100.f * (float)secondInter
-			noStroke();
-			sphere(30); 
-			popMatrix();
-		}
-
-		
 	}
 	
 	public void keyPressed(){
@@ -464,53 +410,10 @@ public class v4DataVis extends PApplet{
 			mSerialData.disConnect();
 			exit();
 		}
-		
-		if(key == 'd') {  //d for data record
-			if(mSerialData.dataTrained == false){
-				if(mSerialData.isRecording == false){
-					mSerialData.typeValue++;
-					imgIndex++;
-					mSerialData.isRecording = true;	
-				}else
-				{
-					mSerialData.isRecording = false;
-					
-					if(imgIndex == 14)
-					{
-						//mSerialData.dataStorage.savef();
-						mSerialData.dataTrained = true;	
-					}
-				}	
-			}
-			
-		}
-		
-		
-		
-		/*
-		if(key == 'f'){
-			firstQuat.Set(mSerialData.quat);
-			firstEuler.Set(firstQuat.getPitchRad(), firstQuat.getYawRad(), firstQuat.getRollRad());
-			ready4Interpolate = true;
-		}
-		
-		if(key == 's'){
-			secondQuat.Set(mSerialData.quat);
-			secondEuler.Set(secondQuat.getPitchRad(), secondQuat.getYawRad(), secondQuat.getRollRad());
-			
-		}
-		
-		if(key == 't'){
-			thirdQuat.Set(mSerialData.quat);
-			thirdEuler.Set(thirdQuat.getPitchRad(), thirdQuat.getYawRad(), thirdQuat.getRollRad());
-			
-		}
-		*/
 	}
 	
 	public static final void main(String args[]){
 		
-		PApplet.main(new String[] {"--present", "com.teng.imuv4.v4DataVis"});
+		PApplet.main(new String[] {"--present", "com.teng.imuv4.TapRealTimeVis"});
 	}
-	
 }

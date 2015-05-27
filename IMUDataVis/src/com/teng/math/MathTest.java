@@ -1,8 +1,11 @@
 package com.teng.math;
 
+import java.util.ArrayList;
+
 public class MathTest {
 	public static final void main(String args[]){
 		
+		/*
 		System.out.println(Math.sin(Math.PI/2));
 		
 		Matrix4 inputMatrix = new Matrix4();
@@ -27,7 +30,25 @@ public class MathTest {
 		inputMatrix2.Inv();
 		
 		System.out.println(inputMatrix2.toString());
+		*/
 		
+		ArrayList<Integer> list = new ArrayList<Integer>();
+		for(int i = 1; i < 11; i++)
+		{
+			list.add(i);
+		}
+		
+		for(int itr = 0; itr < list.size(); itr++)
+		{
+			System.out.println(" " + list.get(itr));
+		}
+		
+		list.add(1, 15);
+
+		for(int itr = 0; itr < list.size(); itr++)
+		{
+			System.out.println(" " + list.get(itr));
+		}
 		//Matrix4 output = inputMatrix.Mul(inputMatrix2);
 		//System.out.println((inputMatrix.Mul(inputMatrix2)).toString());
 	}

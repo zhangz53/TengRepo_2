@@ -28,7 +28,7 @@ class DataLoad{
 		acc2 = new ArrayList<Vector3>();
 		
 		//read the csv file
-		String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\1432324317854_record_sample.csv";
+		String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\1432668854802_collection_3.csv";
 		try {
 			br = new BufferedReader(new FileReader(dataFile));
 		} catch (FileNotFoundException e) {
@@ -123,7 +123,14 @@ public class PreProcessing extends PApplet{
 		int acc1Size = mDataLoad.acc1.size();
 		int acc2Size = mDataLoad.acc2.size();
 		if((acc1Size != acc2Size) || acc1Size == 0 || acc2Size == 0)
+		{
+			pushMatrix();
+			textSize(64);
+			fill(250, 0, 0);
+			text("the end", 480, 525);
+			popMatrix();
 			return;
+		}
 		
 		widthSeg = windowWidth / acc1Size;
 		curMousePos = (int)( mouseX / widthSeg);
