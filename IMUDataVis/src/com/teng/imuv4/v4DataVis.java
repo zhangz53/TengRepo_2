@@ -132,13 +132,15 @@ class SerialData {
                     	{
                     		//System.out.print(quatString);
                     		//System.out.println(quatString.length());  //should equal to 37
-                    		if(quatString.length() == 109 && quatString != null)
+                    		if(quatString.length() == 91 && quatString != null)
                     		{
                     			//decode the hex
                     			String[] outPutStringArr = quatString.split(",");
-                				if(outPutStringArr.length == 13)
+                				if(outPutStringArr.length == 11)
                 				{
                 					Quaternion tempQuat = new Quaternion();
+                					
+                					/*
                 					tempQuat.Set(decodeFloat(outPutStringArr[1]),  	//x 
                 							decodeFloat(outPutStringArr[2]),    	//y
                 							decodeFloat(outPutStringArr[3]), 		//z
@@ -155,10 +157,11 @@ class SerialData {
                 					tempQuat.Nor();
                 					quat2.Set(tempQuat);
                 					
-                					tempQuat.Set(decodeFloat(outPutStringArr[9]),  	//x 
-                							decodeFloat(outPutStringArr[10]),    	//y
-                							decodeFloat(outPutStringArr[11]), 		//z
-                							decodeFloat(outPutStringArr[8]));		//w
+                					*/
+                					tempQuat.Set(decodeFloat(outPutStringArr[7]),  	//x 
+                							decodeFloat(outPutStringArr[8]),    	//y
+                							decodeFloat(outPutStringArr[9]), 		//z
+                							decodeFloat(outPutStringArr[6]));		//w
                 					
                 					tempQuat.Nor();
                 					quat3.Set(tempQuat);
@@ -176,6 +179,8 @@ class SerialData {
                 						{
                 							kNNSamples.add(new Quaternion(quat3));
                 							
+                							//needed for data recording
+                							/*
                 							if(kNNSamples.size() == 14)
                 							{
                 								//save the parameters to a file
@@ -186,7 +191,7 @@ class SerialData {
                 								
                 								dataStorage.savef();
                 								
-                							}
+                							}*/
                 						}
                 						
                 					}else if(dataTrained)
