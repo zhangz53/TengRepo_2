@@ -273,7 +273,7 @@ void setup()
  // Wire.beginOnPins(7,30);
 Wire.begin();
   BNO055_write(OPR_MODE, FASTEST_MODE|OPR_MODE_NDOF);
-  
+  BNO055_write_1(OPR_MODE, FASTEST_MODE|OPR_MODE_NDOF);
  // EEPROM.write(1, 53); //to program node id
   
   //node_id = EEPROM.read(1); // to read the node id
@@ -288,7 +288,8 @@ void loop()
  // freeCubeAccRF();
  
  //acc data from both sensor
- freeCubeAccDoubleRF();
+ //freeCubeAccDoubleRF();
+ freeCubeAllDoubleRF();
  //   linearAcc();
  //  gravityVec();
  // freeCubeRF();
@@ -450,6 +451,41 @@ void freeCubeAccDoubleRF()
   freeIMUOut_accDoubleRF(&a1[0], &a2[0]);
 }
 
+void freeCubeAllDoubleRF()
+{
+  float a1[3];  //x, y, z
+  float a2[3];
+  float q[4];
+  float q1[4];
+  float q2[4];
+  
+  //read acc
+  BNO055_3_vec(LIA_DATA_X_LSB, &a1[0]);
+  BNO055_3_vec_1(LIA_DATA_X_LSB, &a2[0]);
+  
+  //read quat
+  BNO055_4_vec(QUA_DATA_W_LSB, &q1[0]);
+  BNO055_4_vec_1(QUA_DATA_W_LSB, &q2[0]);
+  
+  //get q
+  //normalize the quaterions
+  long m_q1=sqrt((q1[0]*q1[0])+(q1[1]*q1[1])+(q1[2]*q1[2])+(q1[3]*q1[3]));
+  if(m_q1){ q1[0]/=m_q1; q1[1]/=m_q1; q1[2]/=m_q1; q1[3]/=m_q1;}
+  long m_q2=sqrt((q2[0]*q2[0])+(q2[1]*q2[1])+(q2[2]*q2[2])+(q2[3]*q2[3]));
+  if(m_q2){ q2[0]/=m_q2; q2[1]/=m_q2; q2[2]/=m_q2; q2[3]/=m_q2;}
+  
+  //conjugate q2;
+  q1[1]=-q1[1]; q1[2]=-q1[2]; q1[3]=-q1[3];
+  
+  //multiply the quaternions
+  q[0] = -q1[1] * q2[1] - q1[2] * q2[2] - q1[3] * q2[3] + q1[0] * q2[0];
+  q[1] =  q1[1] * q2[0] + q1[2] * q2[3] - q1[3] * q2[2] + q1[0] * q2[1];
+  q[2] = -q1[1] * q2[3] + q1[2] * q2[0] + q1[3] * q2[1] + q1[0] * q2[2];
+  q[3] =  q1[1] * q2[2] - q1[2] * q2[1] + q1[3] * q2[0] + q1[0] * q2[3];
+  
+  freeIMUOut_allDoubleRF(&a1[0], &a2[0], &q[0]);
+}
+
 void BNO055_3_vec(int8_t addr, float *vec){
   Wire.beginTransmission(BNO055_I2C_ADDR);
   Wire.write(addr);
@@ -506,6 +542,32 @@ void BNO055_4_vec(int8_t addr, float *vec){
 */
 }
 
+void BNO055_4_vec_1(int8_t addr, float *vec){
+  float norm;
+  Wire.beginTransmission(BNO055_I2C_H_ADDR);
+  Wire.write(addr);
+  Wire.endTransmission(false);
+
+  Wire.requestFrom(BNO055_I2C_H_ADDR, 8, false);
+  int16_t b_data[8];
+  for(int i=0;i<8;i++)
+    b_data[i]=Wire.read();
+  
+  vec[0] = b_data[1]<<8|b_data[0];
+  vec[1] = b_data[3]<<8|b_data[2];
+  vec[2] = b_data[5]<<8|b_data[4];
+  vec[3] = b_data[7]<<8|b_data[6];
+ 
+ /* //If you need normalization
+  norm = sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2] + vec[3] * vec[3]);    
+  norm = 1.0f/norm;
+  vec[0] *= norm;
+  vec[1] *= norm;
+  vec[2] *= norm;
+  vec[3] *= norm;
+*/
+}
+
 byte BNO055_read(int addr){
   Wire.beginTransmission(BNO055_I2C_ADDR);
   Wire.write(addr);
@@ -523,6 +585,16 @@ int BNO055_write(int addr,int data){
 
   return 1;
 }
+
+int BNO055_write_1(int addr,int data){
+  Wire.beginTransmission(BNO055_I2C_H_ADDR);
+  Wire.write(addr);
+  Wire.write(data);
+  Wire.endTransmission(true);
+
+  return 1;
+}
+
 
 void serialFloatPrint(float f) {
   byte * b = (byte *) &f;
@@ -667,6 +739,32 @@ void freeIMUOut_accDoubleRF(float *a1, float *a2)
   serialFloatPrintRF(a2[1]);
   RF.write(",");
   serialFloatPrintRF(a2[2]);
+  RF.write(",\n");  
+  RF.endTransmission();
+}
+
+void freeIMUOut_allDoubleRF(float *a1, float *a2, float *q)
+{
+  RF.beginTransmission();
+  serialFloatPrintRF(a1[0]);
+  RF.write(",");
+  serialFloatPrintRF(a1[1]);
+  RF.write(",");
+  serialFloatPrintRF(a1[2]);
+  RF.write(",");
+  serialFloatPrintRF(a2[0]);
+  RF.write(",");
+  serialFloatPrintRF(a2[1]);
+  RF.write(",");
+  serialFloatPrintRF(a2[2]);
+  RF.write(",");
+  serialFloatPrintRF(q[0]);
+  RF.write(",");
+  serialFloatPrintRF(q[1]);
+  RF.write(",");
+  serialFloatPrintRF(q[2]);
+  RF.write(",");
+  serialFloatPrintRF(q[3]);
   RF.write(",\n");  
   RF.endTransmission();
 }

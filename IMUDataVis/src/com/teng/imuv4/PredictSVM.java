@@ -265,9 +265,9 @@ public class PredictSVM {
 	    double v = svm.svm_predict(linear_model, nodes);
 	    
 	    for (int i = 0; i < totalClasses; i++){
-	        System.out.print("(" + labels[i] + ":" + prob_estimates[i] + ")");
+	        //System.out.print("(" + labels[i] + ":" + prob_estimates[i] + ")");
 	    }
-	    System.out.println("(Actual:" + features[0] + " Prediction:" + v + ")");            
+	    //System.out.println("(Actual:" + features[0] + " Prediction:" + v + ")");            
 
 	    return v;
 	}

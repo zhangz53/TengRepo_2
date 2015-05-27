@@ -33,9 +33,11 @@ class kNNSample{
 class DataSerial {
 	CommPort commPort;
 	private static String quatString = new String();
-	public static Quaternion quat1;
-	public static Quaternion quat2;
 	public static Quaternion quat3;
+	public static Vector3 acc1;
+	public static Vector3 acc2;
+	public static ArrayList<Vector3> dataset_acc1;
+	public static ArrayList<Vector3> dataset_acc2;
 	public static double typeValue = 0.0;
 	public static boolean isRecording = false;
 	public static boolean dataTrained = false;
@@ -44,6 +46,16 @@ class DataSerial {
 	public static ArrayList<kNNSample> kNNSamples;  
 	public static int predictionFingerSegment;
 	public static int paramK = 10;
+	public static ArrayList<Integer> dataset_quat_predictions; 
+	
+	public static int sampleNum = 30;  //has to be mapped with the number chosen in PreProcessing
+	private static int movingWindowSize = 30;  //decide frequency to examine the windowed data
+	private static int movingCount = 0;
+	
+	public static int gestureState = 0;
+	public static boolean stateUpdating = false;
+	//svm function
+	public static PredictSVM predictSVM;
 	
 	public static DataSerial instance;
 	public static DataSerial getSharedInstance()
@@ -57,14 +69,18 @@ class DataSerial {
 	
 	public DataSerial()
 	{
-		super();
-		quat1 = new Quaternion();  //imu 1
-		quat2 = new Quaternion();  //imu 2
 		quat3 = new Quaternion();  //imu 1+2
+		acc1 = new Vector3();
+		acc2 = new Vector3();
+		dataset_acc1 = new ArrayList<Vector3>();
+		dataset_acc2 = new ArrayList<Vector3>();
+		
 		kNNSamples = new ArrayList<kNNSample>();
+		dataset_quat_predictions = new ArrayList<Integer>();
 		
 		//load knnsamples
 		loadkNNSamples(kNNSamples);
+		predictSVM = new PredictSVM();
 		
 		instance = this;
 	}
@@ -175,34 +191,27 @@ class DataSerial {
                     	if(inputString.equals("\n"))
                     	{
                     		//System.out.print(quatString);
-                    		//System.out.println(quatString.length());  //should equal to 37
-                    		if(quatString.length() == 109 && quatString != null)
+                    		//System.out.println(quatString.length());
+                    		if(quatString.length() == 91 && quatString != null)
                     		{
                     			//decode the hex
                     			String[] outPutStringArr = quatString.split(",");
-                				if(outPutStringArr.length == 13)
+                    			
+                    			if(outPutStringArr.length == 11)
                 				{
-                					Quaternion tempQuat = new Quaternion();
-                					tempQuat.Set(decodeFloat(outPutStringArr[1]),  	//x 
-                							decodeFloat(outPutStringArr[2]),    	//y
-                							decodeFloat(outPutStringArr[3]), 		//z
-                							decodeFloat(outPutStringArr[0]));		//w
+                    				acc1.Set(decodeFloat(outPutStringArr[0])/100.0,
+                    						decodeFloat(outPutStringArr[1])/100.0, 
+                    						decodeFloat(outPutStringArr[2])/100.0);
+                    				
+                    				acc2.Set(decodeFloat(outPutStringArr[3])/100.0,
+                    						decodeFloat(outPutStringArr[4])/100.0, 
+                    						decodeFloat(outPutStringArr[5])/100.0);
                 					
-                					tempQuat.Nor();
-                					quat1.Set(tempQuat);
-                					
-                					tempQuat.Set(decodeFloat(outPutStringArr[5]),  	//x 
-                							decodeFloat(outPutStringArr[6]),    	//y
-                							decodeFloat(outPutStringArr[7]), 		//z
-                							decodeFloat(outPutStringArr[4]));		//w
-                					
-                					tempQuat.Nor();
-                					quat2.Set(tempQuat);
-                					
-                					tempQuat.Set(decodeFloat(outPutStringArr[9]),  	//x 
-                							decodeFloat(outPutStringArr[10]),    	//y
-                							decodeFloat(outPutStringArr[11]), 		//z
-                							decodeFloat(outPutStringArr[8]));		//w
+                					Quaternion tempQuat = new Quaternion();                					
+                					tempQuat.Set(decodeFloat(outPutStringArr[7]),  	//x 
+                							decodeFloat(outPutStringArr[8]),    	//y
+                							decodeFloat(outPutStringArr[9]), 		//z
+                							decodeFloat(outPutStringArr[6]));		//w
                 					
                 					tempQuat.Nor();
                 					quat3.Set(tempQuat);
@@ -211,8 +220,85 @@ class DataSerial {
                 					if(kNNSamples.size() == 140)  //current 10 times
                 					{
                 						predictionFingerSegment = predictFingerSeg(quat3, kNNSamples, paramK);
+                						System.out.println("seg: " + predictionFingerSegment);
                 					}	
                 					
+                					if(stateUpdating)
+                					{
+                						gestureState = predictionFingerSegment;
+                					}
+                					
+                					//save for test data sample
+                    				dataset_acc1.add(new Vector3(acc1));
+                    				dataset_acc2.add(new Vector3(acc2));
+                    				dataset_quat_predictions.add(predictionFingerSegment);
+                    				
+                    				if(dataset_acc1.size() > sampleNum)
+                    				{
+                    					dataset_acc1.remove(0);
+                    					dataset_acc2.remove(0);
+                    					dataset_quat_predictions.remove(0);
+                    					
+                    					movingCount++;
+                    					
+                    					if(movingCount == movingWindowSize)
+                    					{
+                    						//predict
+                    						if(dataset_acc1.size() == sampleNum && dataset_acc2.size() == sampleNum && dataset_quat_predictions.size() == sampleNum)
+                    						{
+                    							double predictValue = predictSVM.predictWithDefaultModel(dataset_acc1, dataset_acc2);
+                    							//System.out.println("predict: " + predictValue);  //-1 or 1
+                    							//heuristics here
+                    							int fingerSegZeros = Collections.frequency(dataset_quat_predictions, 0);
+
+                    							//heuristic 1: if no tap detected, then no
+                    							if(fingerSegZeros == sampleNum)
+                								{
+                									//false positive
+                									stateUpdating = false;
+                									gestureState = 0;
+                								}
+                    							
+                								//some tap detected
+                    							if(predictValue == 1){
+            										//three situations
+            										//1st, bump and stay
+                    								if(fingerSegZeros != sampleNum){
+                    									if(dataset_quat_predictions.get(sampleNum -1) > 0  //this is inaccurate
+                												&& dataset_quat_predictions.get(sampleNum -2) > 0)
+                										{
+                											stateUpdating = true;
+                										}else//2nd, bump and flip
+                										{
+                											 
+                											stateUpdating = false;
+                											gestureState = getElementHighFrequency(dataset_quat_predictions, 0); //frequency, exlude 0
+                										}
+                    								}
+                    								
+            										//3rd, false positives
+            										
+            									}else  //-1  no bump
+            									{
+            										//three situations
+            										//1st, no action at all
+            										
+            										
+            										//2nd, already bumped and swiping
+            										
+            										
+            										//3rd, just close but no bump
+            										
+            										
+            									}
+                								       							
+                    							                    							
+                    							movingCount = 0;
+                    						}
+                    						
+                    					}
+                    				}
+                    				
                 				}
                     			
                     		}
@@ -283,6 +369,7 @@ class DataSerial {
 		//System.out.println(" " + topTenMinValues.get(0) + ", " + topTenMinValues.get(1) + ", " + topTenMinValues.get(2) + ", " + topTenMinValues.get(3) + ", " + topTenMinValues.get(4) + ", " + topTenMinValues.get(5) + ", " + topTenMinValues.get(6) + ", " + topTenMinValues.get(7) + ", " + topTenMinValues.get(8) + ", " + topTenMinValues.get(9));
 		
 		//get the labels with highest frequency
+		/*
 		int maxoccur = 0;
 		for(int itrl = 0; itrl < 15; itrl++)
 		{
@@ -293,11 +380,49 @@ class DataSerial {
 				predictResult = itrl;
 				maxoccur = occur;
 			}
-		}
+		}*/
+		
+		predictResult = getElementHighFrequency(topTenMinLabel);
 		
 		//need to set the threshold
 		return predictResult;
 		
+	}
+	
+	private static int getElementHighFrequency(ArrayList<Integer> list)
+	{
+		int maxoccur = 0;
+		int result = 0;
+		for(int itrl = 0; itrl < 15; itrl++)
+		{
+			int occur = Collections.frequency(list, itrl);
+			
+			if(occur > maxoccur)
+			{
+				result = itrl;
+				maxoccur = occur;
+			}
+		}
+		
+		return result;
+	}
+	
+	private static int getElementHighFrequency(ArrayList<Integer> list, int exludeNum)
+	{
+		int maxoccur = 0;
+		int result = 0;
+		for(int itrl = 1; itrl < 15; itrl++)
+		{
+			int occur = Collections.frequency(list, itrl);
+			
+			if(occur > maxoccur)
+			{
+				result = itrl;
+				maxoccur = occur;
+			}
+		}
+		
+		return result;
 	}
 }
 
@@ -391,7 +516,7 @@ public class TapRealTimeVis extends PApplet{
 			
 			beginShape();
 			PImage curImage;
-			curImage = imgs.get(mSerialData.predictionFingerSegment);
+			curImage = imgs.get(mSerialData.gestureState);
 			
 			texture(curImage);
 			vertex(-298, -438, 50, 0, 0);
