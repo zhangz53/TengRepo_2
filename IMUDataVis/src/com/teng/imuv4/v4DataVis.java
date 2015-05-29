@@ -31,9 +31,11 @@ class SerialData {
 	
 	//knn sample
 	public static ArrayList<Quaternion> kNNSamples;  
+	public static int sampleCount = 0;
 	public static int predictionFingerSegment;
 	
 	public static DataStorage dataStorage;
+	public static int sampleLabel = 0;
 	
 	public static SerialData instance;
 	public static SerialData getSharedInstance()
@@ -175,24 +177,43 @@ class SerialData {
                 								quat3.w, quat3.x, quat3.y, quat3.z);
                 						*/
                 						//record each type with one sample for 1NN
+                						/*
                 						if(typeValue > kNNSamples.size())
                 						{
                 							kNNSamples.add(new Quaternion(quat3));
                 							
                 							//needed for data recording
-                							/*
+                							
                 							if(kNNSamples.size() == 14)
                 							{
                 								//save the parameters to a file
                 								for(Quaternion quat : kNNSamples)
                 								{
-                									DataStorage.AddSampleF(1.0, quat.x, quat.y, quat.z, quat.w, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+                									sampleLabel++;
+                									if(sampleLabel == 15)
+                									{
+                										sampleLabel = 1;
+                									}
+                									DataStorage.AddSampleF(sampleLabel, quat.x, quat.y, quat.z, quat.w, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
                 								}
                 								
-                								dataStorage.savef();
+                								//dataStorage.savef();
                 								
-                							}*/
+                							}
+                						}*/
+                						
+                						if(typeValue > sampleCount)
+                						{
+                							Quaternion quat = new Quaternion(quat3);
+                							sampleLabel++;
+        									if(sampleLabel == 15)
+        									{
+        										sampleLabel = 1;
+        									}
+                							DataStorage.AddSampleF(sampleLabel, quat.x, quat.y, quat.z, quat.w, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+                							sampleCount++;
                 						}
+                						
                 						
                 					}else if(dataTrained)
                 					{
@@ -467,6 +488,7 @@ public class v4DataVis extends PApplet{
 	public void keyPressed(){
 		if(key == 'q'){
 			mSerialData.disConnect();
+			mSerialData.dataStorage.savef();
 			exit();
 		}
 		
@@ -475,16 +497,19 @@ public class v4DataVis extends PApplet{
 				if(mSerialData.isRecording == false){
 					mSerialData.typeValue++;
 					imgIndex++;
+					if(imgIndex == 15)
+						imgIndex = 1;
+					
 					mSerialData.isRecording = true;	
 				}else
 				{
 					mSerialData.isRecording = false;
 					
-					if(imgIndex == 14)
-					{
-						//mSerialData.dataStorage.savef();
-						mSerialData.dataTrained = true;	
-					}
+					//if(imgIndex == 14)
+					//{
+						////mSerialData.dataStorage.savef();
+						//mSerialData.dataTrained = true;	
+					//}
 				}	
 			}
 			

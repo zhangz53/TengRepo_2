@@ -56,6 +56,7 @@ class DataSerial {
 	public static boolean stateUpdating = false;
 	//svm function
 	public static PredictSVM predictSVM;
+	public static double predictValue;
 	
 	public static DataSerial instance;
 	public static DataSerial getSharedInstance()
@@ -90,7 +91,7 @@ class DataSerial {
 		String line = "";
 		String splitBy = ",";
 		BufferedReader br = null;
-		String dataFile = "C:\\Users\\Teng\\Desktop\\dataset\\526\\knnsamples.csv";
+		String dataFile = "C:\\Users\\Teng\\Desktop\\dataset\\528\\knnsamples.csv";
 		try {
 			br = new BufferedReader(new FileReader(dataFile));
 		} catch (FileNotFoundException e) {
@@ -246,7 +247,7 @@ class DataSerial {
                     						//predict
                     						if(dataset_acc1.size() == sampleNum && dataset_acc2.size() == sampleNum && dataset_quat_predictions.size() == sampleNum)
                     						{
-                    							double predictValue = predictSVM.predictWithDefaultModel(dataset_acc1, dataset_acc2);
+                    							predictValue = predictSVM.predictWithDefaultModel(dataset_acc1, dataset_acc2);
                     							//System.out.println("predict: " + predictValue);  //-1 or 1
                     							//heuristics here
                     							int fingerSegZeros = Collections.frequency(dataset_quat_predictions, 0);
@@ -335,7 +336,7 @@ class DataSerial {
 	private static int predictFingerSeg(Quaternion test, ArrayList<kNNSample> samples, int k)
 	{
 		int predictResult = 0;
-		double dis_threshold = 0.01;  // here to set the threshold
+		double dis_threshold = 0.008;  // here to set the threshold
 		ArrayList<Integer> topTenMinLabel = new ArrayList<Integer>();
 		ArrayList<Double> topTenMinValues = new ArrayList<Double>();
 		for(int itrt = 0; itrt < k; itrt++)
@@ -367,7 +368,7 @@ class DataSerial {
 		}
 		
 		//System.out.println(" " + topTenMinValues.get(0) + ", " + topTenMinValues.get(1) + ", " + topTenMinValues.get(2) + ", " + topTenMinValues.get(3) + ", " + topTenMinValues.get(4) + ", " + topTenMinValues.get(5) + ", " + topTenMinValues.get(6) + ", " + topTenMinValues.get(7) + ", " + topTenMinValues.get(8) + ", " + topTenMinValues.get(9));
-		
+		//System.out.println(" " + topTenMinLabel.get(0) + ", " + topTenMinLabel.get(1) + ", " + topTenMinLabel.get(2) + ", " + topTenMinLabel.get(3) + ", " + topTenMinLabel.get(4) + ", " + topTenMinLabel.get(5) + ", " + topTenMinLabel.get(6) + ", " + topTenMinLabel.get(7) + ", " + topTenMinLabel.get(8) + ", " + topTenMinLabel.get(9));
 		//get the labels with highest frequency
 		/*
 		int maxoccur = 0;
@@ -401,6 +402,15 @@ class DataSerial {
 			{
 				result = itrl;
 				maxoccur = occur;
+			}
+		}
+		
+		if(result == 0)
+		{
+			int next = getElementHighFrequency(list, 1);
+			if(Collections.frequency(list, next) > 2)
+			{
+				result = next;
 			}
 		}
 		
@@ -525,6 +535,17 @@ public class TapRealTimeVis extends PApplet{
 			vertex(-298, 0, 50, 0, curImage.height);
 			endShape();
 			
+			popMatrix();
+		}
+		
+		//indications
+		if(mSerialData.predictValue > 0){
+			pushMatrix();
+			textSize(32);
+			fill(0, 102, 153);
+			
+			text("bumped ...", 10, 120);
+
 			popMatrix();
 		}
 		
