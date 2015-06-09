@@ -37,7 +37,7 @@ class SerialData {
 	public static DataStorage dataStorage;
 	public static int sampleLabel = 0;
 	
-	public static int rType = 0;   //0- record one data per time  1- keep recording
+	public static int rType = 1;   //0- record one data per time  1- keep recording
 	
 	public static SerialData instance;
 	public static SerialData getSharedInstance()
