@@ -37,6 +37,8 @@ class SerialData {
 	public static DataStorage dataStorage;
 	public static int sampleLabel = 0;
 	
+	public static int rType = 0;   //0- record one data per time  1- keep recording
+	
 	public static SerialData instance;
 	public static SerialData getSharedInstance()
 	{
@@ -169,7 +171,7 @@ class SerialData {
                 					quat3.Set(tempQuat);
                 					
                 					if(isRecording && dataTrained == false)
-                					{
+                					{               						
                 						/*
                 						DataStorage.AddSampleF(typeValue, 
                 								quat1.w, quat1.x, quat1.y, quat1.z, 
@@ -202,16 +204,23 @@ class SerialData {
                 							}
                 						}*/
                 						
-                						if(typeValue > sampleCount)
+                						if(rType == 0)
+                						{
+                							if(typeValue > sampleCount)
+                    						{
+                    							Quaternion quat = new Quaternion(quat3);
+                    							sampleLabel++;
+            									if(sampleLabel == 15)
+            									{
+            										sampleLabel = 1;
+            									}
+                    							DataStorage.AddSampleF(sampleLabel, quat.x, quat.y, quat.z, quat.w, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+                    							sampleCount++;
+                    						}
+                						}else if(rType == 1)
                 						{
                 							Quaternion quat = new Quaternion(quat3);
-                							sampleLabel++;
-        									if(sampleLabel == 15)
-        									{
-        										sampleLabel = 1;
-        									}
                 							DataStorage.AddSampleF(sampleLabel, quat.x, quat.y, quat.z, quat.w, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-                							sampleCount++;
                 						}
                 						
                 						
@@ -495,12 +504,27 @@ public class v4DataVis extends PApplet{
 		if(key == 'd') {  //d for data record
 			if(mSerialData.dataTrained == false){
 				if(mSerialData.isRecording == false){
-					mSerialData.typeValue++;
-					imgIndex++;
-					if(imgIndex == 15)
-						imgIndex = 1;
 					
-					mSerialData.isRecording = true;	
+					if(mSerialData.rType == 0){
+						mSerialData.typeValue++;
+						imgIndex++;
+						if(imgIndex == 15)
+							imgIndex = 1;
+						
+						mSerialData.isRecording = true;
+					}else if(mSerialData.rType == 1)
+					{
+						imgIndex++;
+						if(imgIndex == 15)
+							imgIndex = 1;
+						
+						mSerialData.sampleLabel++;
+						if(mSerialData.sampleLabel == 15)
+						{
+							mSerialData.sampleLabel = 1;
+						}
+						mSerialData.isRecording = true;
+					}
 				}else
 				{
 					mSerialData.isRecording = false;
@@ -514,7 +538,6 @@ public class v4DataVis extends PApplet{
 			}
 			
 		}
-		
 		
 		
 		/*
