@@ -43,10 +43,14 @@ class DataSerial {
 	public static boolean dataTrained = false;
 	
 	//knn sample
-	public static ArrayList<kNNSample> kNNSamples;  
-	public static int predictionFingerSegment;
+	//public static ArrayList<kNNSample> kNNSamples;  
+	//public static int predictionFingerSegment;
 	public static int paramK = 10;
-	public static ArrayList<Integer> dataset_quat_predictions; 
+	//public static ArrayList<Integer> dataset_quat_predictions; 
+	
+	public static double predictionFingerSegment;
+	public static ArrayList<Double> dataset_quat_predictions; 
+	
 	
 	public static int sampleNum = 30;  //has to be mapped with the number chosen in PreProcessing
 	private static int movingWindowSize = 30;  //decide frequency to examine the windowed data
@@ -54,9 +58,13 @@ class DataSerial {
 	
 	public static int gestureState = 0;
 	public static boolean stateUpdating = false;
-	//svm function
+	//svm function for event
 	public static PredictSVM predictSVM;
 	public static double predictValue;
+	
+	//svm function for segment
+	public static PredictSVM predictSeg;
+	public static double predictValueSeg;
 	
 	public static DataSerial instance;
 	public static DataSerial getSharedInstance()
@@ -76,12 +84,13 @@ class DataSerial {
 		dataset_acc1 = new ArrayList<Vector3>();
 		dataset_acc2 = new ArrayList<Vector3>();
 		
-		kNNSamples = new ArrayList<kNNSample>();
-		dataset_quat_predictions = new ArrayList<Integer>();
+		//kNNSamples = new ArrayList<kNNSample>();
+		dataset_quat_predictions = new ArrayList<Double>();
 		
 		//load knnsamples
-		loadkNNSamples(kNNSamples);
-		predictSVM = new PredictSVM();
+		//loadkNNSamples(kNNSamples);
+		predictSVM = new PredictSVM("C:\\Users\\Teng\\Desktop\\dataset\\526\\linear_model_pilot.model", "C:\\Users\\Teng\\Desktop\\dataset\\526\\range");
+		predictSeg = new PredictSVM("C:\\Users\\Teng\\Desktop\\dataset\\610\\linear_model_seg.model");
 		
 		instance = this;
 	}
@@ -218,15 +227,22 @@ class DataSerial {
                 					quat3.Set(tempQuat);
                 					
                 					//start recognition
+                					/*
                 					if(kNNSamples.size() == 140)  //current 10 times
                 					{
                 						predictionFingerSegment = predictFingerSeg(quat3, kNNSamples, paramK);
                 						System.out.println("seg: " + predictionFingerSegment);
-                					}	
+                					}*/
+                					
+                					predictionFingerSegment = predictSeg.predictWithDefaultModel(quat3);
+                					System.out.println("seg: " + predictionFingerSegment);
                 					
                 					if(stateUpdating)
                 					{
-                						gestureState = predictionFingerSegment;
+                						gestureState = (int)predictionFingerSegment;
+                						
+                						if(gestureState==12)
+                							gestureState = 0;
                 					}
                 					
                 					//save for test data sample
@@ -333,6 +349,7 @@ class DataSerial {
 		return Float.intBitsToFloat(intbits);
 	}
 	
+	/*
 	private static int predictFingerSeg(Quaternion test, ArrayList<kNNSample> samples, int k)
 	{
 		int predictResult = 0;
@@ -370,27 +387,27 @@ class DataSerial {
 		//System.out.println(" " + topTenMinValues.get(0) + ", " + topTenMinValues.get(1) + ", " + topTenMinValues.get(2) + ", " + topTenMinValues.get(3) + ", " + topTenMinValues.get(4) + ", " + topTenMinValues.get(5) + ", " + topTenMinValues.get(6) + ", " + topTenMinValues.get(7) + ", " + topTenMinValues.get(8) + ", " + topTenMinValues.get(9));
 		//System.out.println(" " + topTenMinLabel.get(0) + ", " + topTenMinLabel.get(1) + ", " + topTenMinLabel.get(2) + ", " + topTenMinLabel.get(3) + ", " + topTenMinLabel.get(4) + ", " + topTenMinLabel.get(5) + ", " + topTenMinLabel.get(6) + ", " + topTenMinLabel.get(7) + ", " + topTenMinLabel.get(8) + ", " + topTenMinLabel.get(9));
 		//get the labels with highest frequency
-		/*
-		int maxoccur = 0;
-		for(int itrl = 0; itrl < 15; itrl++)
-		{
-			int occur = Collections.frequency(topTenMinLabel, itrl);
+		
+		//int maxoccur = 0;
+		//for(int itrl = 0; itrl < 15; itrl++)
+		//{
+			//int occur = Collections.frequency(topTenMinLabel, itrl);
 			
-			if(occur > maxoccur)
-			{
-				predictResult = itrl;
-				maxoccur = occur;
-			}
-		}*/
+			//if(occur > maxoccur)
+			//{
+				//predictResult = itrl;
+				//maxoccur = occur;
+			//}
+		//}
 		
 		predictResult = getElementHighFrequency(topTenMinLabel);
 		
 		//need to set the threshold
 		return predictResult;
 		
-	}
+	}*/
 	
-	private static int getElementHighFrequency(ArrayList<Integer> list)
+	private static int getElementHighFrequency(ArrayList<Double> list)
 	{
 		int maxoccur = 0;
 		int result = 0;
@@ -417,7 +434,7 @@ class DataSerial {
 		return result;
 	}
 	
-	private static int getElementHighFrequency(ArrayList<Integer> list, int exludeNum)
+	private static int getElementHighFrequency(ArrayList<Double> list, int exludeNum)
 	{
 		int maxoccur = 0;
 		int result = 0;
@@ -492,8 +509,9 @@ public class TapRealTimeVis extends PApplet{
 		imgs.add(img1); imgs.add(img2); imgs.add(img3);
 		imgs.add(img4); imgs.add(img5); imgs.add(img6);
 		imgs.add(img7); imgs.add(img8); imgs.add(img9);
-		imgs.add(img10); imgs.add(img11); imgs.add(img12);
 		imgs.add(img13); imgs.add(img14);
+		imgs.add(img10); imgs.add(img11); imgs.add(img12);
+		
 		
 		pushMatrix();
 		translate(width/2, height*3/5, 0);

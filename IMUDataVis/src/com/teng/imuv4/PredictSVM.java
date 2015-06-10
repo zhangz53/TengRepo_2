@@ -11,6 +11,7 @@ import libsvm.svm;
 import libsvm.svm_model;
 import libsvm.svm_node;
 
+import com.teng.math.Quaternion;
 import com.teng.math.Vector3;
 
 public class PredictSVM {
@@ -29,6 +30,7 @@ public class PredictSVM {
 	public double lower = -1.0;
 	public double upper = 1.0;
 	
+	
 	public PredictSVM()
 	{
 		featurization = new Featurization(1);
@@ -36,6 +38,19 @@ public class PredictSVM {
 		
 		//load scale range file
 		getScaleRange("C:\\Users\\Teng\\Desktop\\dataset\\526\\range");
+	}
+	
+	public PredictSVM(String modelFile)
+	{
+		featurization = new Featurization(1);
+		linear_model = loadModel(modelFile);
+	}
+	
+	public PredictSVM(String modelFile, String rangeFile)
+	{
+		featurization = new Featurization(1);
+		linear_model = loadModel(modelFile);
+		getScaleRange(rangeFile);
 	}
 	
 	private BufferedReader rewind(BufferedReader fp, String filename) throws IOException
@@ -281,6 +296,32 @@ public class PredictSVM {
 		double predictValue = predictWithDefaultModel(testData);
 		
 		return predictValue;
+	}
+	
+	//this is for quat
+	public double predictWithDefaultModel(Quaternion quat)  //frame by frame
+	{
+		double[] testData = new double[]{12.0, quat.x, quat.y, quat.z, quat.w};
+		svm_node[] nodes = new svm_node[testData.length-1];
+		
+		for (int i = 1; i < testData.length; i++)
+	    {
+	        svm_node node = new svm_node();
+	        node.index = i;
+	        node.value = testData[i];
+
+	        nodes[i-1] = node;
+	    }
+		
+		int totalClasses = 12;       
+	    int[] labels = new int[totalClasses];
+	    
+	    svm.svm_get_labels(linear_model,labels);
+	   // double[] prob_estimates = new double[totalClasses];
+	    
+	    double v = svm.svm_predict(linear_model, nodes);
+	    
+	    return v;
 	}
 	
 	//calculate all the needed features and storage them

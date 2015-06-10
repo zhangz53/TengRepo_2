@@ -343,8 +343,9 @@ public class v4DataVis extends PApplet{
 		imgs.add(img1); imgs.add(img2); imgs.add(img3);
 		imgs.add(img4); imgs.add(img5); imgs.add(img6);
 		imgs.add(img7); imgs.add(img8); imgs.add(img9);
+		imgs.add(img13); imgs.add(img14);  //minor changes here
 		imgs.add(img10); imgs.add(img11); imgs.add(img12);
-		imgs.add(img13); imgs.add(img14);
+		
 		
 		pushMatrix();
 		translate(width/2, height*3/5, 0);
@@ -515,11 +516,11 @@ public class v4DataVis extends PApplet{
 					}else if(mSerialData.rType == 1)
 					{
 						imgIndex++;
-						if(imgIndex == 15)
+						if(imgIndex == 12)  // set the range 1-11, exclude the little finger
 							imgIndex = 1;
 						
 						mSerialData.sampleLabel++;
-						if(mSerialData.sampleLabel == 15)
+						if(mSerialData.sampleLabel == 12)
 						{
 							mSerialData.sampleLabel = 1;
 						}
