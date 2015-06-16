@@ -111,7 +111,7 @@ class SerialDataCapture{
                     	{
                     		//System.out.print(outputString);
                     		//System.out.println(outputString.length());  // for quaternions should equal to 109, for acc should equal to 55
-                    		if(outputString.length() == 55 && outputString != null)  
+                    		if(outputString.length() == 91 && outputString != null)  
                     		{
                     			//decode the hex
                     			String[] outPutStringArr = outputString.split(",");
@@ -158,7 +158,7 @@ class SerialDataCapture{
                 				}*/
                     			
                     			//this is for accelerometers
-                    			if(outPutStringArr.length == 7)
+                    			if(outPutStringArr.length == 11)
                     			{
                     				acc1.Set(decodeFloat(outPutStringArr[0])/100.0,
                     						decodeFloat(outPutStringArr[1])/100.0, 

@@ -13,6 +13,7 @@ import libsvm.svm_node;
 
 import com.teng.math.Quaternion;
 import com.teng.math.Vector3;
+import com.teng.phdata.DataStorage;
 
 public class PredictSVM {
 
@@ -271,7 +272,7 @@ public class PredictSVM {
 	        nodes[i-1] = node;
 	    }
 
-	    int totalClasses = 2;       
+	    int totalClasses = 6;       
 	    int[] labels = new int[totalClasses];
 	    svm.svm_get_labels(linear_model,labels);
 
@@ -279,9 +280,9 @@ public class PredictSVM {
 	    //double v = svm.svm_predict_probability(model, nodes, prob_estimates);
 	    double v = svm.svm_predict(linear_model, nodes);
 	    
-	    for (int i = 0; i < totalClasses; i++){
+	    //for (int i = 0; i < totalClasses; i++){
 	        //System.out.print("(" + labels[i] + ":" + prob_estimates[i] + ")");
-	    }
+	    //}
 	    //System.out.println("(Actual:" + features[0] + " Prediction:" + v + ")");            
 
 	    return v;
@@ -297,6 +298,16 @@ public class PredictSVM {
 		
 		return predictValue;
 	}
+	
+	
+	//this is for acc2
+	public double predictWithDefaultModel(ArrayList<Vector3> dataset)
+	{
+		double[] testData = calculateFeatures(dataset);
+		double predictValue = predictWithDefaultModel(testData);
+		return predictValue;
+	}
+	
 	
 	//this is for quat
 	public double predictWithDefaultModel(Quaternion quat)  //frame by frame
@@ -411,6 +422,55 @@ public class PredictSVM {
 		}
 		
 		return features;
+	}
+	
+	public double[] calculateFeatures(ArrayList<Vector3> ac)
+	{
+		//ac1 local peaks (1st and 2nd)
+		ArrayList<Double> peaks = featurization.localPeakValues(ac, 3);
+		//System.out.println("local peak index: " + peakIndex[0] + ",  and   " + peakIndex[1]);
+		
+		double f1 = peaks.get(0);
+		double f2 = peaks.get(1);
+		double f3 = peaks.get(2);
+		
+		////////////////////////brute force features
+		
+		double[] means1 = featurization.meanAxes(ac);
+		double f4 = means1[0];
+		double f5 = means1[1];
+		double f6 = means1[2];
+		
+		
+		//feature 14-19: standard dev of acc1 and acc2
+		double[] stdvs1 = featurization.stdvAxes(ac, means1);
+		double f8 = stdvs1[0];
+		double f9 = stdvs1[1];
+		double f10 = stdvs1[2];
+		
+		//feature 20-25: skewness of acc1 and acc2
+		double[] skews1 = featurization.skewnessAxes(ac, means1, stdvs1);
+		double f11 = skews1[0];
+		double f12 = skews1[1];
+		double f13 = skews1[2];
+		
+		//feature 26-31: kurtosis of acc1 and acc2
+		double[] kurs1 = featurization.kurtosisAxes(ac, means1, stdvs1);
+		double f14 = kurs1[0];
+		double f15 = kurs1[1];
+		double f16 = kurs1[2];
+		
+		double[] features = new double[]{1.0, f1, f2, f3, f4, f5, f6, f6, f8, f9, f10,   // a mistake here
+				f11, f12, f13, f14, f15, f16};
+		
+		//need to be scaled
+		for(int itrf = 1; itrf < features.length; itrf++)
+		{
+			features[itrf] =  scaleOutput(features[itrf], itrf);
+		}
+		
+		return features;
+	
 	}
 	
 	private double scaleOutput(double value, int index)

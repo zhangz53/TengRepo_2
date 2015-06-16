@@ -28,7 +28,7 @@ class DataLoad{
 		acc2 = new ArrayList<Vector3>();
 		
 		//read the csv file
-		String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\1432668854802_collection_3.csv";
+		String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\6_testfilter.csv";
 		try {
 			br = new BufferedReader(new FileReader(dataFile));
 		} catch (FileNotFoundException e) {
@@ -88,7 +88,7 @@ public class PreProcessing extends PApplet{
 	public int windowWidth;
 	public int windowHeight;
 	
-	private int sampleNum = 30;
+	private int sampleNum = 40; // for about 1 sec
 	private int curMousePos;
 	private int leftBound;
 	private int rightBound;

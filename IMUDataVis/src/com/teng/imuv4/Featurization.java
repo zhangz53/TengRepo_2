@@ -19,7 +19,7 @@ public class Featurization {
 	public ArrayList<Vector3> acc1;
 	public ArrayList<Vector3> acc2;
 	
-	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\1432669151945_preprocess_4.csv";
+	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\7_process.csv";
 	private int index = 1;  //start from 1
 	
 	public DataStorage dataStorage;
@@ -62,7 +62,8 @@ public class Featurization {
 					}else
 					{
 						//all the sample for index collected, find the features
-						calculateFeatures(acc1, acc2);
+						//calculateFeatures(acc1, acc2);
+						calculateFeatures(acc2);
 						
 						//clear the acc and start for index+1
 						acc1.clear();
@@ -76,7 +77,8 @@ public class Featurization {
 			}
 			
 			//the last one
-			calculateFeatures(acc1, acc2);
+			//calculateFeatures(acc1, acc2);
+			calculateFeatures(acc2);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -167,6 +169,48 @@ public class Featurization {
 				f31);
 	}
 	
+	//features for single acc
+	public void calculateFeatures(ArrayList<Vector3> ac)
+	{
+		//ac1 local peaks (1st and 2nd)
+		ArrayList<Double> peaks = localPeakValues(ac, 3);
+		//System.out.println("local peak index: " + peakIndex[0] + ",  and   " + peakIndex[1]);
+		
+		double f1 = peaks.get(0);
+		double f2 = peaks.get(1);
+		double f3 = peaks.get(2);
+		
+		////////////////////////brute force features
+		
+		double[] means1 = meanAxes(ac);
+		double f4 = means1[0];
+		double f5 = means1[1];
+		double f6 = means1[2];
+		
+		
+		//feature 14-19: standard dev of acc1 and acc2
+		double[] stdvs1 = stdvAxes(ac, means1);
+		double f8 = stdvs1[0];
+		double f9 = stdvs1[1];
+		double f10 = stdvs1[2];
+		
+		//feature 20-25: skewness of acc1 and acc2
+		double[] skews1 = skewnessAxes(ac, means1, stdvs1);
+		double f11 = skews1[0];
+		double f12 = skews1[1];
+		double f13 = skews1[2];
+		
+		//feature 26-31: kurtosis of acc1 and acc2
+		double[] kurs1 = kurtosisAxes(ac, means1, stdvs1);
+		double f14 = kurs1[0];
+		double f15 = kurs1[1];
+		double f16 = kurs1[2];
+		
+		DataStorage.AddSampleX(6.0, f1, f2, f3, f4, f5, f6, f6, f8, f9, f10, f11, f12, f13, f14, f15, f16, 
+				0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+	
+	}
+	
 	public int[] localPeakIndex(ArrayList<Vector3> list){
 		
 		//get the 1st and 2nd peak index
@@ -213,6 +257,79 @@ public class Featurization {
 		return result;
 	}
 	
+	
+	public ArrayList<Double> localPeakValues(ArrayList<Vector3> list, int count){
+		//get top count + 3 peaks
+		//remove the largest
+		//remove the most left and most right
+		
+		int sz = list.size();
+		ArrayList<Double> absValue = new ArrayList<Double>();
+		for(Vector3 acc : list){
+			double sum = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
+			absValue.add(sum);
+		}
+		
+		//difference values
+		ArrayList<Double> diff = new ArrayList<Double>();
+		diff.add(0.0);
+		for(int itra = 1; itra < absValue.size(); itra++)
+		{
+			diff.add(absValue.get(itra) - absValue.get(itra-1));
+		}
+		
+		ArrayList<Integer> peakCandy = new ArrayList<Integer>();
+		ArrayList<Double> candyValue = new ArrayList<Double>();
+		for(int itrd = 0; itrd < (diff.size() -1 ); itrd++)
+		{
+			if(diff.get(itrd) > 0 && diff.get(itrd+1) < 0)
+			{
+				peakCandy.add(itrd);
+				candyValue.add(absValue.get(itrd));
+			}
+		}
+		
+		ArrayList<Double> results = new ArrayList<Double>();
+		ArrayList<Integer> resultIndex = new ArrayList<Integer>();
+		
+		for(int itrc = 0; itrc < (count + 3); itrc++)
+		{
+			results.add(0.0);
+			resultIndex.add(0);
+		}
+		
+		if(peakCandy.size() < (count + 3))
+			return results;
+		
+		for(int itrr = 0; itrr < (count + 3); itrr++)
+		{
+			int index = getLargestInList(candyValue);
+			int oriIndex = peakCandy.get(index);
+			
+			results.set(itrr, candyValue.get(index));
+			resultIndex.set(itrr, oriIndex);
+			
+			candyValue.remove(index);
+			peakCandy.remove(index);
+		}
+		
+		//remove the largest
+		results.remove(0);
+		resultIndex.remove(0);
+		
+		//remove the most left
+		int leftIndex = getSmallestIntegerInList(resultIndex);
+		results.remove(leftIndex);
+		resultIndex.remove(leftIndex);
+		
+		//remove the most right
+		int rightIndex = getLargestIntegerInList(resultIndex);
+		results.remove(rightIndex);
+		resultIndex.remove(rightIndex);
+		
+		return results;
+	}
+	
 	public int getLargestInList(ArrayList<Double> list)
 	{
 		double temp = 0.0;
@@ -229,6 +346,42 @@ public class Featurization {
 		
 		return target;
 	}
+	
+	
+	public int getLargestIntegerInList(ArrayList<Integer> list)   // > 0
+	{
+		int temp = 0;
+		int target = 0;
+		
+		for(int itrl = 0; itrl < list.size(); itrl++)
+		{
+			if(list.get(itrl) > temp)
+			{
+				target = itrl;
+				temp = list.get(itrl);
+			}
+		}
+		
+		return target;
+	}
+	
+	public int getSmallestIntegerInList(ArrayList<Integer> list)
+	{
+		int temp = getLargestIntegerInList(list);
+		int target = 0;
+		
+		for(int itrl = 0; itrl < list.size(); itrl++)
+		{
+			if(list.get(itrl) < temp)
+			{
+				target = itrl;
+				temp = list.get(itrl);
+			}
+		}
+		
+		return target;
+	}
+	
 	
 	public double[] meanAxes(ArrayList<Vector3> list)
 	{
