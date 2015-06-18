@@ -464,7 +464,7 @@ public class PredictSVM {
 		double f17 = kurs1[1];
 		double f18 = kurs1[2];
 		
-		double[] features = new double[]{1.0, f1, f2, f3, f4, f5, f6, f6, f8, f9, f10,   // a mistake here
+		double[] features = new double[]{1.0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10,   // a mistake here
 				f11, f12, f13, f14, f15, f16, f17, f18};
 		
 		//need to be scaled
