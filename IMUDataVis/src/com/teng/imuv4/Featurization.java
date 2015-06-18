@@ -19,7 +19,7 @@ public class Featurization {
 	public ArrayList<Vector3> acc1;
 	public ArrayList<Vector3> acc2;
 	
-	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\7_process.csv";
+	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\neg3.csv";
 	private int index = 1;  //start from 1
 	
 	public DataStorage dataStorage;
@@ -53,6 +53,7 @@ public class Featurization {
 				if(values.length == 13)
 				{
 					double sIndexDouble = Double.parseDouble(values[0]);
+					//System.out.println("" + sIndexDouble);
 					int sIndex = (int)sIndexDouble;
 					if(sIndex == index)
 					{
@@ -163,7 +164,7 @@ public class Featurization {
 		double f30 = kurs2[1];
 		double f31 = kurs2[2];
 		
-		DataStorage.AddSampleX(1.0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, 
+		DataStorage.AddSampleX(-1.0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, 
 				f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, 
 				f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, 
 				f31);
@@ -172,42 +173,45 @@ public class Featurization {
 	//features for single acc
 	public void calculateFeatures(ArrayList<Vector3> ac)
 	{
-		//ac1 local peaks (1st and 2nd)
-		ArrayList<Double> peaks = localPeakValues(ac, 3);
-		//System.out.println("local peak index: " + peakIndex[0] + ",  and   " + peakIndex[1]);
+		//largest peak and their absolute values
+		int[] peakIndex = localPeakIndex(ac);
 		
-		double f1 = peaks.get(0);
-		double f2 = peaks.get(1);
-		double f3 = peaks.get(2);
+		double f1 = ac.get(peakIndex[0]).x;
+		double f2 = ac.get(peakIndex[0]).y;
+		double f3 = ac.get(peakIndex[0]).z;
+		
+		double f4 = ac.get(peakIndex[1]).x;
+		double f5 = ac.get(peakIndex[1]).y;
+		double f6 = ac.get(peakIndex[1]).z;
 		
 		////////////////////////brute force features
 		
 		double[] means1 = meanAxes(ac);
-		double f4 = means1[0];
-		double f5 = means1[1];
-		double f6 = means1[2];
+		double f7 = means1[0];
+		double f8 = means1[1];
+		double f9 = means1[2];
 		
 		
 		//feature 14-19: standard dev of acc1 and acc2
 		double[] stdvs1 = stdvAxes(ac, means1);
-		double f8 = stdvs1[0];
-		double f9 = stdvs1[1];
-		double f10 = stdvs1[2];
+		double f10 = stdvs1[0];
+		double f11 = stdvs1[1];
+		double f12 = stdvs1[2];
 		
 		//feature 20-25: skewness of acc1 and acc2
 		double[] skews1 = skewnessAxes(ac, means1, stdvs1);
-		double f11 = skews1[0];
-		double f12 = skews1[1];
-		double f13 = skews1[2];
+		double f13 = skews1[0];
+		double f14 = skews1[1];
+		double f15 = skews1[2];
 		
 		//feature 26-31: kurtosis of acc1 and acc2
 		double[] kurs1 = kurtosisAxes(ac, means1, stdvs1);
-		double f14 = kurs1[0];
-		double f15 = kurs1[1];
-		double f16 = kurs1[2];
+		double f16 = kurs1[0];
+		double f17 = kurs1[1];
+		double f18 = kurs1[2];
 		
-		DataStorage.AddSampleX(6.0, f1, f2, f3, f4, f5, f6, f6, f8, f9, f10, f11, f12, f13, f14, f15, f16, 
-				0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+		DataStorage.AddSampleX(-1.0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, 
+				f17, f18, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 	
 	}
 	
@@ -239,6 +243,16 @@ public class Featurization {
 				candyValue.add(absValue.get(itrd));
 			}
 		}
+		
+		//check pool
+		if(candyValue.size() < 2)
+		{
+			int[] result = new int[2];
+			result[0] = 0;
+			result[1] = 1;
+			return result;
+		}
+		
 		
 		//rand candyValue and the 1st and 2nd largest
 		int index = getLargestInList(candyValue);

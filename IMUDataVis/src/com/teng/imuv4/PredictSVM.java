@@ -272,7 +272,7 @@ public class PredictSVM {
 	        nodes[i-1] = node;
 	    }
 
-	    int totalClasses = 6;       
+	    int totalClasses = 2;       
 	    int[] labels = new int[totalClasses];
 	    svm.svm_get_labels(linear_model,labels);
 
@@ -427,41 +427,45 @@ public class PredictSVM {
 	public double[] calculateFeatures(ArrayList<Vector3> ac)
 	{
 		//ac1 local peaks (1st and 2nd)
-		ArrayList<Double> peaks = featurization.localPeakValues(ac, 3);
+		int[] peakIndex = featurization.localPeakIndex(ac);
 		//System.out.println("local peak index: " + peakIndex[0] + ",  and   " + peakIndex[1]);
 		
-		double f1 = peaks.get(0);
-		double f2 = peaks.get(1);
-		double f3 = peaks.get(2);
+		double f1 = ac.get(peakIndex[0]).x;
+		double f2 = ac.get(peakIndex[0]).y;
+		double f3 = ac.get(peakIndex[0]).z;
+		
+		double f4 = ac.get(peakIndex[1]).x;
+		double f5 = ac.get(peakIndex[1]).y;
+		double f6 = ac.get(peakIndex[1]).z;
 		
 		////////////////////////brute force features
 		
 		double[] means1 = featurization.meanAxes(ac);
-		double f4 = means1[0];
-		double f5 = means1[1];
-		double f6 = means1[2];
+		double f7 = means1[0];
+		double f8 = means1[1];
+		double f9 = means1[2];
 		
 		
 		//feature 14-19: standard dev of acc1 and acc2
 		double[] stdvs1 = featurization.stdvAxes(ac, means1);
-		double f8 = stdvs1[0];
-		double f9 = stdvs1[1];
-		double f10 = stdvs1[2];
+		double f10 = stdvs1[0];
+		double f11 = stdvs1[1];
+		double f12 = stdvs1[2];
 		
 		//feature 20-25: skewness of acc1 and acc2
 		double[] skews1 = featurization.skewnessAxes(ac, means1, stdvs1);
-		double f11 = skews1[0];
-		double f12 = skews1[1];
-		double f13 = skews1[2];
+		double f13 = skews1[0];
+		double f14 = skews1[1];
+		double f15 = skews1[2];
 		
 		//feature 26-31: kurtosis of acc1 and acc2
 		double[] kurs1 = featurization.kurtosisAxes(ac, means1, stdvs1);
-		double f14 = kurs1[0];
-		double f15 = kurs1[1];
-		double f16 = kurs1[2];
+		double f16 = kurs1[0];
+		double f17 = kurs1[1];
+		double f18 = kurs1[2];
 		
 		double[] features = new double[]{1.0, f1, f2, f3, f4, f5, f6, f6, f8, f9, f10,   // a mistake here
-				f11, f12, f13, f14, f15, f16};
+				f11, f12, f13, f14, f15, f16, f17, f18};
 		
 		//need to be scaled
 		for(int itrf = 1; itrf < features.length; itrf++)

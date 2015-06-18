@@ -37,8 +37,8 @@ class DataSerialP {
 	public static ArrayList<Double> dataset_quat_predictions; 
 	
 	
-	public static int sampleNum = 40;  //has to be mapped with the number chosen in PreProcessing
-	private static int movingWindowSize = 40;  //decide frequency to examine the windowed data
+	public static int sampleNum = 14;  //has to be mapped with the number chosen in PreProcessing
+	private static int movingWindowSize = 14;  //decide frequency to examine the windowed data
 	private static int movingCount = 0;
 	
 	
@@ -64,7 +64,7 @@ class DataSerialP {
 		dataset_acc1 = new ArrayList<Vector3>();
 		dataset_acc2 = new ArrayList<Vector3>();
 		
-		predictSVM = new PredictSVM("C:\\Users\\Teng\\Desktop\\dataset\\616\\rbf_model_pilot.model", "C:\\Users\\Teng\\Desktop\\dataset\\616\\range");
+		predictSVM = new PredictSVM("C:\\Users\\Teng\\Desktop\\dataset\\617\\rbf_model_pilot.model", "C:\\Users\\Teng\\Desktop\\dataset\\617\\range");
 		
 		instance = this;
 	}
@@ -183,12 +183,14 @@ class DataSerialP {
                     					if(movingCount == movingWindowSize)
                     					{
                     						//predict
+                    						
+                    						//System.out.println(" " + dataset_acc2.size());
                     						if(dataset_acc1.size() == sampleNum && dataset_acc2.size() == sampleNum)
                     						{	
                     							predictValue = predictSVM.predictWithDefaultModel(dataset_acc2);	
                     							
-                    							if(predictValue < 5.0)
-                    								System.out.println(" " + predictValue);
+                    						
+                    							System.out.println(" " + predictValue);
                     							                    							
                     							movingCount = 0;
                     						}
