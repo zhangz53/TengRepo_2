@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import com.teng.fft.RealDoubleFFT;
 import com.teng.math.Vector3;
 import com.teng.phdata.DataStorage;
 
@@ -19,8 +20,12 @@ public class Featurization {
 	public ArrayList<Vector3> acc1;
 	public ArrayList<Vector3> acc2;
 	
-	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\neg3.csv";
+	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\5_neg.csv";
 	private int index = 1;  //start from 1
+	
+	//for fft
+	//public int sampleSize = 20;
+	//public RealDoubleFFT mRealFFT;
 	
 	public DataStorage dataStorage;
 	
@@ -28,6 +33,7 @@ public class Featurization {
 	{
 		acc1 = new ArrayList<Vector3>();
 		acc2 = new ArrayList<Vector3>();
+		//mRealFFT = new RealDoubleFFT(sampleSize);
 		
 		dataStorage = DataStorage.getInstance();
 	}
@@ -210,10 +216,52 @@ public class Featurization {
 		double f17 = kurs1[1];
 		double f18 = kurs1[2];
 		
-		DataStorage.AddSampleX(-1.0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, 
+		//feature dominate frequency
+		
+		
+		DataStorage.AddSampleX(4.0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, 
 				f17, f18, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 	
 	}
+	
+	/*
+	public double[] DominateFreq(ArrayList<Vector3> ac)
+	{
+		double[] result = new double[3]; //x y z
+		if(ac.size() != sampleSize)
+		{
+			return result;
+		}
+		
+		double[] xValues = new double[sampleSize];
+		double[] yValues = new double[sampleSize];
+		double[] zValues = new double[sampleSize];
+		
+		for(int itra = 0; itra < ac.size(); itra++)
+		{
+			xValues[itra] = ac.get(itra).x;
+			yValues[itra] = ac.get(itra).y;
+			zValues[itra] = ac.get(itra).z;
+		}
+		
+		mRealFFT.ft(xValues);
+		mRealFFT.ft(yValues);
+		mRealFFT.ft(zValues);
+		
+		for(int k = 1; k < ((sampleSize/2) - 1); k ++)
+		{
+			System.out.println("x  " + k + "   : " + xValues[2 * k -1]);
+			System.out.println("x  " + k + "   : " + yValues[2 * k -1]);
+			System.out.println("x  " + k + "   : " + zValues[2 * k -1]);
+		}
+		
+		result[0] = xValues[2 * 1 -1];
+		result[1] = yValues[2 * 1 -1];
+		result[2] = zValues[2 * 1 -1];
+		
+		return result;
+		
+	}*/
 	
 	public int[] localPeakIndex(ArrayList<Vector3> list){
 		

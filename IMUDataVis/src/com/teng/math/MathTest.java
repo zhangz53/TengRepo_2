@@ -1,6 +1,11 @@
 package com.teng.math;
 
-import java.util.ArrayList;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+
+import com.teng.fft.RealDoubleFFT;
 
 public class MathTest {
 	public static final void main(String args[]){
@@ -33,6 +38,7 @@ public class MathTest {
 		*/
 		
 		
+		/*
 		ArrayList<Integer> list = new ArrayList<Integer>();
 		for(int i = 0; i < 11; i++)
 		{
@@ -53,9 +59,49 @@ public class MathTest {
 		for(int itr = 0; itr < list.size(); itr++)
 		{
 			System.out.println(" " + list.get(itr));
-		}
+		}*/
 		
 		//Matrix4 output = inputMatrix.Mul(inputMatrix2);
 		//System.out.println((inputMatrix.Mul(inputMatrix2)).toString());
+		
+		
+		//test fft
+		/*
+		RealDoubleFFT mfft = new RealDoubleFFT(1024);
+		
+		double x[] = new double[1024];
+		
+		String dataFile = "C:\\Users\\Teng\\Documents\\matlab-workspace\\MLToolbox\\libsvm-3.20\\matlab\\sample.txt";
+		
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new FileReader(dataFile));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		String line = "";
+		String splitBy = ",";
+		int count = 0;
+		
+		try {
+			while((line = br.readLine()) != null)
+			{
+				String[] values = line.split(splitBy);
+				if(values.length == 1)
+				{
+					x[count] = Double.parseDouble(values[0]);
+					count++;
+				}
+				
+			}
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		mfft.ft(x);
+		*/
 	}
 }
