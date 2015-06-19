@@ -24,8 +24,10 @@ public class Featurization {
 	private int index = 1;  //start from 1
 	
 	//for fft
-	//public int sampleSize = 20;
-	//public RealDoubleFFT mRealFFT;
+	public int fftBins = 32;  //try to change
+	public int Fs = 66;
+	public double Ts = 1.0/Fs;
+	public RealDoubleFFT mRealFFT;
 	
 	public DataStorage dataStorage;
 	
@@ -33,7 +35,7 @@ public class Featurization {
 	{
 		acc1 = new ArrayList<Vector3>();
 		acc2 = new ArrayList<Vector3>();
-		//mRealFFT = new RealDoubleFFT(sampleSize);
+		mRealFFT = new RealDoubleFFT(fftBins);
 		
 		dataStorage = DataStorage.getInstance();
 	}
@@ -224,10 +226,10 @@ public class Featurization {
 	
 	}
 	
-	/*
-	public double[] DominateFreq(ArrayList<Vector3> ac)
+	
+	public double[] freq(ArrayList<Vector3> ac)
 	{
-		double[] result = new double[3]; //x y z
+		double[] result = new double[3];
 		if(ac.size() != sampleSize)
 		{
 			return result;
@@ -261,7 +263,7 @@ public class Featurization {
 		
 		return result;
 		
-	}*/
+	}
 	
 	public int[] localPeakIndex(ArrayList<Vector3> list){
 		
