@@ -28,7 +28,7 @@ class DataLoad{
 		acc2 = new ArrayList<Vector3>();
 		
 		//read the csv file
-		String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\neg.csv";
+		String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\1435009328148_testfilter.csv";
 		try {
 			br = new BufferedReader(new FileReader(dataFile));
 		} catch (FileNotFoundException e) {
@@ -95,6 +95,7 @@ public class PreProcessing extends PApplet{
 	private int alpha;
 	
 	private int sampleIndex = 0;
+	public int sampleCount = 1;
 	
 	public DataStorage dataStorage;
 	
@@ -200,6 +201,13 @@ public class PreProcessing extends PApplet{
 						 (float)(windowHeight * 1 / 4 + mDataLoad.acc2.get(itra + 1).z * heightSeg));
 			}
 		}
+		
+		//counts
+		pushMatrix();
+		textSize(32);
+		fill(250, 100, 100);
+		text(sampleCount, 100, 100);
+		popMatrix();
 	}
 	
 	public void mouseClicked()
@@ -218,6 +226,7 @@ public class PreProcessing extends PApplet{
 		
 		//get new data for next index
 		sampleIndex++;
+		sampleCount++;
 		mDataLoad.fetchData(sampleIndex);
 	}
 	
