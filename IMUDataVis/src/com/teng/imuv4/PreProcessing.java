@@ -88,7 +88,7 @@ public class PreProcessing extends PApplet{
 	public int windowWidth;
 	public int windowHeight;
 	
-	private int sampleNum = 20; // for about 1 sec
+	private int sampleNum = 32; // for convenient of fft
 	private int curMousePos;
 	private int leftBound;
 	private int rightBound;

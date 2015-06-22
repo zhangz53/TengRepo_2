@@ -8,6 +8,22 @@ import java.io.IOException;
 import com.teng.fft.RealDoubleFFT;
 
 public class MathTest {
+	
+	public static double[] convertToDb(double[] data, double maxSquared) {
+	    data[0] = db2(data[0], 0.0, maxSquared);
+	    int j = 1;
+	    for (int i=1; i < data.length - 1; i+=2, j++) {
+	      data[j] = db2(data[i], data[i+1], maxSquared);
+	    }
+	    data[j] = data[0];
+	    return data;
+	}
+	
+	private static double db2(double r, double i, double maxSquared) {
+	    return 5.0 * Math.log10((r * r + i * i) / maxSquared);
+	}
+	
+	
 	public static final void main(String args[]){
 		
 		/*
@@ -66,10 +82,10 @@ public class MathTest {
 		
 		
 		//test fft
-		/*
-		RealDoubleFFT mfft = new RealDoubleFFT(1024);
 		
-		double x[] = new double[1024];
+		RealDoubleFFT mfft = new RealDoubleFFT(32);
+		
+		double x[] = new double[32];
 		
 		String dataFile = "C:\\Users\\Teng\\Documents\\matlab-workspace\\MLToolbox\\libsvm-3.20\\matlab\\sample.txt";
 		
@@ -102,6 +118,17 @@ public class MathTest {
 		}
 		
 		mfft.ft(x);
-		*/
+		float MEAN_MAX = 16384f;
+		int fftBins = 32;
+		double scale =  MEAN_MAX * MEAN_MAX * fftBins * fftBins / 2d;
+		convertToDb(x, scale);
+		
+		for(int itr = 0; itr < x.length/2; itr++)
+		{
+			System.out.println("" + x[ itr]);
+		}
+		
 	}
+	
+	
 }

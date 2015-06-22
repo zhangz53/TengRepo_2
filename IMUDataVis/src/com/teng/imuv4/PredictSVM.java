@@ -272,7 +272,7 @@ public class PredictSVM {
 	        nodes[i-1] = node;
 	    }
 
-	    int totalClasses = 2;       
+	    int totalClasses = 4;       
 	    int[] labels = new int[totalClasses];
 	    svm.svm_get_labels(linear_model,labels);
 
@@ -464,8 +464,21 @@ public class PredictSVM {
 		double f17 = kurs1[1];
 		double f18 = kurs1[2];
 		
-		double[] features = new double[]{1.0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10,   // a mistake here
-				f11, f12, f13, f14, f15, f16, f17, f18};
+		double[][] freqs = featurization.freq(ac);   //3 by fftBins/2 array
+		//feature X frequencies
+		double[] freqX = freqs[0];
+		
+		//feature Y frequencies
+		double[] freqY = freqs[1];
+		
+		//feature Z frequencies
+		double[] freqZ = freqs[2];
+		
+		double[] features = new double[]{1.0, f7, f8, f9, f10, 
+				f11, f12, f13, f14, f15, f16, f17, f18,
+				freqX[0],freqX[1],freqX[2],freqX[3],freqX[4],freqX[5],freqX[6],freqX[7],freqX[8],freqX[9],freqX[10],freqX[11],freqX[12],freqX[13],freqX[14],freqX[15],
+				freqY[0],freqY[1],freqY[2],freqY[3],freqY[4],freqY[5],freqY[6],freqY[7],freqY[8],freqY[9],freqY[10],freqY[11],freqY[12],freqY[13],freqY[14],freqY[15],
+				freqZ[0],freqZ[1],freqZ[2],freqZ[3],freqZ[4],freqZ[5],freqZ[6],freqZ[7],freqZ[8],freqZ[9],freqZ[10],freqZ[11],freqZ[12],freqZ[13],freqZ[14],freqZ[15]};
 		
 		//need to be scaled
 		for(int itrf = 1; itrf < features.length; itrf++)

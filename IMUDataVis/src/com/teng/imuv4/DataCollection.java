@@ -186,6 +186,8 @@ public class DataCollection extends PApplet{
 	private int oneSecond = 500;   //1 second  //1000
 	private int twoSecond = 1500;  //1.5seconds  //1500
 	
+	public int sampleCount = 0;
+	
 	public void setup()
 	{
 		mSerial = new SerialDataCap();
@@ -217,6 +219,7 @@ public class DataCollection extends PApplet{
 				if(passedTime > twoSecond)
 				{
 					countNumber = 3;
+					sampleCount++;
 					indicator = str(countNumber);
 					rgb[0] = 200; rgb[1] = 200; rgb[2] = 0;
 					mSerial.isRecording = false;
@@ -255,6 +258,13 @@ public class DataCollection extends PApplet{
 			textSize(64);
 			fill(250, 250, 250);
 			text(indicator, 480, 525);
+			
+			//counts
+			textSize(64);
+			fill(250, 100, 100);
+			text(sampleCount, 100, 100);
+			
+			
 			popMatrix();
 		}
 	}

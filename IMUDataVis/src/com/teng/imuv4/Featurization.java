@@ -20,14 +20,16 @@ public class Featurization {
 	public ArrayList<Vector3> acc1;
 	public ArrayList<Vector3> acc2;
 	
-	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\5_neg.csv";
+	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\5_process.csv";
 	private int index = 1;  //start from 1
 	
 	//for fft
 	public int fftBins = 32;  //try to change
-	public int Fs = 66;
-	public double Ts = 1.0/Fs;
+	public int Fs = 66;  //about 66hz
+	public double Ts = 1.0/Fs;  //about 0.015s
 	public RealDoubleFFT mRealFFT;
+	public double scale;
+	private final static float MEAN_MAX = 16384f;   // Maximum signal value
 	
 	public DataStorage dataStorage;
 	
@@ -35,7 +37,9 @@ public class Featurization {
 	{
 		acc1 = new ArrayList<Vector3>();
 		acc2 = new ArrayList<Vector3>();
+		
 		mRealFFT = new RealDoubleFFT(fftBins);
+		scale =  MEAN_MAX * MEAN_MAX * fftBins * fftBins / 2d;
 		
 		dataStorage = DataStorage.getInstance();
 	}
@@ -43,6 +47,8 @@ public class Featurization {
 	public Featurization(int purpose)
 	{
 		//to be used by other class
+		mRealFFT = new RealDoubleFFT(fftBins);
+		scale =  MEAN_MAX * MEAN_MAX * fftBins * fftBins / 2d;
 	}
 	
 	public void getFeatures()
@@ -94,7 +100,7 @@ public class Featurization {
 			e.printStackTrace();
 		}
 		
-		dataStorage.savex();
+		dataStorage.saves();
 	}
 	
 	//calculate all the needed features and storage them
@@ -182,15 +188,15 @@ public class Featurization {
 	public void calculateFeatures(ArrayList<Vector3> ac)
 	{
 		//largest peak and their absolute values
-		int[] peakIndex = localPeakIndex(ac);
+		//int[] peakIndex = localPeakIndex(ac);
 		
-		double f1 = ac.get(peakIndex[0]).x;
-		double f2 = ac.get(peakIndex[0]).y;
-		double f3 = ac.get(peakIndex[0]).z;
+		//double f1 = ac.get(peakIndex[0]).x;
+		//double f2 = ac.get(peakIndex[0]).y;
+		//double f3 = ac.get(peakIndex[0]).z;
 		
-		double f4 = ac.get(peakIndex[1]).x;
-		double f5 = ac.get(peakIndex[1]).y;
-		double f6 = ac.get(peakIndex[1]).z;
+		//double f4 = ac.get(peakIndex[1]).x;
+		//double f5 = ac.get(peakIndex[1]).y;
+		//double f6 = ac.get(peakIndex[1]).z;
 		
 		////////////////////////brute force features
 		
@@ -199,6 +205,10 @@ public class Featurization {
 		double f8 = means1[1];
 		double f9 = means1[2];
 		
+		//mean and std
+		double[] mr = mean_std(f7, f8, f9);
+		double ff1 = mr[0];
+		double ff2 = mr[1];
 		
 		//feature 14-19: standard dev of acc1 and acc2
 		double[] stdvs1 = stdvAxes(ac, means1);
@@ -206,11 +216,21 @@ public class Featurization {
 		double f11 = stdvs1[1];
 		double f12 = stdvs1[2];
 		
+		//mean and std
+		double[] sr = mean_std(f10, f11, f12);
+		double ff3 = sr[0];
+		double ff4 = sr[1];
+		
 		//feature 20-25: skewness of acc1 and acc2
 		double[] skews1 = skewnessAxes(ac, means1, stdvs1);
 		double f13 = skews1[0];
 		double f14 = skews1[1];
 		double f15 = skews1[2];
+		
+		//mean and std
+		double[] skr = mean_std(f13, f14, f15);
+		double ff5 = skr[0];
+		double ff6 = skr[1];
 		
 		//feature 26-31: kurtosis of acc1 and acc2
 		double[] kurs1 = kurtosisAxes(ac, means1, stdvs1);
@@ -218,51 +238,99 @@ public class Featurization {
 		double f17 = kurs1[1];
 		double f18 = kurs1[2];
 		
-		//feature dominate frequency
+		//mean and std
+		double[] kur = mean_std(f16, f17, f18);
+		double ff7 = kur[0];
+		double ff8 = kur[1];
 		
+		double[][] freqs = freq(ac);   //3 by fftBins/2 array
+		//feature X frequencies
+		double[] freqX = freqs[0];
+		//feature Y frequencies
+		double[] freqY = freqs[1];
+		//feature Z frequencies
+		double[] freqZ = freqs[2];
 		
-		DataStorage.AddSampleX(4.0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, 
-				f17, f18, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+		//mean and std
+		double[] fmeans = new double[fftBins/2];
+		double[] fstds = new double[fftBins/2];
+		
+		for(int itrf = 0; itrf<(fftBins/2); itrf++)
+		{
+			double[] fr = mean_std(freqX[itrf], freqY[itrf], freqZ[itrf]);
+			fmeans[itrf] = fr[0];
+			fstds[itrf] = fr[1];
+		}
+		
+		//8 + 16*2 = 40
+		DataStorage.AddSampleS(4.0, ff1, ff2, ff3, ff4, ff5, ff6, ff7, ff8,
+				fmeans[0], fstds[0], fmeans[1], fstds[1],fmeans[2], fstds[2],fmeans[3], fstds[3],fmeans[4], fstds[4],fmeans[5], fstds[5],
+				fmeans[6], fstds[6],fmeans[7], fstds[7],fmeans[8], fstds[8],fmeans[9], fstds[9],fmeans[10], fstds[10],fmeans[11], fstds[11],
+				fmeans[12], fstds[12],fmeans[13], fstds[13],fmeans[14], fstds[14],fmeans[15], fstds[15],
+				0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 	
 	}
 	
 	
-	public double[] freq(ArrayList<Vector3> ac)
+	public double[][] freq(ArrayList<Vector3> ac)  //size of ac should equal to fftBins
 	{
-		double[] result = new double[3];
-		if(ac.size() != sampleSize)
+		double[][] result = new double[3][fftBins/2];  //get fftbins samples
+		if(ac.size() != fftBins)
 		{
 			return result;
 		}
 		
-		double[] xValues = new double[sampleSize];
-		double[] yValues = new double[sampleSize];
-		double[] zValues = new double[sampleSize];
+		double[] fftDataX = new double[fftBins];
+		double[] fftDataY = new double[fftBins];
+		double[] fftDataZ = new double[fftBins];
 		
-		for(int itra = 0; itra < ac.size(); itra++)
+		for(int itra = 0; itra < fftBins; itra++)
 		{
-			xValues[itra] = ac.get(itra).x;
-			yValues[itra] = ac.get(itra).y;
-			zValues[itra] = ac.get(itra).z;
+			fftDataX[itra] = ac.get(itra).x;
+			fftDataY[itra] = ac.get(itra).y;
+			fftDataZ[itra] = ac.get(itra).z;
 		}
 		
-		mRealFFT.ft(xValues);
-		mRealFFT.ft(yValues);
-		mRealFFT.ft(zValues);
+		mRealFFT.ft(fftDataX);
+		mRealFFT.ft(fftDataY);
+		mRealFFT.ft(fftDataZ);
 		
-		for(int k = 1; k < ((sampleSize/2) - 1); k ++)
+		//convert to db
+		convertToDb(fftDataX, scale);
+		convertToDb(fftDataY, scale);
+		convertToDb(fftDataZ, scale);
+		
+		double[] resultX = new double[fftBins/2];
+		double[] resultY = new double[fftBins/2];
+		double[] resultZ = new double[fftBins/2];
+		
+		for(int itr = 0; itr < fftBins/2; itr++)
 		{
-			System.out.println("x  " + k + "   : " + xValues[2 * k -1]);
-			System.out.println("x  " + k + "   : " + yValues[2 * k -1]);
-			System.out.println("x  " + k + "   : " + zValues[2 * k -1]);
+			resultX[itr] = fftDataX[itr];
+			resultY[itr] = fftDataY[itr];
+			resultZ[itr] = fftDataZ[itr];
 		}
 		
-		result[0] = xValues[2 * 1 -1];
-		result[1] = yValues[2 * 1 -1];
-		result[2] = zValues[2 * 1 -1];
+		result[0] = resultX;
+		result[1] = resultY;
+		result[2] = resultZ;
 		
 		return result;
 		
+	}
+	
+	public double[] convertToDb(double[] data, double maxSquared) {
+	    data[0] = db2(data[0], 0.0, maxSquared);
+	    int j = 1;
+	    for (int i=1; i < data.length - 1; i+=2, j++) {
+	      data[j] = db2(data[i], data[i+1], maxSquared);
+	    }
+	    data[j] = data[0];
+	    return data;
+	}
+	
+	private double db2(double r, double i, double maxSquared) {
+	    return 5.0 * Math.log10((r * r + i * i) / maxSquared);
 	}
 	
 	public int[] localPeakIndex(ArrayList<Vector3> list){
@@ -540,6 +608,22 @@ public class Featurization {
 		return axeValues;
 	}
 	
+	public double[] mean_std(double a1, double a2, double a3)
+	{
+		double[] result = new double[2];
+		double mean = (a1 + a2 + a3)/ 3;
+		result[0] = mean;
+		if(mean != 0){
+			double std = Math.sqrt(((a1- mean) * (a1 - mean) + (a2 - mean) * (a2 - mean) + (a3- mean) * (a3 - mean))/3 );
+			result[1] = std;
+		}else
+		{
+			result[1] = 0.0;
+		}
+		
+		return result;
+		
+	}
 	
 	
 	public static final void main(String args[])
