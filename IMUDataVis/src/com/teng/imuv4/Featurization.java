@@ -20,7 +20,7 @@ public class Featurization {
 	public ArrayList<Vector3> acc1;
 	public ArrayList<Vector3> acc2;
 	
-	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\1435009415360_testfilter.csv";
+	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\1process.csv";
 	private int index = 1;  //start from 1
 	
 	//for fft
@@ -78,7 +78,7 @@ public class Featurization {
 					{
 						//all the sample for index collected, find the features
 						//calculateFeatures(acc1, acc2);
-						calculateFeatures(acc2);
+						calculateFeatures(acc1);
 						
 						//clear the acc and start for index+1
 						acc1.clear();
@@ -93,7 +93,7 @@ public class Featurization {
 			
 			//the last one
 			//calculateFeatures(acc1, acc2);
-			calculateFeatures(acc2);
+			calculateFeatures(acc1);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -199,8 +199,11 @@ public class Featurization {
 		//double f6 = ac.get(peakIndex[1]).z;
 		
 		////////////////////////brute force features
+		//use absolute values
+		//since there is no rules for the waves
+		ArrayList<Vector3> absAc = toAbsList(ac);
 		
-		double[] means1 = meanAxes(ac);
+		double[] means1 = meanAxes(absAc);
 		double f1 = means1[0];
 		double f2 = means1[1];
 		double f3 = means1[2];
@@ -211,7 +214,7 @@ public class Featurization {
 		double ff2 = mr[1];
 		
 		//feature 14-19: standard dev of acc1 and acc2
-		double[] stdvs1 = stdvAxes(ac, means1);
+		double[] stdvs1 = stdvAxes(absAc, means1);
 		double f4 = stdvs1[0];
 		double f5 = stdvs1[1];
 		double f6 = stdvs1[2];
@@ -222,7 +225,7 @@ public class Featurization {
 		double ff4 = sr[1];
 		
 		//feature 20-25: skewness of acc1 and acc2
-		double[] skews1 = skewnessAxes(ac, means1, stdvs1);
+		double[] skews1 = skewnessAxes(absAc, means1, stdvs1);
 		double f7 = skews1[0];
 		double f8 = skews1[1];
 		double f9 = skews1[2];
@@ -233,7 +236,7 @@ public class Featurization {
 		double ff6 = skr[1];
 		
 		//feature 26-31: kurtosis of acc1 and acc2
-		double[] kurs1 = kurtosisAxes(ac, means1, stdvs1);
+		double[] kurs1 = kurtosisAxes(absAc, means1, stdvs1);
 		double f10 = kurs1[0];
 		double f11 = kurs1[1];
 		double f12 = kurs1[2];
@@ -263,17 +266,39 @@ public class Featurization {
 		}
 		
 		//1 + 12 + 16*3 + 8 + 16*2 = 1 + 60 + 40
-		DataStorage.AddSampleS(4.0, 
+		DataStorage.AddSampleS(1.0, 
 				f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12,
 				freqX[0], freqX[1],freqX[2],freqX[3],freqX[4],freqX[5],freqX[6],freqX[7],freqX[8],freqX[9],freqX[10],freqX[11],freqX[12],freqX[13],freqX[14],freqX[15],
 				freqY[0], freqY[1],freqY[2],freqY[3],freqY[4],freqY[5],freqY[6],freqY[7],freqY[8],freqY[9],freqY[10],freqY[11],freqY[12],freqY[13],freqY[14],freqY[15],
 				freqZ[0], freqZ[1],freqZ[2],freqZ[3],freqZ[4],freqZ[5],freqZ[6],freqZ[7],freqZ[8],freqZ[9],freqZ[10],freqZ[11],freqZ[12],freqZ[13],freqZ[14],freqZ[15],
+				
+				//average values don't help much
 				ff1, ff2, ff3, ff4, ff5, ff6, ff7, ff8,
 				fmeans[0], fstds[0], fmeans[1], fstds[1],fmeans[2], fstds[2],fmeans[3], fstds[3],fmeans[4], fstds[4],fmeans[5], fstds[5],
 				fmeans[6], fstds[6],fmeans[7], fstds[7],fmeans[8], fstds[8],fmeans[9], fstds[9],fmeans[10], fstds[10],fmeans[11], fstds[11],
 				fmeans[12], fstds[12],fmeans[13], fstds[13],fmeans[14], fstds[14],fmeans[15], fstds[15]
 				);
 	
+	}
+	
+	public ArrayList<Vector3> toAbsList(ArrayList<Vector3> list)
+	{
+		ArrayList<Vector3> result = new ArrayList<Vector3>();
+		//copy
+		for(int itrl = 0; itrl < list.size(); itrl++)
+		{
+			Vector3 ori = list.get(itrl);
+			Vector3 temp = new Vector3();
+			
+			//change to abs values
+			temp.x = Math.abs(ori.x);
+			temp.y = Math.abs(ori.y);
+			temp.z = Math.abs(ori.z);
+			
+			result.add(temp);
+		}
+		
+		return result;
 	}
 	
 	

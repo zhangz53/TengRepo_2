@@ -1,11 +1,6 @@
 package com.teng.math;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-
-import com.teng.fft.RealDoubleFFT;
+import java.util.ArrayList;
 
 public class MathTest {
 	
@@ -54,13 +49,31 @@ public class MathTest {
 		*/
 		
 		
-		/*
+		
 		ArrayList<Integer> list = new ArrayList<Integer>();
 		for(int i = 0; i < 11; i++)
 		{
 			list.add(i);
 		}
 		
+		for(int itr = 0; itr < list.size(); itr++)
+		{
+			System.out.println(" " + list.get(itr));
+		}
+		
+		ArrayList<Integer> newList = list;
+		newList.set(0, 10);
+		
+		for(int itr = 0; itr < list.size(); itr++)
+		{
+			System.out.println(" " + list.get(itr));
+		}
+		for(int itr = 0; itr < list.size(); itr++)
+		{
+			System.out.println(" " + newList.get(itr));
+		}
+		
+		/*
 		list.add(0);
 		for(int itr = 0; itr < list.size(); itr++)
 		{
@@ -82,7 +95,7 @@ public class MathTest {
 		
 		
 		//test fft
-		
+		/*
 		RealDoubleFFT mfft = new RealDoubleFFT(32);
 		
 		double x[] = new double[32];
@@ -126,7 +139,7 @@ public class MathTest {
 		for(int itr = 0; itr < x.length/2; itr++)
 		{
 			System.out.println("" + x[ itr]);
-		}
+		}*/
 		
 	}
 	
