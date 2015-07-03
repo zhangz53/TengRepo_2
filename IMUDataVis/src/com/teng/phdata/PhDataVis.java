@@ -272,7 +272,7 @@ public class PhDataVis extends PApplet{
 						//System.out.println("before : velx  " + mLinVel.x + ","  + "vely " + mLinVel.y + "," + "velz  " + mLinVel.z + ",");
 						
 						//high pass filter linear velocity to remove drift
-						//push the lasted to the end and delete the first
+						//push the last to the end and delete the first
 						Vector3 temp = new Vector3();
 						temp.Set(mLinVel);
 						

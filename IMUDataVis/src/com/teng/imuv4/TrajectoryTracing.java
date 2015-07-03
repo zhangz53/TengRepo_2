@@ -9,16 +9,21 @@ import java.io.InputStream;
 
 import processing.core.PApplet;
 
+import com.teng.math.Matrix4;
 import com.teng.math.Quaternion;
 import com.teng.math.Vector3;
-import com.teng.phdata.DataStorage;
 
 class SerialDataAcc {
 	CommPort commPort;
 	private static String outputString = new String();
 	public static Quaternion quat;
 	public static Vector3 acc;
-	public static double stamp;
+	public static double stamp = 0.0151;  //in seconds
+	
+	public static Vector3 pos;      //space pos
+	public static Vector3 velocity;	//space speed
+	public static Vector3 linAcc;	//space acc
+	public static Matrix4 mMatrix;	//space rotation matrix
 
 	public static SerialDataAcc instance;
 	public static SerialDataAcc getSharedInstance()
@@ -35,6 +40,10 @@ class SerialDataAcc {
 		super();
 		quat = new Quaternion();
 		acc = new Vector3();
+		pos = new Vector3(); pos.Set(Vector3.Zero);
+		velocity = new Vector3(); velocity.Set(Vector3.Zero);
+		linAcc = new Vector3(); linAcc.Set(Vector3.Zero);
+		mMatrix = new Matrix4();
 		
 		instance = this;
 	}
@@ -66,11 +75,25 @@ class SerialDataAcc {
         }
 	}
 	
+	class CloseThread extends Thread
+	{
+		public void run()
+		{
+			commPort.close();
+		}
+	}
+	
 	void disConnect()
 	{
 		 if(commPort != null)
 		 {
-			 commPort.close();
+			 try {
+				commPort.getInputStream().close();
+				new CloseThread().start();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		 }
 	}
 	
@@ -101,30 +124,31 @@ class SerialDataAcc {
                     	{
                     		//System.out.print(outputString);
                     		//System.out.println(outputString.length());  //should equal to 73
-                    		if(outputString.length() == 73 && outputString != null)
+                    		if(outputString.length() == 91 && outputString != null)
                     		{
                     			//decode the hex
                     			String[] outPutStringArr = outputString.split(",");
-                				if(outPutStringArr.length == 9)
+                				if(outPutStringArr.length == 11)
                 				{
+                					//set acc
+                					acc.Set(decodeFloat(outPutStringArr[0]) / 100.0, 
+                							decodeFloat(outPutStringArr[1]) / 100.0, 
+                							decodeFloat(outPutStringArr[2]) / 100.0);
+                					
+                					
                 					//set quat
                 					Quaternion tempQuat = new Quaternion();
-                					tempQuat.Set(decodeFloat(outPutStringArr[1]),  	//x 
-                							decodeFloat(outPutStringArr[2]),    	//y
-                							decodeFloat(outPutStringArr[3]), 		//z
-                							decodeFloat(outPutStringArr[0]));		//w
+                					tempQuat.Set(decodeFloat(outPutStringArr[7]),  	//x 
+                							decodeFloat(outPutStringArr[8]),    	//y
+                							decodeFloat(outPutStringArr[9]), 		//z
+                							decodeFloat(outPutStringArr[6]));		//w
                 					
                 					tempQuat.Nor();
                 					quat.Set(tempQuat);
                 					
-                					//set acc
-                					acc.Set(decodeFloat(outPutStringArr[4]) / 100.0, 
-                							decodeFloat(outPutStringArr[5]) / 100.0, 
-                							decodeFloat(outPutStringArr[6]) / 100.0);
                 					
-                					//set the time stamp
-                					stamp = decodeFloat(outPutStringArr[7]) / 1000.0;  //s
-                					
+                					//do the calculations
+                					getWorldPos(acc, quat);
                 				}
                     		}
                     		
@@ -157,6 +181,16 @@ class SerialDataAcc {
 		return Float.intBitsToFloat(intbits);
 	}
 	
+	static void getWorldPos(Vector3 ac, Quaternion qu)  //no filters at the moment, need to implement good filters, todo task
+	{
+		mMatrix.Set(qu);
+		linAcc.Set(ac);
+		linAcc.Mul(mMatrix.inv());
+		
+		velocity.Add(linAcc.scl(stamp));
+		pos.Add(velocity.scl(stamp));
+	}
+	
 }
 
 public class TrajectoryTracing extends PApplet{
@@ -177,6 +211,7 @@ public class TrajectoryTracing extends PApplet{
 		}
 		
 		
+		/*
 		size(1000, 1000, P3D);
 		background(250);
 		
@@ -196,7 +231,10 @@ public class TrajectoryTracing extends PApplet{
 			line(-350, itry, 0, 350, itry, 0);
 		}
 		popMatrix();
+		*/
 		
+		size(1000, 1000);
+		background(250);
 	}
 	
 	public void draw()
@@ -222,15 +260,52 @@ public class TrajectoryTracing extends PApplet{
 			}
 			popMatrix();
 		}
-		*/
-		//cube
 		
+		//cube
+		{
+			pushMatrix();				
+			fill(200, 10, 50);
+			lights();
+			translate(width/2 - (float)mSerialDataAcc.pos.y*100.0f, height*3/5 -  (float)mSerialDataAcc.pos.z*100.0f  ,  (float)mSerialDataAcc.pos.x*100.0f);
+			
+			//translate(width/2 , height*3/5 , 0f);
+			
+			//apply rotation matrix
+			
+			//applyMatrix((float) mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M00], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M01], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M02], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M03],
+				//	(float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M10], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M11], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M12], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M13],
+				//	(float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M20], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M21], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M22], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M23],
+				//	(float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M30], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M31], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M32], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M33]);
+			
+			
+			noStroke();
+			box(100);
+			popMatrix();
+		}
+		
+		*/
+		
+		background(250);
+		pushMatrix();
+		
+		fill(100, 50, 50, 150);
+		noStroke();
+		ellipse(500 + (float)mSerialDataAcc.pos.x*200.0f, 500 + (float)mSerialDataAcc.pos.y*200.0f, 200, 200);
+		
+		popMatrix();
 	}
 	
 	public void keyPressed(){
 		if(key == 'q'){
 			mSerialDataAcc.disConnect();
 			exit();
+		}
+		
+		if(key == 'r')
+		{
+			mSerialDataAcc.velocity.Set(Vector3.Zero);
+			mSerialDataAcc.pos.Set(Vector3.Zero);
+			
 		}
 		
 	}

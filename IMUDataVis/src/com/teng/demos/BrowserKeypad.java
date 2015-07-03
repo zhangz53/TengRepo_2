@@ -17,8 +17,10 @@ import java.util.Collections;
 
 import processing.core.PApplet;
 import processing.core.PImage;
+import processing.core.PVector;
 
 import com.teng.imuv4.PredictSVM;
+import com.teng.math.Matrix4;
 import com.teng.math.Quaternion;
 import com.teng.math.Vector3;
 
@@ -30,6 +32,8 @@ class DataSerialKeyPad {
 	public static Vector3 acc2;
 	public static ArrayList<Vector3> dataset_acc1;
 	public static ArrayList<Vector3> dataset_acc2;
+	public static ArrayList<Quaternion> dataset_quat3;
+	
 	public static double typeValue = 0.0;
 	public static boolean isRecording = false;
 	public static boolean dataTrained = false;
@@ -37,7 +41,11 @@ class DataSerialKeyPad {
 	public static double predictionFingerSegment;
 	public static ArrayList<Double> dataset_quat_predictions; 
 	
-	public static ArrayList<Double> directions;  //+1.0 right, -1.0 left
+	public static Vector3 pos;      //space pos
+	public static Vector3 velocity;	//space speed
+	public static Vector3 linAcc;	//space acc
+	public static Matrix4 mMatrix;	//space rotation matrix
+	public static double stamp = 0.0151;  //in seconds
 	
 	public static int sampleNum = 32;
 	private static int movingWindowSize = 32; 
@@ -64,7 +72,11 @@ class DataSerialKeyPad {
 		acc2 = new Vector3();
 		dataset_acc1 = new ArrayList<Vector3>();
 		dataset_acc2 = new ArrayList<Vector3>();
-		directions = new ArrayList<Double>();
+		dataset_quat3 = new ArrayList<Quaternion>();
+		pos = new Vector3(); pos.Set(Vector3.Zero);
+		velocity = new Vector3(); velocity.Set(Vector3.Zero);
+		linAcc = new Vector3(); linAcc.Set(Vector3.Zero);
+		mMatrix = new Matrix4();
 		
 		predictSVM = new PredictSVM("C:\\Users\\Teng\\Desktop\\dataset\\626-keyboardonwrist\\rbf_model_pilot.model", "C:\\Users\\Teng\\Desktop\\dataset\\626-keyboardonwrist\\range");
 		
@@ -174,31 +186,21 @@ class DataSerialKeyPad {
                 					//save for test data sample
                     				dataset_acc1.add(new Vector3(acc1));
                     				dataset_acc2.add(new Vector3(acc2));
-                    				
-                    				//if(acc1.y < 0)
-                    				//{
-                    				//	directions.add(-1.0);
-                    				//}else
-                    				//{
-                    				//	directions.add(1.0);
-                    				//}
+                    				Quaternion tempQuat3 = new Quaternion();
+                    				tempQuat3.Set(quat3);
+                    				dataset_quat3.add(tempQuat3);
                     				
                     				if(dataset_acc1.size() > sampleNum)
                     				{
                     					dataset_acc1.remove(0);
                     					dataset_acc2.remove(0);
-                    					
-                    					//direction record
-                    					//System.out.println("x " + acc1.x + "   y   " + acc1.y  + "  z  " + acc1.z); 
-                    					//y value, + left, - right
-                    					//directions.remove(0);
-                    					
+                    					dataset_quat3.remove(0);
+                    				
                     					movingCount++;
                     					
                     					if(movingCount == movingWindowSize)
                     					{
                     						//predict
-                    						
                     						//System.out.println(" " + dataset_acc2.size());
                     						if(dataset_acc1.size() == sampleNum && dataset_acc2.size() == sampleNum)
                     						{	
@@ -206,12 +208,10 @@ class DataSerialKeyPad {
                     							
                     							//direction
                     							if(predictValue == 1){
-                    								
-                    								System.out.println("1");
-                        							
-                    							}
-                    							
-                    							                    							
+                    								getTranslatePos(dataset_acc1, dataset_quat3);
+                    								System.out.println("1 , " + pos.x + " ,  " + pos.y + " ,  " + pos.z);
+                    								reset();	
+                    							}                  							
                     							movingCount = 0;
                     						}
                     						
@@ -251,22 +251,37 @@ class DataSerialKeyPad {
 		return Float.intBitsToFloat(intbits);
 	}
 	
-	private static int getElementHighFrequency(ArrayList<Double> list)
+	
+	private static void getTranslatePos(ArrayList<Vector3> accList, ArrayList<Quaternion> quatList)
 	{
-		int occur_neg = Collections.frequency(list, -1.0);
-		int occur_pos = Collections.frequency(list, 1.0);	
-		
-		if(occur_neg > occur_pos)
+		if(accList.size() != quatList.size())
 		{
-			return -1;
+			pos.Set(Vector3.Zero);
 		}else
 		{
-			return 1;
+			int sz = accList.size();
+			Vector3 ac = new Vector3();
+			Quaternion qu = new Quaternion();
+			for(int itra = 0; itra < sz; itra++)
+			{
+				ac.Set(accList.get(itra));
+				qu.Set(quatList.get(itra));
+				
+				mMatrix.Set(qu);
+				linAcc.Set(ac);
+				linAcc.Mul(mMatrix.inv());
+				
+				velocity.Add(linAcc.scl(stamp));
+				pos.Add(velocity.scl(stamp));
+			}
 		}
-		
 	}
 	
-	
+	private static void reset()
+	{
+		velocity.Set(Vector3.Zero);
+		pos.Set(Vector3.Zero);
+	}
 	
 }
 
@@ -327,6 +342,9 @@ public class BrowserKeypad extends PApplet{
 		background(250);
 		
 		//indications
+		drawArrow(20, 20, 180, 180, 0, 8, true);
+		
+		
 		if(mSerialData.predictValue > 0){
 			pushMatrix();
 			textSize(32);
@@ -336,6 +354,79 @@ public class BrowserKeypad extends PApplet{
 
 			popMatrix();
 		}
+		
+	}
+	
+	//draw arrows
+	//drawArrow(20, 20, 180, 180, 0, 4, true);
+	void drawArrow(float x0, float y0, float x1, float y1, float beginHeadSize, float endHeadSize, boolean filled) 
+	{
+		PVector d = new PVector(x1 - x0, y1 - y0);
+		d.normalize();
+		  
+		float coeff = 1.5f;
+		  
+		strokeCap(SQUARE);
+		strokeWeight(6.0f);  
+		line(x0+d.x*beginHeadSize*coeff/(filled?1.0f:1.75f), 
+		        y0+d.y*beginHeadSize*coeff/(filled?1.0f:1.75f), 
+		        x1-d.x*endHeadSize*coeff/(filled?1.0f:1.75f), 
+		        y1-d.y*endHeadSize*coeff/(filled?1.0f:1.75f));
+		  
+		float angle = atan2(d.y, d.x);
+		  
+		if (filled) {
+		    // begin head
+		    pushMatrix();
+		    translate(x0, y0);
+		    rotate(angle+PI);
+		    triangle(-beginHeadSize*coeff, -beginHeadSize, 
+		             -beginHeadSize*coeff, beginHeadSize, 
+		             0, 0);
+		    popMatrix();
+		    // end head
+		    pushMatrix();
+		    translate(x1, y1);
+		    rotate(angle);
+		    triangle(-endHeadSize*coeff, -endHeadSize, 
+		             -endHeadSize*coeff, endHeadSize, 
+		             0, 0);
+		    popMatrix();
+		} 
+		else {
+		    // begin head
+		    pushMatrix();
+		    translate(x0, y0);
+		    rotate(angle+PI);
+		    strokeCap(ROUND);
+		    line(-beginHeadSize*coeff, -beginHeadSize, 0, 0);
+		    line(-beginHeadSize*coeff, beginHeadSize, 0, 0);
+		    popMatrix();
+		    // end head
+		    pushMatrix();
+		    translate(x1, y1);
+		    rotate(angle);
+		    strokeCap(ROUND);
+		    line(-endHeadSize*coeff, -endHeadSize, 0, 0);
+		    line(-endHeadSize*coeff, endHeadSize, 0, 0);
+		    popMatrix();
+		}
+	}
+	
+	//text input
+	void drawTextBox()
+	{
+		
+	}
+	
+	//response to keyboard input
+	void drawText()
+	{
+		
+	}
+	
+	//delete the whole line
+	void deleteLine(){
 		
 	}
 	
