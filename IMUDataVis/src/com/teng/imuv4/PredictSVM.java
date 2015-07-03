@@ -426,59 +426,64 @@ public class PredictSVM {
 	
 	public double[] calculateFeatures(ArrayList<Vector3> ac)
 	{
-		//ac1 local peaks (1st and 2nd)
-		int[] peakIndex = featurization.localPeakIndex(ac);
-		//System.out.println("local peak index: " + peakIndex[0] + ",  and   " + peakIndex[1]);
+		ArrayList<Vector3> absAc = featurization.toAbsList(ac);
 		
-		double f1 = ac.get(peakIndex[0]).x;
-		double f2 = ac.get(peakIndex[0]).y;
-		double f3 = ac.get(peakIndex[0]).z;
+		double[] means1 = featurization.meanAxes(absAc);
+		double f1 = means1[0];
+		double f2 = means1[1];
+		double f3 = means1[2];
 		
-		double f4 = ac.get(peakIndex[1]).x;
-		double f5 = ac.get(peakIndex[1]).y;
-		double f6 = ac.get(peakIndex[1]).z;
-		
-		////////////////////////brute force features
-		
-		double[] means1 = featurization.meanAxes(ac);
-		double f7 = means1[0];
-		double f8 = means1[1];
-		double f9 = means1[2];
-		
+		//mean and std
+		double[] mr = featurization.mean_std(f1, f2, f3);
+		double ff1 = mr[0];
+		double ff2 = mr[1];
 		
 		//feature 14-19: standard dev of acc1 and acc2
-		double[] stdvs1 = featurization.stdvAxes(ac, means1);
-		double f10 = stdvs1[0];
-		double f11 = stdvs1[1];
-		double f12 = stdvs1[2];
+		double[] stdvs1 = featurization.stdvAxes(absAc, means1);
+		double f4 = stdvs1[0];
+		double f5 = stdvs1[1];
+		double f6 = stdvs1[2];
+		
+		//mean and std
+		double[] sr = featurization.mean_std(f4, f5, f6);
+		double ff3 = sr[0];
+		double ff4 = sr[1];
 		
 		//feature 20-25: skewness of acc1 and acc2
-		double[] skews1 = featurization.skewnessAxes(ac, means1, stdvs1);
-		double f13 = skews1[0];
-		double f14 = skews1[1];
-		double f15 = skews1[2];
+		double[] skews1 = featurization.skewnessAxes(absAc, means1, stdvs1);
+		double f7 = skews1[0];
+		double f8 = skews1[1];
+		double f9 = skews1[2];
+		
+		//mean and std
+		double[] skr = featurization.mean_std(f7, f8, f9);
+		double ff5 = skr[0];
+		double ff6 = skr[1];
 		
 		//feature 26-31: kurtosis of acc1 and acc2
-		double[] kurs1 = featurization.kurtosisAxes(ac, means1, stdvs1);
-		double f16 = kurs1[0];
-		double f17 = kurs1[1];
-		double f18 = kurs1[2];
+		double[] kurs1 = featurization.kurtosisAxes(absAc, means1, stdvs1);
+		double f10 = kurs1[0];
+		double f11 = kurs1[1];
+		double f12 = kurs1[2];
+		
+		//mean and std
+		double[] kur = featurization.mean_std(f10, f11, f12);
+		double ff7 = kur[0];
+		double ff8 = kur[1];
 		
 		double[][] freqs = featurization.freq(ac);   //3 by fftBins/2 array
 		//feature X frequencies
 		double[] freqX = freqs[0];
-		
 		//feature Y frequencies
 		double[] freqY = freqs[1];
-		
 		//feature Z frequencies
 		double[] freqZ = freqs[2];
 		
-		double[] features = new double[]{1.0, f7, f8, f9, f10, 
-				f11, f12, f13, f14, f15, f16, f17, f18,
+		double[] features = new double[]{1.0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12,
 				freqX[0],freqX[1],freqX[2],freqX[3],freqX[4],freqX[5],freqX[6],freqX[7],freqX[8],freqX[9],freqX[10],freqX[11],freqX[12],freqX[13],freqX[14],freqX[15],
 				freqY[0],freqY[1],freqY[2],freqY[3],freqY[4],freqY[5],freqY[6],freqY[7],freqY[8],freqY[9],freqY[10],freqY[11],freqY[12],freqY[13],freqY[14],freqY[15],
-				freqZ[0],freqZ[1],freqZ[2],freqZ[3],freqZ[4],freqZ[5],freqZ[6],freqZ[7],freqZ[8],freqZ[9],freqZ[10],freqZ[11],freqZ[12],freqZ[13],freqZ[14],freqZ[15]};
+				freqZ[0],freqZ[1],freqZ[2],freqZ[3],freqZ[4],freqZ[5],freqZ[6],freqZ[7],freqZ[8],freqZ[9],freqZ[10],freqZ[11],freqZ[12],freqZ[13],freqZ[14],freqZ[15],
+				ff1, ff2, ff3, ff4, ff5, ff6, ff7, ff8};
 		
 		//need to be scaled
 		for(int itrf = 1; itrf < features.length; itrf++)

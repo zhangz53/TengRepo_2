@@ -1,4 +1,10 @@
-package com.teng.imuv4;
+/**
+ * 1st step: directional swipe, show arrows
+ * 2nd step: type words, use swipe to select, replace mouse actions
+ * 3rd step: web browser, previous page and next page
+ */
+
+package com.teng.demos;
 
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
@@ -12,10 +18,11 @@ import java.util.Collections;
 import processing.core.PApplet;
 import processing.core.PImage;
 
+import com.teng.imuv4.PredictSVM;
 import com.teng.math.Quaternion;
 import com.teng.math.Vector3;
 
-class DataSerialP {
+class DataSerialKeyPad {
 	CommPort commPort;
 	private static String quatString = new String();
 	public static Quaternion quat3;
@@ -27,42 +34,37 @@ class DataSerialP {
 	public static boolean isRecording = false;
 	public static boolean dataTrained = false;
 	
-	//knn sample
-	//public static ArrayList<kNNSample> kNNSamples;  
-	//public static int predictionFingerSegment;
-	public static int paramK = 10;
-	//public static ArrayList<Integer> dataset_quat_predictions; 
-	
 	public static double predictionFingerSegment;
 	public static ArrayList<Double> dataset_quat_predictions; 
 	
+	public static ArrayList<Double> directions;  //+1.0 right, -1.0 left
 	
-	public static int sampleNum = 32;  //has to be mapped with the number chosen in PreProcessing
-	private static int movingWindowSize = 32;  //decide frequency to examine the windowed data
+	public static int sampleNum = 32;
+	private static int movingWindowSize = 32; 
 	private static int movingCount = 0;
-	
 	
 	//svm function for event
 	public static PredictSVM predictSVM;
 	public static double predictValue;
 	
-	public static DataSerialP instance;
-	public static DataSerialP getSharedInstance()
+	public static DataSerialKeyPad instance;
+	public static DataSerialKeyPad getSharedInstance()
 	{
 		if(instance == null)
 		{
-			instance = new DataSerialP();
+			instance = new DataSerialKeyPad();
 		}
 		return instance;
 	}
 	
-	public DataSerialP()
+	public DataSerialKeyPad()
 	{
 		quat3 = new Quaternion();  //imu 1+2
 		acc1 = new Vector3();
 		acc2 = new Vector3();
 		dataset_acc1 = new ArrayList<Vector3>();
 		dataset_acc2 = new ArrayList<Vector3>();
+		directions = new ArrayList<Double>();
 		
 		predictSVM = new PredictSVM("C:\\Users\\Teng\\Desktop\\dataset\\626-keyboardonwrist\\rbf_model_pilot.model", "C:\\Users\\Teng\\Desktop\\dataset\\626-keyboardonwrist\\range");
 		
@@ -173,10 +175,23 @@ class DataSerialP {
                     				dataset_acc1.add(new Vector3(acc1));
                     				dataset_acc2.add(new Vector3(acc2));
                     				
+                    				//if(acc1.y < 0)
+                    				//{
+                    				//	directions.add(-1.0);
+                    				//}else
+                    				//{
+                    				//	directions.add(1.0);
+                    				//}
+                    				
                     				if(dataset_acc1.size() > sampleNum)
                     				{
                     					dataset_acc1.remove(0);
                     					dataset_acc2.remove(0);
+                    					
+                    					//direction record
+                    					//System.out.println("x " + acc1.x + "   y   " + acc1.y  + "  z  " + acc1.z); 
+                    					//y value, + left, - right
+                    					//directions.remove(0);
                     					
                     					movingCount++;
                     					
@@ -189,8 +204,13 @@ class DataSerialP {
                     						{	
                     							predictValue = predictSVM.predictWithDefaultModel(dataset_acc1);	
                     							
-                    						
-                    							System.out.println(" " + predictValue);
+                    							//direction
+                    							if(predictValue == 1){
+                    								
+                    								System.out.println("1");
+                        							
+                    							}
+                    							
                     							                    							
                     							movingCount = 0;
                     						}
@@ -233,60 +253,31 @@ class DataSerialP {
 	
 	private static int getElementHighFrequency(ArrayList<Double> list)
 	{
-		int maxoccur = 0;
-		int result = 0;
-		for(int itrl = 0; itrl < 15; itrl++)
+		int occur_neg = Collections.frequency(list, -1.0);
+		int occur_pos = Collections.frequency(list, 1.0);	
+		
+		if(occur_neg > occur_pos)
 		{
-			int occur = Collections.frequency(list, itrl);
-			
-			if(occur > maxoccur)
-			{
-				result = itrl;
-				maxoccur = occur;
-			}
+			return -1;
+		}else
+		{
+			return 1;
 		}
 		
-		if(result == 0)
-		{
-			int next = getElementHighFrequency(list, 1);
-			if(Collections.frequency(list, next) > 2)
-			{
-				result = next;
-			}
-		}
-		
-		return result;
 	}
 	
-	private static int getElementHighFrequency(ArrayList<Double> list, int exludeNum)
-	{
-		int maxoccur = 0;
-		int result = 0;
-		for(int itrl = 1; itrl < 15; itrl++)
-		{
-			int occur = Collections.frequency(list, itrl);
-			
-			if(occur > maxoccur)
-			{
-				result = itrl;
-				maxoccur = occur;
-			}
-		}
-		
-		return result;
-	}
+	
+	
 }
 
+public class BrowserKeypad extends PApplet{
 
-public class SwipeRealTimeVis extends PApplet{
-	
-	public DataSerialP mSerialData;
-	
+	public DataSerialKeyPad mSerialData;
 	Quaternion firstQuat = new Quaternion();
 	Vector3 firstEuler = new Vector3();
 	Quaternion secondQuat  = new Quaternion();
 	Vector3 secondEuler = new Vector3();
-	Quaternion thirdQuat  = new Quaternion();
+	Quaternion thirdQuat  = new Quaternion();	
 	Vector3 thirdEuler = new Vector3();
 	
 	Vector3 firstVec = new Vector3(0, 0, 0);
@@ -301,7 +292,7 @@ public class SwipeRealTimeVis extends PApplet{
 	public void setup()
 	{
 		//initialize COM port, zigbee to be COM11
-		mSerialData = new DataSerialP();
+		mSerialData = new DataSerialKeyPad();
 		
 		try {
 			mSerialData.connect("COM11");
@@ -356,8 +347,7 @@ public class SwipeRealTimeVis extends PApplet{
 	}
 	
 	public static final void main(String args[]){
-		
-		PApplet.main(new String[] {"--present", "com.teng.imuv4.SwipeRealTimeVis"});
+		PApplet.main(new String[] {"--present", "com.teng.demos.BrowserKeypad"});
 	}
-
+	
 }
