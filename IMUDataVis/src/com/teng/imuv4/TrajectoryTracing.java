@@ -9,6 +9,7 @@ import java.io.InputStream;
 
 import processing.core.PApplet;
 
+import com.teng.filter.ButterWorth;
 import com.teng.math.Matrix4;
 import com.teng.math.Quaternion;
 import com.teng.math.Vector3;
@@ -24,6 +25,11 @@ class SerialDataAcc {
 	public static Vector3 velocity;	//space speed
 	public static Vector3 linAcc;	//space acc
 	public static Matrix4 mMatrix;	//space rotation matrix
+	public static Vector3 filter_velocity;	//space speed
+	public static Vector3 filter_pos;	//space acc
+	
+	
+	public static ButterWorth mButterHp;
 
 	public static SerialDataAcc instance;
 	public static SerialDataAcc getSharedInstance()
@@ -44,6 +50,14 @@ class SerialDataAcc {
 		velocity = new Vector3(); velocity.Set(Vector3.Zero);
 		linAcc = new Vector3(); linAcc.Set(Vector3.Zero);
 		mMatrix = new Matrix4();
+		
+		filter_velocity = new Vector3(); filter_velocity.Set(Vector3.Zero);
+		filter_pos = new Vector3(); filter_pos.Set(Vector3.Zero);
+		
+		mButterHp = new ButterWorth(ButterWorth.BandType.high);
+		//create data set for velocity and pos
+		mButterHp.createDataSet();
+		mButterHp.createDataSet();
 		
 		instance = this;
 	}
@@ -190,7 +204,11 @@ class SerialDataAcc {
 		linAcc.Mul(mMatrix.inv());
 		
 		velocity.Add(linAcc.scl(stamp));
-		pos.Add(velocity.scl(stamp));
+		//apply high pass filter
+		filter_velocity.Set(mButterHp.applyButterWorth(1, 1, velocity));
+		
+		pos.Add(filter_velocity.scl(stamp));
+		filter_pos.Set(mButterHp.applyButterWorth(2, 1, pos));
 	}
 	
 }
@@ -292,7 +310,7 @@ public class TrajectoryTracing extends PApplet{
 		
 		fill(100, 50, 50, 150);
 		noStroke();
-		ellipse(500 + (float)mSerialDataAcc.pos.x*200.0f, 500 + (float)mSerialDataAcc.pos.y*200.0f, 200, 200);
+		ellipse(500 + (float)mSerialDataAcc.filter_pos.x*500.0f, 500 + (float)mSerialDataAcc.filter_pos.y*500.0f, 200, 200);
 		
 		popMatrix();
 	}
@@ -307,6 +325,8 @@ public class TrajectoryTracing extends PApplet{
 		{
 			mSerialDataAcc.velocity.Set(Vector3.Zero);
 			mSerialDataAcc.pos.Set(Vector3.Zero);
+			mSerialDataAcc.filter_velocity.Set(Vector3.Zero);
+			mSerialDataAcc.filter_pos.Set(Vector3.Zero);
 			
 		}
 		

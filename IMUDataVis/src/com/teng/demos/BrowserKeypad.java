@@ -19,6 +19,7 @@ import processing.core.PApplet;
 import processing.core.PImage;
 import processing.core.PVector;
 
+import com.teng.filter.ButterWorth;
 import com.teng.imuv4.PredictSVM;
 import com.teng.math.Matrix4;
 import com.teng.math.Quaternion;
@@ -46,17 +47,26 @@ class DataSerialKeyPad {
 	public static Vector3 linAcc;	//space acc
 	public static Matrix4 mMatrix;	//space rotation matrix
 	public static double stamp = 0.0151;  //in seconds
+	public static Vector3 filter_velocity;	//
+	public static Vector3 filter_pos;	//
+	public static ButterWorth mButterHp;
 	
 	public static int sampleNum = 32;
-	private static int movingWindowSize = 32; 
+	private static int movingWindowSize = 20; 
 	private static int movingCount = 0;
+	
+	//for second step heuristic
+	public static ArrayList<Double> predicts;
+	public static boolean visAction = false;
 	
 	//for visualize
 	public static ArrayList<Vector3> dataset_vis; 
+	public static boolean visRefresh = false;
 	
 	//svm function for event
 	public static PredictSVM predictSVM;
-	public static double predictValue;
+	//public static double predictValue;
+	public static double hPredictValue;
 	
 	public static DataSerialKeyPad instance;
 	public static DataSerialKeyPad getSharedInstance()
@@ -81,8 +91,15 @@ class DataSerialKeyPad {
 		velocity = new Vector3(); velocity.Set(Vector3.Zero);
 		linAcc = new Vector3(); linAcc.Set(Vector3.Zero);
 		mMatrix = new Matrix4();
+		filter_velocity = new Vector3(); filter_velocity.Set(Vector3.Zero);
+		filter_pos = new Vector3(); filter_pos.Set(Vector3.Zero);
+		mButterHp = new ButterWorth(ButterWorth.BandType.high);
+		mButterHp.createDataSet();
+		mButterHp.createDataSet();
 		
-		predictSVM = new PredictSVM("C:\\Users\\Teng\\Desktop\\dataset\\704-watch\\rbf_model_pilot.model", "C:\\Users\\Teng\\Desktop\\dataset\\704-watch\\range");
+		predicts = new ArrayList<Double>();
+		
+		predictSVM = new PredictSVM("C:\\Users\\Teng\\Desktop\\dataset\\705-watch\\rbf_model_pilot.model", "C:\\Users\\Teng\\Desktop\\dataset\\705-watch\\range");
 		
 		instance = this;
 	}
@@ -208,15 +225,34 @@ class DataSerialKeyPad {
                     						//System.out.println(" " + dataset_acc2.size());
                     						if(dataset_acc1.size() == sampleNum && dataset_acc2.size() == sampleNum)
                     						{	
-                    							predictValue = predictSVM.predictWithDefaultModel(dataset_acc1);	
+                    							double predictValue = predictSVM.predictWithDefaultModel(dataset_acc1);	
                     							
                     							//System.out.println(" " + predictValue);
                     							
+                    							//heuristics for predictions
+                    							if(predictValue != 5)
+                    							{
+                    								predicts.add(predictValue);
+                    							}else
+                    							{
+                    								if(predicts.size() != 0)
+                    								{
+                    									//do a prediction
+                    									hPredictValue = predicts.get(predicts.size() - 1);
+                    									System.out.println(" " + hPredictValue);
+                    									visAction = true;
+                    									//clear
+                    									predicts.clear();
+                    								}
+                    							}
+                    							
                     							
                     							//direction
+                    							/*
+                    							
                     							if(predictValue == 3 || predictValue == 4){
                     								getTranslatePos(dataset_acc1, dataset_quat3);
-                    								System.out.println( "" + predictValue + " , "  + pos.x + " ,  " + pos.y + " ,  " + pos.z);
+                    								System.out.println( "" + predictValue + " , "  + filter_pos.x + " ,  " + filter_pos.y + " ,  " + filter_pos.z);
                     								reset();
                     								
                     								//copy the dataset for vis
@@ -225,7 +261,9 @@ class DataSerialKeyPad {
                     								{
                     									dataset_vis.add(dataset_acc1.get(itrd));
                     								}
-                    							}                 							
+                    								
+                    								//visRefresh = true;
+                    							}*/                 							
                     							movingCount = 0;
                     						}
                     						
@@ -286,7 +324,11 @@ class DataSerialKeyPad {
 				linAcc.Mul(mMatrix.inv());
 				
 				velocity.Add(linAcc.scl(stamp));
-				pos.Add(velocity.scl(stamp));
+				filter_velocity.Set(mButterHp.applyButterWorth(1, 1, velocity));
+				
+				pos.Add(filter_velocity.scl(stamp));
+				filter_pos.Set(mButterHp.applyButterWorth(2, 1, pos));
+				
 			}
 		}
 	}
@@ -295,6 +337,8 @@ class DataSerialKeyPad {
 	{
 		velocity.Set(Vector3.Zero);
 		pos.Set(Vector3.Zero);
+		filter_velocity.Set(Vector3.Zero);
+		filter_pos.Set(Vector3.Zero);
 	}
 	
 }
@@ -312,6 +356,10 @@ public class BrowserKeypad extends PApplet{
 	Vector3 firstVec = new Vector3(0, 0, 0);
 	Vector3 secondVec = new Vector3(100, 0, 0);
 	Vector3 curEuler = new Vector3();
+	
+	public String inputText = "";
+	public String tempText = "";
+	public int inputState = 2;
 	
 	private ArrayList<PImage> imgs;
 	private int imgIndex = 0;
@@ -353,16 +401,8 @@ public class BrowserKeypad extends PApplet{
 		//indications
 		drawArrow(20, 20, 180, 180, 0, 8, true);
 		
-		/*
-		if(mSerialData.predictValue > 0){
-			pushMatrix();
-			textSize(32);
-			fill(0, 102, 153);
-			
-			text(" ...", 10, 120);
-
-			popMatrix();
-		}*/
+		deleteLine();
+		drawText();
 		
 		//draw acc1log, up side
 				{
@@ -461,18 +501,57 @@ public class BrowserKeypad extends PApplet{
 	//response to keyboard input
 	void drawText()
 	{
-		
+		pushMatrix();
+		textSize(32);
+		fill(0, 102, 153);
+		text(tempText + inputText, 500, 500);
+		popMatrix();
 	}
 	
 	//delete the whole line
 	void deleteLine(){
-		
+		if(mSerialData.visAction)
+		{
+			switch((int)(mSerialData.hPredictValue))
+			{
+			case 1:
+				inputState = 2;
+				inputText = tempText + inputText;
+				tempText = "";
+				break;
+			case 2:
+				inputState = 1;
+				inputText = tempText + inputText;
+				tempText = "";
+				break;
+			case 3:
+				inputText = "";
+				break;
+			case 4:
+				inputText = "";
+				break;
+			default:
+				break;
+			}
+			
+			mSerialData.visAction = false;
+		}
 	}
 	
 	public void keyPressed(){
 		if(key == 'q'){
 			mSerialData.disConnect();
 			exit();
+		}else
+		{
+			if(inputState == 2)
+			{
+				inputText += key;
+			}else if(inputState == 1)
+			{
+				tempText += key;
+			}
+			
 		}
 	}
 	

@@ -14,6 +14,11 @@ public class ButterWorth {
 	public ArrayList<Double> ccof;
 	private double sf;  //scaling factor, 1 when toscale is false
 	
+	//maintain input and output here
+	public ArrayList<ArrayList<Vector3>> inputDataSets;
+	public ArrayList<ArrayList<Vector3>> outputDataSets;
+	
+	
 	private IIR mIIR;
 	
 	public enum BandType{
@@ -29,6 +34,9 @@ public class ButterWorth {
 		//by default
 		dcof = new ArrayList<Double>();
 		ccof = new ArrayList<Double>();
+		
+		inputDataSets = new ArrayList<ArrayList<Vector3>>();
+		outputDataSets = new ArrayList<ArrayList<Vector3>>();
 		
 		if(_type == BandType.high){
 			//1 order,  0.1hz cutoff ?
@@ -66,6 +74,17 @@ public class ButterWorth {
 		{
 			//updateCofHP(f2f);
 		}
+	}
+	
+	
+	//create a new dataset for input and output
+	public void createDataSet()
+	{
+		ArrayList<Vector3> inputSet = new ArrayList<Vector3>();
+		ArrayList<Vector3> outputSet = new ArrayList<Vector3>();
+		
+		inputDataSets.add(inputSet);
+		outputDataSets.add(outputSet);
 	}
 	
 	/*
@@ -127,6 +146,45 @@ public class ButterWorth {
 		//if(bandType == BandType.high)
 		//	System.out.println( xValues.get(1).x  + " * " + ccof.get(0) + " + " + xValues.get(0).x  + " * " + ccof.get(1) + " - "  + yValues.get(0).x + " * " + dcof.get(1));
 		
+		return yValue;
+	}
+	
+	public Vector3 applyButterWorth(int datasetIndex, int order,  Vector3 xValue)
+	{
+		Vector3 yValue = new Vector3();
+		if(datasetIndex > inputDataSets.size())
+			return yValue;
+		
+		ArrayList<Vector3> xValues = inputDataSets.get(datasetIndex - 1);
+		ArrayList<Vector3> yValues = outputDataSets.get(datasetIndex - 1);
+		
+		Vector3 tempx = new Vector3();
+		tempx.Set(xValue);
+		xValues.add(tempx);
+		
+		if(xValues.size() > (order + 1))
+		{
+			xValues.remove(0);
+		}
+		
+		if(xValues.size() == (order + 1))
+		{
+			yValue = applyButterWorth(xValues, yValues);
+			yValues.add(yValue);
+		}else
+		{
+			Vector3 tempy = new Vector3();
+			tempy.Set(xValue);
+			yValues.add(tempy);
+			
+			yValue.Set(tempy);
+		}
+		
+		if(yValues.size() > order)
+		{
+			yValues.remove(0);
+		}
+			
 		return yValue;
 	}
 	

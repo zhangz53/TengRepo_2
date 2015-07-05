@@ -20,7 +20,7 @@ public class Featurization {
 	public ArrayList<Vector3> acc1;
 	public ArrayList<Vector3> acc2;
 	
-	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\6process.csv";
+	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\negprocess.csv";
 	private int index = 1;  //start from 1
 	
 	//for fft
@@ -201,7 +201,7 @@ public class Featurization {
 		////////////////////////brute force features
 		//use absolute values
 		//since there is no rules for the waves
-		ArrayList<Vector3> absAc = toAbsList(ac);
+		ArrayList<Vector3> absAc = ac;//toAbsList(ac);  //no need for absolute values
 		
 		double[] means1 = meanAxes(absAc);
 		double f1 = means1[0];

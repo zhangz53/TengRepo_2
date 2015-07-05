@@ -426,7 +426,7 @@ public class PredictSVM {
 	
 	public double[] calculateFeatures(ArrayList<Vector3> ac)
 	{
-		ArrayList<Vector3> absAc = featurization.toAbsList(ac);
+		ArrayList<Vector3> absAc = ac;//featurization.toAbsList(ac);
 		
 		double[] means1 = featurization.meanAxes(absAc);
 		double f1 = means1[0];
