@@ -183,6 +183,8 @@ class SerialDataAcc {
 	
 	static void getWorldPos(Vector3 ac, Quaternion qu)  //no filters at the moment, need to implement good filters, todo task
 	{
+		//add filters?
+		
 		mMatrix.Set(qu);
 		linAcc.Set(ac);
 		linAcc.Mul(mMatrix.inv());

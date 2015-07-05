@@ -28,7 +28,7 @@ class DataLoad{
 		acc2 = new ArrayList<Vector3>();
 		
 		//read the csv file
-		String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\neg.csv";
+		String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\5neg.csv";
 		try {
 			br = new BufferedReader(new FileReader(dataFile));
 		} catch (FileNotFoundException e) {

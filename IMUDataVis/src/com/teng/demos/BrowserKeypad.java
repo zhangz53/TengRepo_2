@@ -51,6 +51,9 @@ class DataSerialKeyPad {
 	private static int movingWindowSize = 32; 
 	private static int movingCount = 0;
 	
+	//for visualize
+	public static ArrayList<Vector3> dataset_vis; 
+	
 	//svm function for event
 	public static PredictSVM predictSVM;
 	public static double predictValue;
@@ -72,13 +75,14 @@ class DataSerialKeyPad {
 		acc2 = new Vector3();
 		dataset_acc1 = new ArrayList<Vector3>();
 		dataset_acc2 = new ArrayList<Vector3>();
+		dataset_vis = new ArrayList<Vector3>();
 		dataset_quat3 = new ArrayList<Quaternion>();
 		pos = new Vector3(); pos.Set(Vector3.Zero);
 		velocity = new Vector3(); velocity.Set(Vector3.Zero);
 		linAcc = new Vector3(); linAcc.Set(Vector3.Zero);
 		mMatrix = new Matrix4();
 		
-		predictSVM = new PredictSVM("C:\\Users\\Teng\\Desktop\\dataset\\626-keyboardonwrist\\rbf_model_pilot.model", "C:\\Users\\Teng\\Desktop\\dataset\\626-keyboardonwrist\\range");
+		predictSVM = new PredictSVM("C:\\Users\\Teng\\Desktop\\dataset\\704-watch\\rbf_model_pilot.model", "C:\\Users\\Teng\\Desktop\\dataset\\704-watch\\range");
 		
 		instance = this;
 	}
@@ -206,12 +210,22 @@ class DataSerialKeyPad {
                     						{	
                     							predictValue = predictSVM.predictWithDefaultModel(dataset_acc1);	
                     							
+                    							//System.out.println(" " + predictValue);
+                    							
+                    							
                     							//direction
-                    							if(predictValue == 1){
+                    							if(predictValue == 3 || predictValue == 4){
                     								getTranslatePos(dataset_acc1, dataset_quat3);
-                    								System.out.println("1 , " + pos.x + " ,  " + pos.y + " ,  " + pos.z);
-                    								reset();	
-                    							}                  							
+                    								System.out.println( "" + predictValue + " , "  + pos.x + " ,  " + pos.y + " ,  " + pos.z);
+                    								reset();
+                    								
+                    								//copy the dataset for vis
+                    								dataset_vis.clear();
+                    								for(int itrd = 0; itrd < dataset_acc1.size(); itrd++)
+                    								{
+                    									dataset_vis.add(dataset_acc1.get(itrd));
+                    								}
+                    							}                 							
                     							movingCount = 0;
                     						}
                     						
@@ -304,6 +318,12 @@ public class BrowserKeypad extends PApplet{
 	
 	boolean ready4Interpolate = false;
 	
+	public double widthSeg;
+	public double heightSeg;
+	public double heightThreshold;
+	public int windowWidth;
+	public int windowHeight;
+	
 	public void setup()
 	{
 		//initialize COM port, zigbee to be COM11
@@ -316,25 +336,14 @@ public class BrowserKeypad extends PApplet{
 			e.printStackTrace();
 		}
 		
-		size(1000, 1000, P3D);
+		windowWidth = 1500;
+		windowHeight = 1200;  //split into two
+		widthSeg = windowWidth / 65;
+		heightThreshold = 10;  //+ - 10
+		heightSeg = (windowHeight/2) / (2 * heightThreshold);
+		
+		size(windowWidth, windowHeight);
 		background(250);
-		camera(500.0f, 200.0f, 1000.0f, 500.0f, 500.0f, 0.0f, 0.0f, 1.0f, 0.0f);	
-		
-		pushMatrix();
-		translate(width/2, height*3/5, 0);
-		noFill();
-		stroke(100, 0, 200);
-		for(int itrz = 0; itrz < 500; itrz+=100)
-		{
-			line(-350, 0, itrz, 350, 0, itrz);
-		}
-		
-		stroke(100, 200, 0);
-		for(int itry = 0; itry > -500; itry-=100)
-		{
-			line(-350, itry, 0, 350, itry, 0);
-		}
-		popMatrix();
 	}
 	
 	public void draw()
@@ -344,7 +353,7 @@ public class BrowserKeypad extends PApplet{
 		//indications
 		drawArrow(20, 20, 180, 180, 0, 8, true);
 		
-		
+		/*
 		if(mSerialData.predictValue > 0){
 			pushMatrix();
 			textSize(32);
@@ -353,7 +362,37 @@ public class BrowserKeypad extends PApplet{
 			text(" ...", 10, 120);
 
 			popMatrix();
-		}
+		}*/
+		
+		//draw acc1log, up side
+				{
+					int acc1Size = mSerialData.dataset_vis.size(); 
+					
+					if(acc1Size > 10)
+					{
+						for(int itra = 0; itra < (acc1Size-1); itra ++)
+						{
+							stroke(255, 0, 0);  //x
+							line((float)(windowWidth - acc1Size * widthSeg + itra * widthSeg), 
+									 (float)(windowHeight * 3 / 4 + mSerialData.dataset_vis.get(itra).x * heightSeg),
+									 (float)(windowWidth - acc1Size * widthSeg + (itra + 1) * widthSeg), 
+									 (float)(windowHeight * 3 / 4 + mSerialData.dataset_vis.get(itra + 1).x * heightSeg));
+							
+							stroke(0, 255, 0);  //y
+							line((float)(windowWidth - acc1Size * widthSeg + itra * widthSeg), 
+									 (float)(windowHeight * 3 / 4 + mSerialData.dataset_vis.get(itra).y * heightSeg),
+									 (float)(windowWidth - acc1Size * widthSeg + (itra + 1) * widthSeg), 
+									 (float)(windowHeight * 3 / 4 + mSerialData.dataset_vis.get(itra + 1).y * heightSeg));
+							
+							stroke(0, 0, 255);  //z
+							line((float)(windowWidth - acc1Size * widthSeg + itra * widthSeg), 
+									 (float)(windowHeight * 3 / 4 + mSerialData.dataset_vis.get(itra).z * heightSeg),
+									 (float)(windowWidth - acc1Size * widthSeg + (itra + 1) * widthSeg), 
+									 (float)(windowHeight * 3 / 4 + mSerialData.dataset_vis.get(itra + 1).z * heightSeg));
+						}
+					}
+					
+				}
 		
 	}
 	

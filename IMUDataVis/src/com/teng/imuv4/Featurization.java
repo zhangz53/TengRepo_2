@@ -20,7 +20,7 @@ public class Featurization {
 	public ArrayList<Vector3> acc1;
 	public ArrayList<Vector3> acc2;
 	
-	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\negprocess.csv";
+	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\6process.csv";
 	private int index = 1;  //start from 1
 	
 	//for fft
@@ -266,7 +266,7 @@ public class Featurization {
 		}
 		
 		//1 + 12 + 16*3 + 8 + 16*2 = 1 + 60 + 40
-		DataStorage.AddSampleS(-1.0, 
+		DataStorage.AddSampleS(5.0, 
 				f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12,
 				freqX[0], freqX[1],freqX[2],freqX[3],freqX[4],freqX[5],freqX[6],freqX[7],freqX[8],freqX[9],freqX[10],freqX[11],freqX[12],freqX[13],freqX[14],freqX[15],
 				freqY[0], freqY[1],freqY[2],freqY[3],freqY[4],freqY[5],freqY[6],freqY[7],freqY[8],freqY[9],freqY[10],freqY[11],freqY[12],freqY[13],freqY[14],freqY[15],
@@ -274,6 +274,7 @@ public class Featurization {
 				
 				//average values don't help much
 				ff1, ff2, ff3, ff4, ff5, ff6, ff7, ff8,
+				//32
 				fmeans[0], fstds[0], fmeans[1], fstds[1],fmeans[2], fstds[2],fmeans[3], fstds[3],fmeans[4], fstds[4],fmeans[5], fstds[5],
 				fmeans[6], fstds[6],fmeans[7], fstds[7],fmeans[8], fstds[8],fmeans[9], fstds[9],fmeans[10], fstds[10],fmeans[11], fstds[11],
 				fmeans[12], fstds[12],fmeans[13], fstds[13],fmeans[14], fstds[14],fmeans[15], fstds[15]

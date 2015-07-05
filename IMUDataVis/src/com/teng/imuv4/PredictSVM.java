@@ -272,7 +272,7 @@ public class PredictSVM {
 	        nodes[i-1] = node;
 	    }
 
-	    int totalClasses = 4;       
+	    int totalClasses = 5;       
 	    int[] labels = new int[totalClasses];
 	    svm.svm_get_labels(linear_model,labels);
 
