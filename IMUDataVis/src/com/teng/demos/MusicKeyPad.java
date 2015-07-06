@@ -384,12 +384,19 @@ public class MusicKeyPad extends PApplet{
 	Vector3 curEuler = new Vector3();
 	
 	public String inputText = "";
+	
+	public ArrayList<String> texts;
+	public ArrayList<Double> rs;
+	public ArrayList<Double> gs;
+	public ArrayList<Double> bs;
+	public ArrayList<Double> ss;
+	
 	public int inputState = 0;
 	
 	public int colorR = 0;
 	public int colorG = 0;
 	public int colorB = 0;
-	public int textSize = 32;
+	public int textSize = 48;
 	
 	private ArrayList<PImage> imgs;
 	private int imgIndex = 0;
@@ -413,6 +420,12 @@ public class MusicKeyPad extends PApplet{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		texts = new ArrayList<String>();
+		rs = new ArrayList<Double>();
+		gs = new ArrayList<Double>();
+		bs = new ArrayList<Double>();
+		ss = new ArrayList<Double>();
 		
 		windowWidth = 1500;
 		windowHeight = 1200;  //split into two
@@ -535,6 +548,18 @@ public class MusicKeyPad extends PApplet{
 		textSize(textSize);
 		fill(colorR, colorG, colorB);
 		text(inputText, 500, 500);
+		
+		//inverse order to draw text
+		if(texts.size() > 0){
+			for(int itrt = (texts.size() - 1); itrt > -1; itrt--)
+			{
+				textSize(ss.get(itrt).intValue());
+				fill(rs.get(itrt).intValue(), gs.get(itrt).intValue(), bs.get(itrt).intValue());
+				text(texts.get(itrt), 500, 500);
+			}
+		}
+		
+		
 		popMatrix();
 	}
 	
@@ -545,29 +570,49 @@ public class MusicKeyPad extends PApplet{
 			switch((int)(mSerialData.hPredictValue))
 			{
 			case 1:
-				colorR = 255; colorG = 0; colorB = 0;
 				break;
 			case 2:
+				String tempString = inputText;
+				texts.add(tempString);
+				rs.add((double) colorR); gs.add((double) colorG); bs.add((double) colorB);
+				ss.add((double) textSize);
 				colorR = 255; colorG = 0; colorB = 0;
 				break;
 			case 3:
+				String tempString2 = inputText;
+				texts.add(tempString2);
+				rs.add((double) colorR); gs.add((double) colorG); bs.add((double) colorB);
+				ss.add((double) textSize);
 				colorR = 255; colorG = 0; colorB = 0;
 				break;
 			case 4:
+				String tempString3 = inputText;
+				texts.add(tempString3);
+				rs.add((double) colorR); gs.add((double) colorG); bs.add((double) colorB);
+				ss.add((double) textSize);
 				
-				textSize = 48;
+				colorR = 75; colorG = 235; colorB = 136;
 				break;
 			case 5:
-				textSize = 32;
+				String tempString5 = inputText;
+				texts.add(tempString5);
+				rs.add((double) colorR); gs.add((double) colorG); bs.add((double) colorB);
+				ss.add((double) textSize);
+				
+				colorR = 156; colorG = 54; colorB = 126;
 				break;
 			case 6:
 	
 				break;
 			case 7:
+				String tempString7 = inputText;
+				texts.add(tempString7);
+				rs.add((double) colorR); gs.add((double) colorG); bs.add((double) colorB);
+				ss.add((double) textSize);
 				colorR = 0; colorG = 0; colorB = 255;
 				break;
 			case 8:
-	
+				
 				break;
 			case 9:
 				

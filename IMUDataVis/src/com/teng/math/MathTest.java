@@ -49,7 +49,7 @@ public class MathTest {
 		*/
 		
 		
-		
+		/*
 		ArrayList<Integer> list = new ArrayList<Integer>();
 		for(int i = 0; i < 11; i++)
 		{
@@ -71,7 +71,7 @@ public class MathTest {
 		for(int itr = 0; itr < list.size(); itr++)
 		{
 			System.out.println(" " + newList.get(itr));
-		}
+		}*/
 		
 		/*
 		list.add(0);
@@ -140,6 +140,13 @@ public class MathTest {
 		{
 			System.out.println("" + x[ itr]);
 		}*/
+		
+		
+		String a = "abc";
+		String b = a;
+		b = "efg";
+		
+		System.out.println(a + "  " + b);
 		
 	}
 	
