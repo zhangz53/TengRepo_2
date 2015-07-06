@@ -272,20 +272,55 @@ public class PredictSVM {
 	        nodes[i-1] = node;
 	    }
 
-	    int totalClasses = 5;       
+	    int totalClasses = 10;  //5       
 	    int[] labels = new int[totalClasses];
 	    svm.svm_get_labels(linear_model,labels);
 
 	    double[] prob_estimates = new double[totalClasses];
-	    //double v = svm.svm_predict_probability(model, nodes, prob_estimates);
-	    double v = svm.svm_predict(linear_model, nodes);
+	    double v = svm.svm_predict_probability(linear_model, nodes, prob_estimates);
 	    
-	    //for (int i = 0; i < totalClasses; i++){
-	        //System.out.print("(" + labels[i] + ":" + prob_estimates[i] + ")");
-	    //}
+	    //double v = svm.svm_predict(linear_model, nodes);
+	    
+	    for (int i = 0; i < totalClasses; i++){
+	        System.out.print("(" + labels[i] + ":" + prob_estimates[i] + ")");
+	    }
 	    //System.out.println("(Actual:" + features[0] + " Prediction:" + v + ")");            
 
 	    return v;
+	}
+	
+	public double[] predictWithDefaultModel_Prob(double[] features)
+	{
+		double[] result = new double[2];
+		
+		svm_node[] nodes = new svm_node[features.length-1];
+	    for (int i = 1; i < features.length; i++)
+	    {
+	        svm_node node = new svm_node();
+	        node.index = i;
+	        node.value = features[i];
+
+	        nodes[i-1] = node;
+	    }
+
+	    int totalClasses = 10;  //5       
+	    int[] labels = new int[totalClasses];
+	    svm.svm_get_labels(linear_model,labels);
+
+	    double[] prob_estimates = new double[totalClasses];
+	    double v = svm.svm_predict_probability(linear_model, nodes, prob_estimates);
+	    
+	    //double v = svm.svm_predict(linear_model, nodes);
+	    
+	   // for (int i = 0; i < totalClasses; i++){
+	    //    System.out.print("(" + labels[i] + ":" + prob_estimates[i] + ")");
+	   // }
+	    //System.out.println("(Actual:" + features[0] + " Prediction:" + v + ")");            
+
+	    result[0] = v;
+	    result[1] = prob_estimates[(int) (v-1)];
+	    
+	    return result;
 	}
 	
 	//this is for acc1 and acc2
@@ -308,6 +343,12 @@ public class PredictSVM {
 		return predictValue;
 	}
 	
+	public double[] predictWithDefaultModel_Prob(ArrayList<Vector3> dataset)
+	{
+		double[] testData = calculateFeatures(dataset);
+		double[] predictValue = predictWithDefaultModel_Prob(testData);
+		return predictValue;
+	}
 	
 	//this is for quat
 	public double predictWithDefaultModel(Quaternion quat)  //frame by frame

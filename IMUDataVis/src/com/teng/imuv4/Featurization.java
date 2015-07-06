@@ -20,7 +20,7 @@ public class Featurization {
 	public ArrayList<Vector3> acc1;
 	public ArrayList<Vector3> acc2;
 	
-	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\negprocess.csv";
+	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\11process.csv";
 	private int index = 1;  //start from 1
 	
 	//for fft
@@ -78,7 +78,7 @@ public class Featurization {
 					{
 						//all the sample for index collected, find the features
 						//calculateFeatures(acc1, acc2);
-						calculateFeatures(acc1);
+						calculateFeatures(acc2);
 						
 						//clear the acc and start for index+1
 						acc1.clear();
@@ -93,7 +93,7 @@ public class Featurization {
 			
 			//the last one
 			//calculateFeatures(acc1, acc2);
-			calculateFeatures(acc1);
+			calculateFeatures(acc2);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -266,7 +266,7 @@ public class Featurization {
 		}
 		
 		//1 + 12 + 16*3 + 8 + 16*2 = 1 + 60 + 40
-		DataStorage.AddSampleS(5.0, 
+		DataStorage.AddSampleS(10.0, 
 				f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12,
 				freqX[0], freqX[1],freqX[2],freqX[3],freqX[4],freqX[5],freqX[6],freqX[7],freqX[8],freqX[9],freqX[10],freqX[11],freqX[12],freqX[13],freqX[14],freqX[15],
 				freqY[0], freqY[1],freqY[2],freqY[3],freqY[4],freqY[5],freqY[6],freqY[7],freqY[8],freqY[9],freqY[10],freqY[11],freqY[12],freqY[13],freqY[14],freqY[15],
