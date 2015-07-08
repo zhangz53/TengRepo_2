@@ -40,11 +40,18 @@ public class ButterWorth {
 		
 		if(_type == BandType.high){
 			//1 order,  0.1hz cutoff ?
-			dcof.add(1.0);
-			dcof.add(-0.969067417193793);
+			//dcof.add(1.0);
+			//dcof.add(-0.969067417193793);
 		
-			ccof.add(0.984533708596897);
-			ccof.add(-0.984533708596897);
+			//ccof.add(0.984533708596897);
+			//ccof.add(-0.984533708596897);
+			
+			//1 order, 3hz cutoff
+			dcof.add(1.0);
+			dcof.add(-0.750821238038765);
+		
+			ccof.add(0.875410619019382);
+			ccof.add(-0.875410619019382);
 			
 			bandType = BandType.high;
 		}else if(_type == BandType.low)

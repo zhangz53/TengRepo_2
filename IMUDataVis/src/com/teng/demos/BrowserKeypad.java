@@ -303,7 +303,7 @@ class DataSerialKeyPad {
 		return Float.intBitsToFloat(intbits);
 	}
 	
-	
+	//watch out, the parameters need to be change for the filter
 	private static void getTranslatePos(ArrayList<Vector3> accList, ArrayList<Quaternion> quatList)
 	{
 		if(accList.size() != quatList.size())

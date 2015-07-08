@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import com.teng.fft.RealDoubleFFT;
+import com.teng.filter.ButterWorth;
 import com.teng.math.Vector3;
 import com.teng.phdata.DataStorage;
 
@@ -31,12 +32,18 @@ public class Featurization {
 	public double scale;
 	private final static float MEAN_MAX = 16384f;   // Maximum signal value
 	
+	//for filter
+	public static ButterWorth mButterHp;
+	
 	public DataStorage dataStorage;
 	
 	public Featurization()
 	{
 		acc1 = new ArrayList<Vector3>();
 		acc2 = new ArrayList<Vector3>();
+		
+		mButterHp = new ButterWorth(ButterWorth.BandType.high);
+		mButterHp.createDataSet(); 
 		
 		mRealFFT = new RealDoubleFFT(fftBins);
 		scale =  MEAN_MAX * MEAN_MAX * fftBins * fftBins / 2d;
@@ -78,6 +85,7 @@ public class Featurization {
 					{
 						//all the sample for index collected, find the features
 						//calculateFeatures(acc1, acc2);
+						//highPassFilter(acc2);
 						calculateFeatures(acc2);
 						
 						//clear the acc and start for index+1
@@ -93,6 +101,7 @@ public class Featurization {
 			
 			//the last one
 			//calculateFeatures(acc1, acc2);
+			//highPassFilter(acc2);
 			calculateFeatures(acc2);
 			
 		} catch (IOException e) {
@@ -101,6 +110,25 @@ public class Featurization {
 		}
 		
 		dataStorage.saves();
+	}
+	
+	//high pass filter the data
+	public void highPassFilter(ArrayList<Vector3> ac)
+	{
+		ArrayList<Vector3> temp = new ArrayList<Vector3>();
+		int sz = ac.size();
+		for(int i = 0; i < sz; i++)
+		{
+			temp.add(ac.get(i));
+		}
+		
+		for(int itrt = 0; itrt < sz; itrt++)
+		{
+			Vector3 fResult = new Vector3();
+			fResult.Set(mButterHp.applyButterWorth(1, 1, temp.get(itrt)));
+			ac.set(itrt, fResult);
+		}
+		
 	}
 	
 	//calculate all the needed features and storage them
