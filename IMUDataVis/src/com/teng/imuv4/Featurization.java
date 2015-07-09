@@ -24,7 +24,7 @@ public class Featurization {
 	public ArrayList<Vector3> acc2;
 	public ArrayList<Quaternion> quats;
 	
-	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\1436406772115_testfilter.csv";
+	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\pos_4_test_process.csv";
 	private int index = 1;  //start from 1
 	
 	//for fft
@@ -82,6 +82,20 @@ public class Featurization {
 		//to be used by other class
 		mRealFFT = new RealDoubleFFT(fftBins);
 		scale =  MEAN_MAX * MEAN_MAX * fftBins * fftBins / 2d;
+		
+		pos = new Vector3();
+		velocity = new Vector3();
+		linAcc = new Vector3();
+		filteredAcc = new Vector3();
+		filter_velocity = new Vector3();
+		filter_pos = new Vector3();
+		mMatrix = new Matrix4();		
+		
+		mButterHp = new ButterWorth(ButterWorth.BandType.high);
+		mButterHp.createDataSet(); 
+		mButterHp.createDataSet(); 
+		mButterLp = new ButterWorth(ButterWorth.BandType.low);
+		mButterLp.createDataSet();
 	}
 	
 	public void getFeatures()
@@ -112,7 +126,7 @@ public class Featurization {
 						//all the sample for index collected, find the features
 						//calculateFeatures(acc1, acc2);
 						//highPassFilter(acc2);
-						calculateFeatures(acc1, quats);
+						calculateFeatures(acc2, quats);
 						
 						//clear the acc and start for index+1
 						acc1.clear();
@@ -130,7 +144,7 @@ public class Featurization {
 			//the last one
 			//calculateFeatures(acc1, acc2);
 			//highPassFilter(acc2);
-			calculateFeatures(acc1, quats);
+			calculateFeatures(acc2, quats);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -305,7 +319,10 @@ public class Featurization {
 		double ff8 = kur[1];
 		
 		//displacement
-		getDisplacement(ac, quat);
+		getDisplacement(ac);
+		
+		//diff peak
+		Vector3 diffPeak = largestNeighbourAbsDiff(ac);
 		
 		double[][] freqs = freq(ac);   //3 by fftBins/2 array
 		//feature X frequencies
@@ -327,7 +344,7 @@ public class Featurization {
 		}
 		
 		//1 + 12 + 16*3 + 8 + 16*2 = 1 + 60 + 40
-		DataStorage.AddSampleS(-1.0, 
+		DataStorage.AddSampleS(1.0, 
 				f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12,
 				freqX[0], freqX[1],freqX[2],freqX[3],freqX[4],freqX[5],freqX[6],freqX[7],freqX[8],freqX[9],freqX[10],freqX[11],freqX[12],freqX[13],freqX[14],freqX[15],
 				freqY[0], freqY[1],freqY[2],freqY[3],freqY[4],freqY[5],freqY[6],freqY[7],freqY[8],freqY[9],freqY[10],freqY[11],freqY[12],freqY[13],freqY[14],freqY[15],
@@ -336,8 +353,9 @@ public class Featurization {
 				//average values don't help much
 				ff1, ff2, ff3, ff4, ff5, ff6, ff7, ff8,
 				//32
-				filter_pos.x, filter_pos.y, filter_pos.z, 
-				velocity.x,velocity.y, velocity.z,fmeans[3], fstds[3],fmeans[4], fstds[4],fmeans[5], fstds[5],
+				pos.x, pos.y, pos.z, 
+				diffPeak.x, diffPeak.y, diffPeak.z, 
+				0.0, fstds[3],fmeans[4], fstds[4],fmeans[5], fstds[5],
 				fmeans[6], fstds[6],fmeans[7], fstds[7],fmeans[8], fstds[8],fmeans[9], fstds[9],fmeans[10], fstds[10],fmeans[11], fstds[11],
 				fmeans[12], fstds[12],fmeans[13], fstds[13],fmeans[14], fstds[14],fmeans[15], fstds[15]
 				);
@@ -378,7 +396,7 @@ public class Featurization {
 				pos.Add(filter_velocity.scl(stamp));
 				filter_pos.Set(mButterHp.applyButterWorth(2, 1, pos));
 					
-				System.out.println(linAcc.x);
+				//System.out.println(linAcc.x);
 				//System.out.println(velocity.z);
 				//System.out.println(filter_pos.x);
 				
@@ -386,7 +404,7 @@ public class Featurization {
 				
 			}
 			
-			System.out.println();		
+			//System.out.println();		
 		}
 	}
 	
@@ -396,17 +414,23 @@ public class Featurization {
 		int sz = accList.size();
 		velocity.Set(Vector3.Zero);
 		pos.Set(Vector3.Zero);
-		//mButterLp.refreshDataSet(1);
+		
+		mButterLp.refreshDataSet(1);
 		for(int itra = 0; itra < sz; itra++)
 		{
 			//how about filter the noise of acc
 			linAcc.Set(accList.get(itra));
-			//filteredAcc.Set(mButterLp.applyButterWorth(1, 1, linAcc));
-			
-			velocity.Add(linAcc.scl(stamp));
+			filteredAcc.Set(mButterLp.applyButterWorth(1, 1, linAcc));
+
+			velocity.Add(filteredAcc.scl(stamp));
 			pos.Add(velocity.scl(stamp));
+			
+			//System.out.println(filteredAcc.y);
+			//System.out.println(velocity.y);
+			//System.out.println(pos.x);
 		}
 		
+		//System.out.println();		
 	}
 	
 	public ArrayList<Vector3> toAbsList(ArrayList<Vector3> list)
@@ -489,6 +513,32 @@ public class Featurization {
 	
 	private double db2(double r, double i, double maxSquared) {
 	    return 5.0 * Math.log10((r * r + i * i) / maxSquared);
+	}
+	
+	public ArrayList<Vector3> neighbourAbsDiff(ArrayList<Vector3> list)
+	{
+		ArrayList<Vector3> diffs = new ArrayList<Vector3>();	
+		if(list.size() < 2)
+			return diffs;
+		
+		for(int itr = 1; itr < list.size(); itr++)
+		{
+			Vector3 diff = new Vector3();
+			diff.Set(list.get(itr).sub(list.get(itr-1)));
+			diff.Abs();
+			diffs.add(diff);
+		}
+		
+		return diffs;
+	}
+	
+	public Vector3 largestNeighbourAbsDiff(ArrayList<Vector3> list)
+	{
+		ArrayList<Vector3> diffs = neighbourAbsDiff(list);
+		int peakIndex = localPeakIndex(diffs)[0];
+		Vector3 result = new Vector3();
+		result.Set(diffs.get(peakIndex));
+		return result;
 	}
 	
 	public int[] localPeakIndex(ArrayList<Vector3> list){

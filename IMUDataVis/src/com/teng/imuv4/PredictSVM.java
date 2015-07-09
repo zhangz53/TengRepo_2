@@ -512,6 +512,11 @@ public class PredictSVM {
 		double ff7 = kur[0];
 		double ff8 = kur[1];
 		
+		featurization.getDisplacement(absAc);
+		double ff9 = featurization.pos.x;
+		double ff10 = featurization.pos.y;
+		double ff11 = featurization.pos.z;
+		
 		double[][] freqs = featurization.freq(ac);   //3 by fftBins/2 array
 		//feature X frequencies
 		double[] freqX = freqs[0];
@@ -524,7 +529,7 @@ public class PredictSVM {
 				freqX[0],freqX[1],freqX[2],freqX[3],freqX[4],freqX[5],freqX[6],freqX[7],freqX[8],freqX[9],freqX[10],freqX[11],freqX[12],freqX[13],freqX[14],freqX[15],
 				freqY[0],freqY[1],freqY[2],freqY[3],freqY[4],freqY[5],freqY[6],freqY[7],freqY[8],freqY[9],freqY[10],freqY[11],freqY[12],freqY[13],freqY[14],freqY[15],
 				freqZ[0],freqZ[1],freqZ[2],freqZ[3],freqZ[4],freqZ[5],freqZ[6],freqZ[7],freqZ[8],freqZ[9],freqZ[10],freqZ[11],freqZ[12],freqZ[13],freqZ[14],freqZ[15],
-				ff1, ff2, ff3, ff4, ff5, ff6, ff7, ff8};
+				ff1, ff2, ff3, ff4, ff5, ff6, ff7, ff8, ff9, ff10, ff11};
 		
 		//need to be scaled
 		for(int itrf = 1; itrf < features.length; itrf++)

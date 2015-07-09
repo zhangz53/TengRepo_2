@@ -660,4 +660,12 @@ public class Vector3 implements Vector<Vector3>{
 		return this;
 	}
 
+	public Vector3 Abs()
+	{
+		this.x = Math.abs(this.x);
+		this.y = Math.abs(this.y);
+		this.z = Math.abs(this.z);
+		
+		return this;
+	}
 }

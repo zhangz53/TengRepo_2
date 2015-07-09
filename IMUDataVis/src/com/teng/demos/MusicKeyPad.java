@@ -95,7 +95,7 @@ class DataSerialMusicPad {
 		predicts = new ArrayList<Double>();
 		predict_probs = new ArrayList<Double>();
 		
-		predictSVM = new PredictSVM("C:\\Users\\Teng\\Desktop\\dataset\\708-slide-3\\rbf_model_pilot.model", "C:\\Users\\Teng\\Desktop\\dataset\\708-slide-3\\range");
+		predictSVM = new PredictSVM("C:\\Users\\Teng\\Desktop\\dataset\\709-slide-3\\rbf_model_pilot.model", "C:\\Users\\Teng\\Desktop\\dataset\\709-slide-3\\range");
 		
 		instance = this;
 	}
