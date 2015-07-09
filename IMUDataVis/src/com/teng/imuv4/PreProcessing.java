@@ -28,7 +28,7 @@ class DataLoad{
 		acc2 = new ArrayList<Vector3>();
 		
 		//read the csv file
-		String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\5pos.csv";
+		String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\neg.csv";
 		try {
 			br = new BufferedReader(new FileReader(dataFile));
 		} catch (FileNotFoundException e) {
@@ -103,7 +103,7 @@ public class PreProcessing extends PApplet{
 	{
 		windowWidth = 1500;
 		windowHeight = 1200;  //split into two
-		heightThreshold = 10;  //+ - 10
+		heightThreshold = 5;  //+ - 10
 		heightSeg = (windowHeight/2) / (2 * heightThreshold);
 		
 		size(windowWidth, windowHeight);

@@ -40,27 +40,35 @@ public class ButterWorth {
 		
 		if(_type == BandType.high){
 			//1 order,  0.1hz cutoff ?
-			//dcof.add(1.0);
-			//dcof.add(-0.969067417193793);
+			dcof.add(1.0);
+			dcof.add(-0.969067417193793);
 		
-			//ccof.add(0.984533708596897);
-			//ccof.add(-0.984533708596897);
+			ccof.add(0.984533708596897);
+			ccof.add(-0.984533708596897);
 			
 			//1 order, 3hz cutoff
-			dcof.add(1.0);
-			dcof.add(-0.750821238038765);
+			//dcof.add(1.0);
+			//dcof.add(-0.750821238038765);
 		
-			ccof.add(0.875410619019382);
-			ccof.add(-0.875410619019382);
+			//ccof.add(0.875410619019382);
+			//ccof.add(-0.875410619019382);
 			
 			bandType = BandType.high;
 		}else if(_type == BandType.low)
 		{
-			dcof.add(1.0);
-			dcof.add(-0.726542528005361);
+			//dcof.add(1.0);
+			//dcof.add(-0.726542528005361);
 			
-			ccof.add(0.136728735997320);
-			ccof.add(0.136728735997320);
+			//ccof.add(0.136728735997320);
+			//ccof.add(0.136728735997320);
+			
+			//10hz cutoff, low pass
+			dcof.add(1.0);
+			dcof.add(-0.324919696232906);
+			
+			ccof.add(0.337540151883547);
+			ccof.add(0.337540151883547);
+			
 			bandType = BandType.low;
 		}
 		
@@ -92,6 +100,15 @@ public class ButterWorth {
 		
 		inputDataSets.add(inputSet);
 		outputDataSets.add(outputSet);
+	}
+	
+	public void refreshDataSet(int index)
+	{
+		ArrayList<Vector3> inputSet = inputDataSets.get(index - 1);
+		ArrayList<Vector3> outputSet = outputDataSets.get(index - 1);
+		
+		inputSet.clear();
+		outputSet.clear();
 	}
 	
 	/*

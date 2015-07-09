@@ -272,7 +272,7 @@ public class PredictSVM {
 	        nodes[i-1] = node;
 	    }
 
-	    int totalClasses = 10;  //5       
+	    int totalClasses = 2;  //5       
 	    int[] labels = new int[totalClasses];
 	    svm.svm_get_labels(linear_model,labels);
 
@@ -281,9 +281,9 @@ public class PredictSVM {
 	    
 	    //double v = svm.svm_predict(linear_model, nodes);
 	    
-	    for (int i = 0; i < totalClasses; i++){
-	        System.out.print("(" + labels[i] + ":" + prob_estimates[i] + ")");
-	    }
+	   // for (int i = 0; i < totalClasses; i++){
+	    //    System.out.print("(" + labels[i] + ":" + prob_estimates[i] + ")");
+	   // }
 	    //System.out.println("(Actual:" + features[0] + " Prediction:" + v + ")");            
 
 	    return v;
@@ -303,7 +303,7 @@ public class PredictSVM {
 	        nodes[i-1] = node;
 	    }
 
-	    int totalClasses = 10;  //5       
+	    int totalClasses = 2;  //5       
 	    int[] labels = new int[totalClasses];
 	    svm.svm_get_labels(linear_model,labels);
 

@@ -231,7 +231,7 @@ public class TrajectoryTracing extends PApplet{
 		}
 		
 		
-		/*
+		
 		size(1000, 1000, P3D);
 		background(250);
 		
@@ -251,15 +251,15 @@ public class TrajectoryTracing extends PApplet{
 			line(-350, itry, 0, 350, itry, 0);
 		}
 		popMatrix();
-		*/
 		
-		size(1000, 1000);
-		background(250);
+		
+		//size(1000, 1000);
+		//background(250);
 	}
 	
 	public void draw()
 	{
-		/*
+		
 		background(250);
 		
 		//coordinates
@@ -286,16 +286,16 @@ public class TrajectoryTracing extends PApplet{
 			pushMatrix();				
 			fill(200, 10, 50);
 			lights();
-			translate(width/2 - (float)mSerialDataAcc.pos.y*100.0f, height*3/5 -  (float)mSerialDataAcc.pos.z*100.0f  ,  (float)mSerialDataAcc.pos.x*100.0f);
+			//translate(width/2 - (float)mSerialDataAcc.pos.y*100.0f, height*3/5 -  (float)mSerialDataAcc.pos.z*100.0f  ,  (float)mSerialDataAcc.pos.x*100.0f);
 			
-			//translate(width/2 , height*3/5 , 0f);
+			translate(width/2 , height*3/5 , 0f);
 			
 			//apply rotation matrix
 			
-			//applyMatrix((float) mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M00], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M01], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M02], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M03],
-				//	(float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M10], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M11], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M12], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M13],
-				//	(float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M20], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M21], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M22], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M23],
-				//	(float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M30], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M31], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M32], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M33]);
+			applyMatrix((float) mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M00], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M01], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M02], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M03],
+					(float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M10], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M11], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M12], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M13],
+					(float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M20], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M21], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M22], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M23],
+					(float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M30], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M31], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M32], (float)mSerialDataAcc.mMatrix.val[mSerialDataAcc.mMatrix.M33]);
 			
 			
 			noStroke();
@@ -303,8 +303,8 @@ public class TrajectoryTracing extends PApplet{
 			popMatrix();
 		}
 		
-		*/
 		
+		/*
 		background(250);
 		pushMatrix();
 		
@@ -313,6 +313,7 @@ public class TrajectoryTracing extends PApplet{
 		ellipse(500 + (float)mSerialDataAcc.filter_pos.x*500.0f, 500 + (float)mSerialDataAcc.filter_pos.y*500.0f, 200, 200);
 		
 		popMatrix();
+		*/
 	}
 	
 	public void keyPressed(){

@@ -46,7 +46,7 @@ class DataSerialMusicPad {
 	public static ButterWorth mButterHp;
 	
 	public static int sampleNum = 32;
-	private static int movingWindowSize = 20; 
+	private static int movingWindowSize = 32; 
 	private static int movingCount = 0;
 	
 	//for second step heuristic
@@ -95,7 +95,7 @@ class DataSerialMusicPad {
 		predicts = new ArrayList<Double>();
 		predict_probs = new ArrayList<Double>();
 		
-		predictSVM = new PredictSVM("C:\\Users\\Teng\\Desktop\\dataset\\705-pad-2\\rbf_model_pilot.model", "C:\\Users\\Teng\\Desktop\\dataset\\705-pad-2\\range");
+		predictSVM = new PredictSVM("C:\\Users\\Teng\\Desktop\\dataset\\708-slide-3\\rbf_model_pilot.model", "C:\\Users\\Teng\\Desktop\\dataset\\708-slide-3\\range");
 		
 		instance = this;
 	}
@@ -221,8 +221,10 @@ class DataSerialMusicPad {
                     						//System.out.println(" " + dataset_acc2.size());
                     						if(dataset_acc1.size() == sampleNum && dataset_acc2.size() == sampleNum)
                     						{	
-                    							double[] predictValue = predictSVM.predictWithDefaultModel_Prob(dataset_acc2);
+                    							double predictValue = predictSVM.predictWithDefaultModel(dataset_acc2);
+                    							System.out.println(predictValue);
                     							
+                    							/*
                     							//heuristics for predictions
                     							if(predictValue[0] != 10.0)
                     							{
@@ -238,15 +240,15 @@ class DataSerialMusicPad {
                     									if(hIndex != -1)
                     									{
                     										hPredictValue = predicts.get(hIndex);
-                    										System.out.print(" " + hPredictValue);
+                    										System.out.println(" " + hPredictValue);
                         									visAction = true;
                     									}
                     									
-                    									for(int itrp = 0; itrp < predicts.size(); itrp ++)
-                    									{
-                    										System.out.print("   " + predicts.get(itrp) + " : " + predict_probs.get(itrp) + ", ");
-                    									}
-                    									System.out.println();
+                    									//for(int itrp = 0; itrp < predicts.size(); itrp ++)
+                    									//{
+                    									//	System.out.print("   " + predicts.get(itrp) + " : " + predict_probs.get(itrp) + ", ");
+                    									//}
+                    									//System.out.println();
                     									//clear
                     									predicts.clear();
                     									predict_probs.clear();
@@ -254,7 +256,7 @@ class DataSerialMusicPad {
                     									
                     								}
                     							}
-                    							
+                    							*/
                     							
                     							//direction
                     							/*
