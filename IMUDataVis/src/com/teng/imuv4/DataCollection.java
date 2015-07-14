@@ -6,6 +6,7 @@ import gnu.io.SerialPort;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 
 import processing.core.PApplet;
 
@@ -31,11 +32,23 @@ class SerialDataCap{
 	public static double sampleCount = 0.0;
 	public static boolean isRecording = false;
 	
+	//get rid of DC shift
+	public static ArrayList<Vector3> firstTenAcc1;
+	public static ArrayList<Vector3> firstTenAcc2;
+	public static boolean isFirstTen = true;
+	public static Vector3 baseAcc1;
+	public static Vector3 baseAcc2;
+	
 	public SerialDataCap()
 	{
 		acc1 = new Vector3();
 		acc2 = new Vector3();
 		quat3 = new Quaternion();
+		
+		firstTenAcc1 = new ArrayList<Vector3>();
+		firstTenAcc2 = new ArrayList<Vector3>();
+		baseAcc1 = new Vector3();
+		baseAcc2 = new Vector3();
 		
 		dataStorage = DataStorage.getInstance();
 		
@@ -136,20 +149,46 @@ class SerialDataCap{
                     						decodeFloat(outPutStringArr[4])/100.0, 
                     						decodeFloat(outPutStringArr[5])/100.0);
                     				
-                    				Quaternion tempQuat = new Quaternion();                					
-                					tempQuat.Set(decodeFloat(outPutStringArr[7]),  	//x 
-                							decodeFloat(outPutStringArr[8]),    	//y
-                							decodeFloat(outPutStringArr[9]), 		//z
-                							decodeFloat(outPutStringArr[6]));		//w
+                    				//Quaternion tempQuat = new Quaternion();                					
+                					//tempQuat.Set(decodeFloat(outPutStringArr[7]),  	//x 
+                						//	decodeFloat(outPutStringArr[8]),    	//y
+                							//decodeFloat(outPutStringArr[9]), 		//z
+                							//decodeFloat(outPutStringArr[6]));		//w
                 					
-                					tempQuat.Nor();
-                					quat3.Set(tempQuat);
+                					//tempQuat.Nor();
+                					//quat3.Set(tempQuat);
                     				
-                    				//record
-                    				if(isRecording)
+                    				if(isFirstTen)
                     				{
-                    					DataStorage.AddSampleF(sampleCount, acc1.x, acc1.y, acc1.z, acc2.x, acc2.y, acc2.z,
-                        						 quat3.x, quat3.y, quat3.z, quat3.w, 0.0, 0.0);
+                    					Vector3 tempAcc1 = new Vector3();
+                    					Vector3 tempAcc2 = new Vector3();
+                    					tempAcc1.Set(acc1);
+                    					tempAcc2.Set(acc2);
+                    					
+                    					firstTenAcc1.add(tempAcc1);
+                    					firstTenAcc2.add(tempAcc2);
+                    					
+                    					if(firstTenAcc1.size() == 66){
+                    						isFirstTen = false;
+                    						
+                    						//calculate the average
+                    						double[] meansAcc1 = means(firstTenAcc1);
+                    						double[] meansAcc2 = means(firstTenAcc2);
+                    						
+                    						baseAcc1.Set(meansAcc1[0], meansAcc1[1], meansAcc1[2]);
+                    						baseAcc2.Set(meansAcc2[0], meansAcc2[1], meansAcc2[2]);
+                    					}
+                    				}else{
+                    					//record
+                        				if(isRecording)
+                        				{
+                        					//deduce by base
+                        					acc1.Sub(baseAcc1);
+                        					acc2.Sub(baseAcc2);
+                        					
+                        					DataStorage.AddSampleF(sampleCount, acc1.x, acc1.y, acc1.z, acc2.x, acc2.y, acc2.z,
+                            						 quat3.x, quat3.y, quat3.z, quat3.w, 0.0, 0.0);
+                        				}
                     				}
                     				
                     			}
@@ -183,6 +222,28 @@ class SerialDataCap{
 		
 		int intbits = (inData[3] << 24) | ((inData[2] & 0xff) << 16) | ((inData[1] & 0xff) << 8) | (inData[0] & 0xff);
 		return Float.intBitsToFloat(intbits);
+	}
+	
+	static double[] means(ArrayList<Vector3> list)
+	{
+		double[] axeValues = new double[3];
+		axeValues[0] = 0.0;
+		axeValues[1] = 0.0;
+		axeValues[2] = 0.0;
+		
+		int sz = list.size();
+		for(Vector3 acc : list)
+		{
+			axeValues[0] += acc.x;
+			axeValues[1] += acc.y;
+			axeValues[2] += acc.z;
+		}
+		
+		axeValues[0] = axeValues[0] / sz;
+		axeValues[1] = axeValues[1] / sz;
+		axeValues[2] = axeValues[2] / sz;
+		
+		return axeValues;
 	}
 }
 

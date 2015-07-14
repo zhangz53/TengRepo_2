@@ -25,10 +25,22 @@ class SerialDataCapture{
 	public static ArrayList<Vector3> acc1Log;
 	public static ArrayList<Vector3> acc2Log;
 	
+	//
+	public static ArrayList<Vector3> firstTenAcc1;
+	public static ArrayList<Vector3> firstTenAcc2;
+	public static boolean isFirstTen = true;
+	public static Vector3 baseAcc1;
+	public static Vector3 baseAcc2;
+	
 	public SerialDataCapture()
 	{
 		acc1 = new Vector3();
 		acc2 = new Vector3();
+		
+		firstTenAcc1 = new ArrayList<Vector3>();
+		firstTenAcc2 = new ArrayList<Vector3>();
+		baseAcc1 = new Vector3();
+		baseAcc2 = new Vector3();
 		
 		acc1Log = new ArrayList<Vector3>();
 		acc2Log = new ArrayList<Vector3>();
@@ -168,27 +180,48 @@ class SerialDataCapture{
                     						decodeFloat(outPutStringArr[4])/100.0, 
                     						decodeFloat(outPutStringArr[5])/100.0);
                     				
-                    				Vector3 temp1 = new Vector3();
-                    				temp1.Set(acc1);
-                    				acc1Log.add(temp1);
-                    				Vector3 temp2 = new Vector3();
-                    				temp2.Set(acc2);
-                    				acc2Log.add(temp2);
                     				
-                    				//control the size
-                    				if(acc1Log.size() > logSize)
+                    				if(isFirstTen)
                     				{
-                    					acc1Log.remove(0);
-                    				}
-                    				
-                    				if(acc2Log.size() > logSize)
-                    				{
-                    					acc2Log.remove(0);
-                    				}
-                    				
-                    				//send a event request for drawing
-                    				
-                    				
+                    					Vector3 tempAcc1 = new Vector3();
+                    					Vector3 tempAcc2 = new Vector3();
+                    					tempAcc1.Set(acc1);
+                    					tempAcc2.Set(acc2);
+                    					
+                    					firstTenAcc1.add(tempAcc1);
+                    					firstTenAcc2.add(tempAcc2);
+                    					
+                    					if(firstTenAcc1.size() == 66){
+                    						isFirstTen = false;
+                    						
+                    						//calculate the average
+                    						double[] meansAcc1 = means(firstTenAcc1);
+                    						double[] meansAcc2 = means(firstTenAcc2);
+                    						
+                    						baseAcc1.Set(meansAcc1[0], meansAcc1[1], meansAcc1[2]);
+                    						baseAcc2.Set(meansAcc2[0], meansAcc2[1], meansAcc2[2]);
+                    					}
+                    				}else{
+                    					Vector3 temp1 = new Vector3();
+                        				temp1.Set(acc1);
+                        				temp1.Sub(baseAcc1);
+                        				acc1Log.add(temp1);
+                        				Vector3 temp2 = new Vector3();
+                        				temp2.Set(acc2);
+                        				temp2.Sub(baseAcc2);
+                        				acc2Log.add(temp2);
+                        				
+                        				//control the size
+                        				if(acc1Log.size() > logSize)
+                        				{
+                        					acc1Log.remove(0);
+                        				}
+                        				
+                        				if(acc2Log.size() > logSize)
+                        				{
+                        					acc2Log.remove(0);
+                        				}
+                    				}  				
                     			}
                     			
                     		}
@@ -220,6 +253,28 @@ class SerialDataCapture{
 		
 		int intbits = (inData[3] << 24) | ((inData[2] & 0xff) << 16) | ((inData[1] & 0xff) << 8) | (inData[0] & 0xff);
 		return Float.intBitsToFloat(intbits);
+	}
+	
+	static double[] means(ArrayList<Vector3> list)
+	{
+		double[] axeValues = new double[3];
+		axeValues[0] = 0.0;
+		axeValues[1] = 0.0;
+		axeValues[2] = 0.0;
+		
+		int sz = list.size();
+		for(Vector3 acc : list)
+		{
+			axeValues[0] += acc.x;
+			axeValues[1] += acc.y;
+			axeValues[2] += acc.z;
+		}
+		
+		axeValues[0] = axeValues[0] / sz;
+		axeValues[1] = axeValues[1] / sz;
+		axeValues[2] = axeValues[2] / sz;
+		
+		return axeValues;
 	}
 }
 
