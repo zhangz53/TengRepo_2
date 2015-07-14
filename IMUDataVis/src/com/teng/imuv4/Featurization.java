@@ -24,7 +24,7 @@ public class Featurization {
 	public ArrayList<Vector3> acc2;
 	public ArrayList<Quaternion> quats;
 	
-	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\Teng\\f12p.csv";
+	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\3p.csv";
 	private int index = 1;  //start from 1
 	
 	//for fft
@@ -276,14 +276,15 @@ public class Featurization {
 		ArrayList<Vector3> absAc = ac;//toAbsList(ac);  //no need for absolute values
 		
 		double[] means1 = meanAxes(absAc);
+		
 		double f1 = means1[0];
 		double f2 = means1[1];
 		double f3 = means1[2];
 		
 		//mean and std
-		double[] mr = mean_std(f1, f2, f3);
-		double ff1 = mr[0];
-		double ff2 = mr[1];
+		//double[] mr = mean_std(f1, f2, f3);
+		//double ff1 = mr[0];
+		//double ff2 = mr[1];
 		
 		//feature 14-19: standard dev of acc1 and acc2
 		double[] stdvs1 = stdvAxes(absAc, means1);
@@ -292,9 +293,9 @@ public class Featurization {
 		double f6 = stdvs1[2];
 		
 		//mean and std
-		double[] sr = mean_std(f4, f5, f6);
-		double ff3 = sr[0];
-		double ff4 = sr[1];
+		//double[] sr = mean_std(f4, f5, f6);
+		//double ff3 = sr[0];
+		//double ff4 = sr[1];
 		
 		//feature 20-25: skewness of acc1 and acc2
 		double[] skews1 = skewnessAxes(absAc, means1, stdvs1);
@@ -303,9 +304,9 @@ public class Featurization {
 		double f9 = skews1[2];
 		
 		//mean and std
-		double[] skr = mean_std(f7, f8, f9);
-		double ff5 = skr[0];
-		double ff6 = skr[1];
+		//double[] skr = mean_std(f7, f8, f9);
+		//double ff5 = skr[0];
+		//double ff6 = skr[1];
 		
 		//feature 26-31: kurtosis of acc1 and acc2
 		double[] kurs1 = kurtosisAxes(absAc, means1, stdvs1);
@@ -314,16 +315,17 @@ public class Featurization {
 		double f12 = kurs1[2];
 		
 		//mean and std
-		double[] kur = mean_std(f10, f11, f12);
-		double ff7 = kur[0];
-		double ff8 = kur[1];
+		//double[] kur = mean_std(f10, f11, f12);
+		//double ff7 = kur[0];
+		//double ff8 = kur[1];
 		
-		//displacement
+		//displacement, taken care of mean
 		getDisplacement(ac);
 		
 		//diff peak
 		Vector3 diffPeak = largestNeighbourAbsDiff(ac);
 		
+		//frequency, taken care of mean
 		double[][] freqs = freq(ac);   //3 by fftBins/2 array
 		//feature X frequencies
 		double[] freqX = freqs[0];
@@ -336,12 +338,12 @@ public class Featurization {
 		double[] fmeans = new double[fftBins/2];
 		double[] fstds = new double[fftBins/2];
 		
-		for(int itrf = 0; itrf<(fftBins/2); itrf++)
-		{
-			double[] fr = mean_std(freqX[itrf], freqY[itrf], freqZ[itrf]);
-			fmeans[itrf] = fr[0];
-			fstds[itrf] = fr[1];
-		}
+		//for(int itrf = 0; itrf<(fftBins/2); itrf++)
+		//{
+			//double[] fr = mean_std(freqX[itrf], freqY[itrf], freqZ[itrf]);
+			//fmeans[itrf] = fr[0];
+			//fstds[itrf] = fr[1];
+		//}
 		
 		//1 + 12 + 16*3 + 8 + 16*2 = 1 + 60 + 40
 		DataStorage.AddSampleS(-1.0, 
@@ -351,7 +353,7 @@ public class Featurization {
 				freqZ[0], freqZ[1],freqZ[2],freqZ[3],freqZ[4],freqZ[5],freqZ[6],freqZ[7],freqZ[8],freqZ[9],freqZ[10],freqZ[11],freqZ[12],freqZ[13],freqZ[14],freqZ[15],
 				
 				//average values don't help much
-				ff1, ff2, ff3, ff4, ff5, ff6, ff7, ff8,
+				0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 				//32
 				pos.x, pos.y, pos.z, 
 				diffPeak.x, diffPeak.y, diffPeak.z, 

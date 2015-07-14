@@ -9,6 +9,7 @@ import java.io.InputStream;
 
 import processing.core.PApplet;
 
+import com.teng.filter.ButterWorth;
 import com.teng.math.Quaternion;
 import com.teng.math.Vector3;
 import com.teng.phdata.DataStorage;
@@ -27,6 +28,9 @@ public class v4DataRecorderDouble {
 	public static double stamp;
 	public static double typeValue = 1.0;
 	
+	//filters
+	public static ButterWorth butterLp;
+	
 	//data log
 	public static DataStorage dataStorage;
 	
@@ -39,7 +43,7 @@ public class v4DataRecorderDouble {
 		
 		dataStorage = DataStorage.getInstance();
 		
-		
+		//butterLp = new ButterWorth();
 	}
 	
 	void connect (String portName) throws Exception
@@ -121,13 +125,13 @@ public class v4DataRecorderDouble {
                     	{
                     		//System.out.print(outputString);
                     		//System.out.println(outputString.length());  // for quaternions should equal to 109, for acc should equal to 55
-                    		if(outputString.length() == 55 && outputString != null)  
+                    		if(outputString.length() == 91 && outputString != null)  
                     		{
                     			//decode the hex
                     			String[] outPutStringArr = outputString.split(",");
                     			
                     			//this is for accelerometers
-                    			if(outPutStringArr.length == 7)
+                    			if(outPutStringArr.length == 11)
                     			{
                     				acc1.Set(decodeFloat(outPutStringArr[0])/100.0,
                     						decodeFloat(outPutStringArr[1])/100.0, 
@@ -136,6 +140,12 @@ public class v4DataRecorderDouble {
                     				acc2.Set(decodeFloat(outPutStringArr[3])/100.0,
                     						decodeFloat(outPutStringArr[4])/100.0, 
                     						decodeFloat(outPutStringArr[5])/100.0);
+                    				
+                    				//filters
+                    				//remove noise
+                    				
+                    				
+                    				//remove dc shift
                     				
                     				//record
                     				DataStorage.AddSampleF(1.0, acc1.x, acc1.y, acc1.z, acc2.x, acc2.y, acc2.z,

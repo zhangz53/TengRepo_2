@@ -20,27 +20,18 @@ class SerialDataCapture{
 	public static Vector3 acc1;
 	public static Vector3 acc2;
 	
+	//filters
+	//public static 
+	
 	//data log for plot
 	public static int logSize = 65*10; //250hz for 5 secs
 	public static ArrayList<Vector3> acc1Log;
 	public static ArrayList<Vector3> acc2Log;
 	
-	//
-	public static ArrayList<Vector3> firstTenAcc1;
-	public static ArrayList<Vector3> firstTenAcc2;
-	public static boolean isFirstTen = true;
-	public static Vector3 baseAcc1;
-	public static Vector3 baseAcc2;
-	
 	public SerialDataCapture()
 	{
 		acc1 = new Vector3();
 		acc2 = new Vector3();
-		
-		firstTenAcc1 = new ArrayList<Vector3>();
-		firstTenAcc2 = new ArrayList<Vector3>();
-		baseAcc1 = new Vector3();
-		baseAcc2 = new Vector3();
 		
 		acc1Log = new ArrayList<Vector3>();
 		acc2Log = new ArrayList<Vector3>();
@@ -181,47 +172,31 @@ class SerialDataCapture{
                     						decodeFloat(outPutStringArr[5])/100.0);
                     				
                     				
-                    				if(isFirstTen)
+                    				//apply filters
+                    				//low pass, to remove noise
+                    				
+                    				
+                    				//... to remove dc shift
+                    				
+                    					
+                    				Vector3 temp1 = new Vector3();
+                    				temp1.Set(acc1);
+                    				acc1Log.add(temp1);
+                    				Vector3 temp2 = new Vector3();
+                    				temp2.Set(acc2);
+                    				acc2Log.add(temp2);
+                    				
+                    				//control the size
+                    				if(acc1Log.size() > logSize)
                     				{
-                    					Vector3 tempAcc1 = new Vector3();
-                    					Vector3 tempAcc2 = new Vector3();
-                    					tempAcc1.Set(acc1);
-                    					tempAcc2.Set(acc2);
-                    					
-                    					firstTenAcc1.add(tempAcc1);
-                    					firstTenAcc2.add(tempAcc2);
-                    					
-                    					if(firstTenAcc1.size() == 66){
-                    						isFirstTen = false;
-                    						
-                    						//calculate the average
-                    						double[] meansAcc1 = means(firstTenAcc1);
-                    						double[] meansAcc2 = means(firstTenAcc2);
-                    						
-                    						baseAcc1.Set(meansAcc1[0], meansAcc1[1], meansAcc1[2]);
-                    						baseAcc2.Set(meansAcc2[0], meansAcc2[1], meansAcc2[2]);
-                    					}
-                    				}else{
-                    					Vector3 temp1 = new Vector3();
-                        				temp1.Set(acc1);
-                        				temp1.Sub(baseAcc1);
-                        				acc1Log.add(temp1);
-                        				Vector3 temp2 = new Vector3();
-                        				temp2.Set(acc2);
-                        				temp2.Sub(baseAcc2);
-                        				acc2Log.add(temp2);
-                        				
-                        				//control the size
-                        				if(acc1Log.size() > logSize)
-                        				{
-                        					acc1Log.remove(0);
-                        				}
-                        				
-                        				if(acc2Log.size() > logSize)
-                        				{
-                        					acc2Log.remove(0);
-                        				}
-                    				}  				
+                    					acc1Log.remove(0);
+                    				}
+                    				
+                    				if(acc2Log.size() > logSize)
+                    				{
+                    					acc2Log.remove(0);
+                    				}
+
                     			}
                     			
                     		}

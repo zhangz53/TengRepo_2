@@ -35,7 +35,7 @@ class SerialDataCap{
 	//get rid of DC shift
 	public static ArrayList<Vector3> firstTenAcc1;
 	public static ArrayList<Vector3> firstTenAcc2;
-	public static boolean isFirstTen = true;
+	public static boolean isFirstTen = false;
 	public static Vector3 baseAcc1;
 	public static Vector3 baseAcc2;
 	
