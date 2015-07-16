@@ -24,7 +24,7 @@ public class Featurization {
 	public ArrayList<Vector3> acc2;
 	public ArrayList<Quaternion> quats;
 	
-	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\3p.csv";
+	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\Teng\\round-2\\f11p.csv";
 	private int index = 1;  //start from 1
 	
 	//for fft
@@ -277,9 +277,9 @@ public class Featurization {
 		
 		double[] means1 = meanAxes(absAc);
 		
-		double f1 = means1[0];
-		double f2 = means1[1];
-		double f3 = means1[2];
+		//double f1 = means1[0];
+		//double f2 = means1[1];
+		//double f3 = means1[2];
 		
 		//mean and std
 		//double[] mr = mean_std(f1, f2, f3);
@@ -320,13 +320,24 @@ public class Featurization {
 		//double ff8 = kur[1];
 		
 		//displacement, taken care of mean
-		getDisplacement(ac);
+		//getDisplacement(ac);
 		
 		//diff peak
 		Vector3 diffPeak = largestNeighbourAbsDiff(ac);
 		
 		//frequency, taken care of mean
-		double[][] freqs = freq(ac);   //3 by fftBins/2 array
+		//signal sub by mean
+		ArrayList<Vector3> groundAc = new ArrayList<Vector3>();
+		
+		for(int itra = 0; itra < ac.size(); itra++)
+		{
+			Vector3 temp = new Vector3();
+			temp.Set(ac.get(itra));
+			temp.Sub(means1[0], means1[1], means1[2]);  //remove the means
+			groundAc.add(temp);
+		}
+		
+		double[][] freqs = freq(groundAc);   //3 by fftBins/2 array
 		//feature X frequencies
 		double[] freqX = freqs[0];
 		//feature Y frequencies
@@ -346,17 +357,19 @@ public class Featurization {
 		//}
 		
 		//1 + 12 + 16*3 + 8 + 16*2 = 1 + 60 + 40
-		DataStorage.AddSampleS(-1.0, 
-				f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12,
-				freqX[0], freqX[1],freqX[2],freqX[3],freqX[4],freqX[5],freqX[6],freqX[7],freqX[8],freqX[9],freqX[10],freqX[11],freqX[12],freqX[13],freqX[14],freqX[15],
-				freqY[0], freqY[1],freqY[2],freqY[3],freqY[4],freqY[5],freqY[6],freqY[7],freqY[8],freqY[9],freqY[10],freqY[11],freqY[12],freqY[13],freqY[14],freqY[15],
-				freqZ[0], freqZ[1],freqZ[2],freqZ[3],freqZ[4],freqZ[5],freqZ[6],freqZ[7],freqZ[8],freqZ[9],freqZ[10],freqZ[11],freqZ[12],freqZ[13],freqZ[14],freqZ[15],
-				
+		DataStorage.AddSampleS(1.0, 
+				diffPeak.x, diffPeak.y, diffPeak.z, 
+				f4, f5, f6, f7, f8, f9, f10, f11, f12,
+				freqX[1],freqX[2],freqX[3],freqX[4],freqX[5],freqX[6],freqX[7],freqX[8],freqX[9],freqX[10],freqX[11],freqX[12],freqX[13],freqX[14],freqX[15],
+				freqY[1],freqY[2],freqY[3],freqY[4],freqY[5],freqY[6],freqY[7],freqY[8],freqY[9],freqY[10],freqY[11],freqY[12],freqY[13],freqY[14],freqY[15],
+				freqZ[1],freqZ[2],freqZ[3],freqZ[4],freqZ[5],freqZ[6],freqZ[7],freqZ[8],freqZ[9],freqZ[10],freqZ[11],freqZ[12],freqZ[13],freqZ[14],freqZ[15],
+				0.0, 0.0, 0.0,
 				//average values don't help much
 				0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 				//32
-				pos.x, pos.y, pos.z, 
-				diffPeak.x, diffPeak.y, diffPeak.z, 
+				//pos.x, pos.y, pos.z, 
+				0.0, 0.0, 0.0,
+				0.0, 0.0, 0.0,
 				0.0, fstds[3],fmeans[4], fstds[4],fmeans[5], fstds[5],
 				fmeans[6], fstds[6],fmeans[7], fstds[7],fmeans[8], fstds[8],fmeans[9], fstds[9],fmeans[10], fstds[10],fmeans[11], fstds[11],
 				fmeans[12], fstds[12],fmeans[13], fstds[13],fmeans[14], fstds[14],fmeans[15], fstds[15]
