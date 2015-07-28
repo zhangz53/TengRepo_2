@@ -25,7 +25,7 @@ public class Featurization {
 	public ArrayList<Quaternion> quats;
 	public Vector3 xAxis;
 	
-	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\-1process.csv";
+	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\4\\1process.csv";
 	private int index = 1;  //start from 1
 	
 	//for fft
@@ -275,7 +275,7 @@ public class Featurization {
 		////////////////////////brute force features
 		//use absolute values
 		//since there is no rules for the waves
-		ArrayList<Vector3> absAc = getAroundXAxisAcc(ac, quat);//toAbsList(ac);  //no need for absolute values
+		ArrayList<Vector3> absAc = ac;//getAroundXAxisAcc(ac, quat);//toAbsList(ac);  //no need for absolute values
 		
 		double[] means1 = meanAxes(absAc);
 		
@@ -359,7 +359,8 @@ public class Featurization {
 		//}
 		
 		//1 + 12 + 16*3 + 8 + 16*2 = 1 + 60 + 40
-		DataStorage.AddSampleS(-1.0, 
+		//for ring acc2, y and z
+		DataStorage.AddSampleS(1.0, 
 				0.0, diffPeak.y, diffPeak.z, 
 				0.0, f5, f6, 0.0, f8, f9, 0.0, f11, f12,
 				//freqX[1],freqX[2],freqX[3],freqX[4],freqX[5],freqX[6],freqX[7],freqX[8],freqX[9],freqX[10],freqX[11],freqX[12],freqX[13],freqX[14],freqX[15],
@@ -377,6 +378,28 @@ public class Featurization {
 				fmeans[6], fstds[6],fmeans[7], fstds[7],fmeans[8], fstds[8],fmeans[9], fstds[9],fmeans[10], fstds[10],fmeans[11], fstds[11],
 				fmeans[12], fstds[12],fmeans[13], fstds[13],fmeans[14], fstds[14],fmeans[15], fstds[15]
 				);
+		/*
+		//for watch acc1, x and z
+		DataStorage.AddSampleS(-1.0, 
+				diffPeak.x, 0, diffPeak.z, 
+				f4, 0, f6, f7, 0.0, f9, f10, 0.0, f12,
+				freqX[1],freqX[2],freqX[3],freqX[4],freqX[5],freqX[6],freqX[7],freqX[8],freqX[9],freqX[10],freqX[11],freqX[12],freqX[13],freqX[14],freqX[15],
+				0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+				//freqY[1],freqY[2],freqY[3],freqY[4],freqY[5],freqY[6],freqY[7],freqY[8],freqY[9],freqY[10],freqY[11],freqY[12],freqY[13],freqY[14],freqY[15],
+				freqZ[1],freqZ[2],freqZ[3],freqZ[4],freqZ[5],freqZ[6],freqZ[7],freqZ[8],freqZ[9],freqZ[10],freqZ[11],freqZ[12],freqZ[13],freqZ[14],freqZ[15],
+				0.0, 0.0, 0.0,
+				//average values don't help much
+				0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+				//32
+				//pos.x, pos.y, pos.z, 
+				0.0, 0.0, 0.0,
+				0.0, 0.0, 0.0,
+				0.0, fstds[3],fmeans[4], fstds[4],fmeans[5], fstds[5],
+				fmeans[6], fstds[6],fmeans[7], fstds[7],fmeans[8], fstds[8],fmeans[9], fstds[9],fmeans[10], fstds[10],fmeans[11], fstds[11],
+				fmeans[12], fstds[12],fmeans[13], fstds[13],fmeans[14], fstds[14],fmeans[15], fstds[15]
+				);
+				
+				*/
 	
 	}
 	

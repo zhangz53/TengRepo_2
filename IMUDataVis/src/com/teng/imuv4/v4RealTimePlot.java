@@ -22,8 +22,10 @@ class SerialDataCapture{
 	public static Vector3 acc1;
 	public static Vector3 acc2;
 	
-	public static Quaternion quat3;
+	public static Quaternion quat1;
+	public static Quaternion quat2;
 	public static Vector3 xAxis;
+	public static Vector3 zAxis;
 	//filters
 	//public static 
 	
@@ -38,8 +40,11 @@ class SerialDataCapture{
 	{
 		acc1 = new Vector3();
 		acc2 = new Vector3();
-		quat3 = new Quaternion();
+		quat1 = new Quaternion();
+		quat2 = new Quaternion();
+		
 		xAxis = new Vector3(1.0, 0, 0);
+		zAxis = new Vector3(0, 0, 1.0);
 		acc1Log = new ArrayList<Vector3>();
 		acc2Log = new ArrayList<Vector3>();
 		
@@ -125,7 +130,7 @@ class SerialDataCapture{
                     	{
                     		//System.out.print(outputString);
                     		//System.out.println(outputString.length());  // for quaternions should equal to 109, for acc should equal to 55
-                    		if(outputString.length() == 91 && outputString != null)  
+                    		if(outputString.length() == 126 && outputString != null)  
                     		{
                     			//decode the hex
                     			String[] outPutStringArr = outputString.split(",");
@@ -172,7 +177,7 @@ class SerialDataCapture{
                 				}*/
                     			
                     			//this is for accelerometers
-                    			if(outPutStringArr.length == 11)
+                    			if(outPutStringArr.length == 15)
                     			{
                     				acc1.Set(decodeFloat(outPutStringArr[0])/100.0,
                     						decodeFloat(outPutStringArr[1])/100.0, 
@@ -191,9 +196,18 @@ class SerialDataCapture{
                 							decodeFloat(outPutStringArr[6]));		//w
                 					
                 					tempQuat.Nor();
-                					quat3.Set(tempQuat);
+                					quat1.Set(tempQuat);
                     				
+                					Quaternion tempQuat2 = new Quaternion();                					
+                					tempQuat2.Set(decodeFloat(outPutStringArr[11]),  	//x 
+                							decodeFloat(outPutStringArr[12]),    	//y
+                							decodeFloat(outPutStringArr[13]), 		//z
+                							decodeFloat(outPutStringArr[10]));		//w
+                					
+                					tempQuat2.Nor();
+                					quat2.Set(tempQuat2);
                     				
+                					
                     				//apply filters
                     				//low pass, to remove noise
                 					//acc1.Set(mButter.applyButterWorth(1, 1, acc1));
@@ -202,15 +216,23 @@ class SerialDataCapture{
                     				//... to remove dc shift
                     				
                 					
-                					//get pitch degree
-                					double aroundXRad = quat3.getAngleAroundRad(xAxis);
-                					double alongMovementAcc = acc2.y * Math.cos(aroundXRad) + acc2.z * Math.sin(aroundXRad);
-                					double orthoMovementAcc = -acc2.y * Math.sin(aroundXRad) + acc2.z * Math.cos(aroundXRad);
+                					//get around x degree for ring acc2
+                					double aroundXRad_Acc2 = quat2.getAngleAroundRad(xAxis);
+                					double alongMovementAcc = acc2.y * Math.cos(aroundXRad_Acc2) + acc2.z * Math.sin(aroundXRad_Acc2);
+                					double orthoMovementAcc = -acc2.y * Math.sin(aroundXRad_Acc2) + acc2.z * Math.cos(aroundXRad_Acc2);
                 					
-                					acc1.Set(0.0, alongMovementAcc, orthoMovementAcc);
+                					//acc1.Set(0.0, alongMovementAcc, orthoMovementAcc);
                 					//System.out.println(aroundXRad);
                 					
-                    					
+                					//get around z for watch acc1
+                					double aroundXRad_Acc1 = quat1.getAngleAroundRad(xAxis);
+                					double orthoMovementAcc1 = -acc1.y * Math.sin(aroundXRad_Acc1) + acc1.z * Math.cos(aroundXRad_Acc1);
+                					
+                					//acc2.Set(acc1.x, 0, orthoMovementAcc1);
+                					
+                					//System.out.println(aroundXRad_Acc1);
+                					
+                					
                     				Vector3 temp1 = new Vector3();
                     				temp1.Set(acc1);
                     				acc1Log.add(temp1);

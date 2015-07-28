@@ -22,6 +22,8 @@ class SerialDataCap{
 	public static Quaternion quat3;
 	public static Vector3 acc1;
 	public static Vector3 acc2;
+	public static Vector3 xAxis;
+	
 	
 	public static Vector3 geoAcc;
 	public static double stamp;
@@ -44,6 +46,9 @@ class SerialDataCap{
 		acc1 = new Vector3();
 		acc2 = new Vector3();
 		quat3 = new Quaternion();
+		quat1 = new Quaternion();
+		quat2 = new Quaternion();
+		xAxis = new Vector3(1.0, 0, 0);
 		
 		firstTenAcc1 = new ArrayList<Vector3>();
 		firstTenAcc2 = new ArrayList<Vector3>();
@@ -133,13 +138,13 @@ class SerialDataCap{
                     	{
                     		//System.out.print(outputString);
                     		//System.out.println(outputString.length());  // for quaternions should equal to 109, for acc should equal to 55
-                    		if(outputString.length() == 91 && outputString != null)  
+                    		if(outputString.length() == 126 && outputString != null)  
                     		{
                     			//decode the hex
                     			String[] outPutStringArr = outputString.split(",");
                     			
                     			//this is for accelerometers
-                    			if(outPutStringArr.length == 11)
+                    			if(outPutStringArr.length == 15)
                     			{
                     				acc1.Set(decodeFloat(outPutStringArr[0])/100.0,
                     						decodeFloat(outPutStringArr[1])/100.0, 
@@ -156,7 +161,16 @@ class SerialDataCap{
                 							decodeFloat(outPutStringArr[6]));		//w
                 					
                 					tempQuat.Nor();
-                					quat3.Set(tempQuat);
+                					quat1.Set(tempQuat);
+                					
+                					Quaternion tempQuat2 = new Quaternion();                					
+                					tempQuat2.Set(decodeFloat(outPutStringArr[11]),  	//x 
+                							decodeFloat(outPutStringArr[12]),    	//y
+                							decodeFloat(outPutStringArr[13]), 		//z
+                							decodeFloat(outPutStringArr[10]));		//w
+                					
+                					tempQuat2.Nor();
+                					quat2.Set(tempQuat2);
                 					
                     				
                     				if(isFirstTen)
@@ -188,11 +202,21 @@ class SerialDataCap{
                         					//acc2.Sub(baseAcc2);
                         					//double tamp = System.currentTimeMillis();
                         					
+                        					//do the first feature selection here
+                        					//for acc2/ring
+                        					double aroundXRad_Acc2 = quat2.getAngleAroundRad(xAxis);
+                        					double alongMovementAcc2 = acc2.y * Math.cos(aroundXRad_Acc2) + acc2.z * Math.sin(aroundXRad_Acc2);
+                        					double orthoMovementAcc2 = -acc2.y * Math.sin(aroundXRad_Acc2) + acc2.z * Math.cos(aroundXRad_Acc2);
                         					
                         					
                         					
-                        					DataStorage.AddSampleF(sampleCount, acc1.x, acc1.y, acc1.z, acc2.x, acc2.y, acc2.z,
-                            						 quat3.x, quat3.y, quat3.z, quat3.w, 0.0, 0.0);
+                        					//for acc1/watch
+                        					double aroundXRad_Acc1 = quat1.getAngleAroundRad(xAxis);
+                        					double orthoMovementAcc1 = -acc1.y * Math.sin(aroundXRad_Acc1) + acc1.z * Math.cos(aroundXRad_Acc1);
+                        					
+                        					
+                        					DataStorage.AddSampleF(sampleCount, acc1.x, acc1.y, orthoMovementAcc1, acc2.x, alongMovementAcc2, orthoMovementAcc2,
+                            						 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
                         				}
                     				}
                     				
@@ -249,6 +273,42 @@ class SerialDataCap{
 		axeValues[2] = axeValues[2] / sz;
 		
 		return axeValues;
+	}
+	
+	public ArrayList<Vector3> getAroundAxisAcc(ArrayList<Vector3> accList, ArrayList<Quaternion> quatList, Vector3 axis)
+	{
+		ArrayList<Vector3> resultAccList = new ArrayList<Vector3>();
+		
+		if(accList.size() != quatList.size())
+		{
+			return resultAccList;
+		}else
+		{
+			int sz = accList.size();
+			for(int itra = 0; itra < sz; itra++)
+			{
+				//
+				double aroundAxisRadius = quatList.get(itra).getAngleAround(axis);
+				double alongMovementAcc = 0;
+				double orthoMovementAcc = 0;
+				
+				if(axis.x == 1.0 && axis.y == 0 && axis.z == 0){
+					alongMovementAcc = accList.get(itra).y * Math.cos(aroundAxisRadius) + accList.get(itra).z * Math.sin(aroundAxisRadius);
+					orthoMovementAcc = -accList.get(itra).y * Math.sin(aroundAxisRadius) + accList.get(itra).z * Math.cos(aroundAxisRadius);  //pay attention to the +-
+				}else if(axis.x == 0.0 && axis.y == 0 && axis.z == 1.0)
+				{
+					
+				}
+				
+				
+				
+				Vector3 temp = new Vector3();
+				temp.Set(accList.get(itra).x, alongMovementAcc, orthoMovementAcc);
+				resultAccList.add(temp);
+			}
+			
+			return resultAccList;
+		}
 	}
 }
 
