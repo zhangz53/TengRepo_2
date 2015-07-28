@@ -149,14 +149,15 @@ class SerialDataCap{
                     						decodeFloat(outPutStringArr[4])/100.0, 
                     						decodeFloat(outPutStringArr[5])/100.0);
                     				
-                    				//Quaternion tempQuat = new Quaternion();                					
-                					//tempQuat.Set(decodeFloat(outPutStringArr[7]),  	//x 
-                						//	decodeFloat(outPutStringArr[8]),    	//y
-                							//decodeFloat(outPutStringArr[9]), 		//z
-                							//decodeFloat(outPutStringArr[6]));		//w
+                    				Quaternion tempQuat = new Quaternion();                					
+                					tempQuat.Set(decodeFloat(outPutStringArr[7]),  	//x 
+                							decodeFloat(outPutStringArr[8]),    	//y
+                							decodeFloat(outPutStringArr[9]), 		//z
+                							decodeFloat(outPutStringArr[6]));		//w
                 					
-                					//tempQuat.Nor();
-                					//quat3.Set(tempQuat);
+                					tempQuat.Nor();
+                					quat3.Set(tempQuat);
+                					
                     				
                     				if(isFirstTen)
                     				{
@@ -183,8 +184,12 @@ class SerialDataCap{
                         				if(isRecording)
                         				{
                         					//deduce by base
-                        					acc1.Sub(baseAcc1);
-                        					acc2.Sub(baseAcc2);
+                        					//acc1.Sub(baseAcc1);
+                        					//acc2.Sub(baseAcc2);
+                        					//double tamp = System.currentTimeMillis();
+                        					
+                        					
+                        					
                         					
                         					DataStorage.AddSampleF(sampleCount, acc1.x, acc1.y, acc1.z, acc2.x, acc2.y, acc2.z,
                             						 quat3.x, quat3.y, quat3.z, quat3.w, 0.0, 0.0);

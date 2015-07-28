@@ -21,6 +21,8 @@ public class MathTest {
 	
 	public static final void main(String args[]){
 		
+		System.out.println(Math.cos(Math.PI));
+		
 		/*
 		System.out.println(Math.sin(Math.PI/2));
 		
@@ -49,7 +51,7 @@ public class MathTest {
 		*/
 		
 		
-		
+		/*
 		ArrayList<Integer> list = new ArrayList<Integer>();
 		for(int i = 0; i < 11; i++)
 		{
@@ -72,7 +74,7 @@ public class MathTest {
 		{
 			System.out.println(" " + newList.get(itr));
 		}
-		
+		*/
 		/*
 		list.add(0);
 		for(int itr = 0; itr < list.size(); itr++)

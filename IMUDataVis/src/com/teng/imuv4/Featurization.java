@@ -23,8 +23,9 @@ public class Featurization {
 	public ArrayList<Vector3> acc1;
 	public ArrayList<Vector3> acc2;
 	public ArrayList<Quaternion> quats;
+	public Vector3 xAxis;
 	
-	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\Teng\\round-2\\f11p.csv";
+	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\-1process.csv";
 	private int index = 1;  //start from 1
 	
 	//for fft
@@ -56,6 +57,7 @@ public class Featurization {
 		acc1 = new ArrayList<Vector3>();
 		acc2 = new ArrayList<Vector3>();
 		quats = new ArrayList<Quaternion>();
+		xAxis = new Vector3(1.0, 0, 0);
 		
 		pos = new Vector3();
 		velocity = new Vector3();
@@ -273,7 +275,7 @@ public class Featurization {
 		////////////////////////brute force features
 		//use absolute values
 		//since there is no rules for the waves
-		ArrayList<Vector3> absAc = ac;//toAbsList(ac);  //no need for absolute values
+		ArrayList<Vector3> absAc = getAroundXAxisAcc(ac, quat);//toAbsList(ac);  //no need for absolute values
 		
 		double[] means1 = meanAxes(absAc);
 		
@@ -323,7 +325,7 @@ public class Featurization {
 		//getDisplacement(ac);
 		
 		//diff peak
-		Vector3 diffPeak = largestNeighbourAbsDiff(ac);
+		Vector3 diffPeak = largestNeighbourAbsDiff(absAc);
 		
 		//frequency, taken care of mean
 		//signal sub by mean
@@ -332,7 +334,7 @@ public class Featurization {
 		for(int itra = 0; itra < ac.size(); itra++)
 		{
 			Vector3 temp = new Vector3();
-			temp.Set(ac.get(itra));
+			temp.Set(absAc.get(itra));
 			temp.Sub(means1[0], means1[1], means1[2]);  //remove the means
 			groundAc.add(temp);
 		}
@@ -357,10 +359,11 @@ public class Featurization {
 		//}
 		
 		//1 + 12 + 16*3 + 8 + 16*2 = 1 + 60 + 40
-		DataStorage.AddSampleS(1.0, 
-				diffPeak.x, diffPeak.y, diffPeak.z, 
-				f4, f5, f6, f7, f8, f9, f10, f11, f12,
-				freqX[1],freqX[2],freqX[3],freqX[4],freqX[5],freqX[6],freqX[7],freqX[8],freqX[9],freqX[10],freqX[11],freqX[12],freqX[13],freqX[14],freqX[15],
+		DataStorage.AddSampleS(-1.0, 
+				0.0, diffPeak.y, diffPeak.z, 
+				0.0, f5, f6, 0.0, f8, f9, 0.0, f11, f12,
+				//freqX[1],freqX[2],freqX[3],freqX[4],freqX[5],freqX[6],freqX[7],freqX[8],freqX[9],freqX[10],freqX[11],freqX[12],freqX[13],freqX[14],freqX[15],
+				0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
 				freqY[1],freqY[2],freqY[3],freqY[4],freqY[5],freqY[6],freqY[7],freqY[8],freqY[9],freqY[10],freqY[11],freqY[12],freqY[13],freqY[14],freqY[15],
 				freqZ[1],freqZ[2],freqZ[3],freqZ[4],freqZ[5],freqZ[6],freqZ[7],freqZ[8],freqZ[9],freqZ[10],freqZ[11],freqZ[12],freqZ[13],freqZ[14],freqZ[15],
 				0.0, 0.0, 0.0,
@@ -375,6 +378,34 @@ public class Featurization {
 				fmeans[12], fstds[12],fmeans[13], fstds[13],fmeans[14], fstds[14],fmeans[15], fstds[15]
 				);
 	
+	}
+	
+	
+	public ArrayList<Vector3> getAroundXAxisAcc(ArrayList<Vector3> accList, ArrayList<Quaternion> quatList)
+	{
+		ArrayList<Vector3> resultAccList = new ArrayList<Vector3>();
+		
+		if(accList.size() != quatList.size())
+		{
+			return resultAccList;
+		}else
+		{
+			int sz = accList.size();
+			for(int itra = 0; itra < sz; itra++)
+			{
+				//
+				double aroundXRadius = quatList.get(itra).getAngleAround(xAxis);
+				
+				double alongMovementAcc = accList.get(itra).y * Math.cos(aroundXRadius) + accList.get(itra).z * Math.sin(aroundXRadius);
+				double orthoMovementAcc = -accList.get(itra).y * Math.sin(aroundXRadius) + accList.get(itra).z * Math.cos(aroundXRadius);  //pay attention to the +-
+				
+				Vector3 temp = new Vector3();
+				temp.Set(accList.get(itra).x, alongMovementAcc, orthoMovementAcc);
+				resultAccList.add(temp);
+			}
+			
+			return resultAccList;
+		}
 	}
 	
 	

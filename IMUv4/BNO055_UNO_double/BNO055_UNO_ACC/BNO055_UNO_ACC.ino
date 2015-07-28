@@ -325,7 +325,7 @@ void loop()
   //gravityVec();
   //eulerHead();
   
-  delay(10); //100hz
+  delay(10); //
 }
 
 void acc(){
@@ -455,7 +455,7 @@ void freeCubeAllDoubleRF()
 {
   float a1[3];  //x, y, z
   float a2[3];
-  float q[4];
+  //float q[4];
   float q1[4];
   float q2[4];
   
@@ -464,7 +464,7 @@ void freeCubeAllDoubleRF()
   BNO055_3_vec_1(LIA_DATA_X_LSB, &a2[0]);
   
   //read quat
-  BNO055_4_vec(QUA_DATA_W_LSB, &q1[0]);
+  //BNO055_4_vec(QUA_DATA_W_LSB, &q1[0]);
   BNO055_4_vec_1(QUA_DATA_W_LSB, &q2[0]);
   
   /*
@@ -485,7 +485,9 @@ void freeCubeAllDoubleRF()
   q[3] =  q1[1] * q2[2] - q1[2] * q2[1] + q1[3] * q2[0] + q1[0] * q2[3];
   */
   
-  freeIMUOut_allDoubleRF(&a1[0], &a2[0], &q1[0]);
+  //freeIMUOut_allDoubleRF(&a1[0], &a2[0], &q1[0], &q2[0]);
+  freeIMUOut_threeDoubleRF(&a1[0], &a2[0], &q2[0]);
+  
 }
 
 void BNO055_3_vec(int8_t addr, float *vec){
@@ -745,7 +747,41 @@ void freeIMUOut_accDoubleRF(float *a1, float *a2)
   RF.endTransmission();
 }
 
-void freeIMUOut_allDoubleRF(float *a1, float *a2, float *q)
+void freeIMUOut_allDoubleRF(float *a1, float *a2, float *q1, float *q2)
+{
+  RF.beginTransmission();
+  serialFloatPrintRF(a1[0]);
+  RF.write(",");
+  serialFloatPrintRF(a1[1]);
+  RF.write(",");
+  serialFloatPrintRF(a1[2]);
+  RF.write(",");
+  serialFloatPrintRF(a2[0]);
+  RF.write(",");
+  serialFloatPrintRF(a2[1]);
+  RF.write(",");
+  serialFloatPrintRF(a2[2]);
+  RF.write(",");
+  serialFloatPrintRF(q1[0]);
+  RF.write(",");
+  serialFloatPrintRF(q1[1]);
+  RF.write(",");
+  serialFloatPrintRF(q1[2]);
+  RF.write(",");
+  serialFloatPrintRF(q1[3]);
+  RF.write(",");
+  serialFloatPrintRF(q2[0]);
+  RF.write(",");
+  serialFloatPrintRF(q2[1]);
+  RF.write(",");
+  serialFloatPrintRF(q2[2]);
+  RF.write(",");
+  serialFloatPrintRF(q2[3]);
+  RF.write(",\n");  
+  RF.endTransmission();
+}
+
+void freeIMUOut_threeDoubleRF(float *a1, float *a2, float *q)
 {
   RF.beginTransmission();
   serialFloatPrintRF(a1[0]);

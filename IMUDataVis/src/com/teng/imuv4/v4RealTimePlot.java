@@ -10,6 +10,8 @@ import java.util.ArrayList;
 
 import processing.core.PApplet;
 
+import com.teng.filter.ButterWorth;
+import com.teng.math.Quaternion;
 import com.teng.math.Vector3;
 
 class SerialDataCapture{
@@ -20,6 +22,8 @@ class SerialDataCapture{
 	public static Vector3 acc1;
 	public static Vector3 acc2;
 	
+	public static Quaternion quat3;
+	public static Vector3 xAxis;
 	//filters
 	//public static 
 	
@@ -28,13 +32,20 @@ class SerialDataCapture{
 	public static ArrayList<Vector3> acc1Log;
 	public static ArrayList<Vector3> acc2Log;
 	
+	//public static ButterWorth mButter;
+	
 	public SerialDataCapture()
 	{
 		acc1 = new Vector3();
 		acc2 = new Vector3();
-		
+		quat3 = new Quaternion();
+		xAxis = new Vector3(1.0, 0, 0);
 		acc1Log = new ArrayList<Vector3>();
 		acc2Log = new ArrayList<Vector3>();
+		
+		//mButter = new ButterWorth(ButterWorth.BandType.low);
+		//mButter.createDataSet();
+		//mButter.createDataSet();
 		
 	}
 	
@@ -171,13 +182,34 @@ class SerialDataCapture{
                     						decodeFloat(outPutStringArr[4])/100.0, 
                     						decodeFloat(outPutStringArr[5])/100.0);
                     				
+                    				//System.out.println(acc2.z);
+                    				
+                    				Quaternion tempQuat = new Quaternion();                					
+                					tempQuat.Set(decodeFloat(outPutStringArr[7]),  	//x 
+                							decodeFloat(outPutStringArr[8]),    	//y
+                							decodeFloat(outPutStringArr[9]), 		//z
+                							decodeFloat(outPutStringArr[6]));		//w
+                					
+                					tempQuat.Nor();
+                					quat3.Set(tempQuat);
+                    				
                     				
                     				//apply filters
                     				//low pass, to remove noise
-                    				
+                					//acc1.Set(mButter.applyButterWorth(1, 1, acc1));
+                					//acc2.Set(mButter.applyButterWorth(2, 1, acc2));
                     				
                     				//... to remove dc shift
                     				
+                					
+                					//get pitch degree
+                					double aroundXRad = quat3.getAngleAroundRad(xAxis);
+                					double alongMovementAcc = acc2.y * Math.cos(aroundXRad) + acc2.z * Math.sin(aroundXRad);
+                					double orthoMovementAcc = -acc2.y * Math.sin(aroundXRad) + acc2.z * Math.cos(aroundXRad);
+                					
+                					acc1.Set(0.0, alongMovementAcc, orthoMovementAcc);
+                					//System.out.println(aroundXRad);
+                					
                     					
                     				Vector3 temp1 = new Vector3();
                     				temp1.Set(acc1);
@@ -286,6 +318,8 @@ public class v4RealTimePlot extends PApplet{
 	public void draw()  //loop at around 60hz
 	{
 		background(250);
+		
+		
 		
 		//draw acc1log, up side
 		{

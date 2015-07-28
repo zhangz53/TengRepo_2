@@ -8,6 +8,7 @@ import java.util.ArrayList;
 
 import processing.core.PApplet;
 
+import com.teng.math.Quaternion;
 import com.teng.math.Vector3;
 import com.teng.phdata.DataStorage;
 
@@ -22,13 +23,16 @@ class DataLoad{
 	public ArrayList<Vector3> acc1;
 	public ArrayList<Vector3> acc2;
 	
+	public ArrayList<Quaternion> quat;
+	
 	public DataLoad()
 	{
 		acc1 = new ArrayList<Vector3>();
 		acc2 = new ArrayList<Vector3>();
+		quat = new ArrayList<Quaternion>();
 		
 		//read the csv file
-		String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\1436899257851_testfilter.csv";
+		String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\-1_testfilter.csv";
 		try {
 			br = new BufferedReader(new FileReader(dataFile));
 		} catch (FileNotFoundException e) {
@@ -53,6 +57,7 @@ class DataLoad{
 						//record the data
 						acc1.add(new Vector3(Double.parseDouble(values[1]), Double.parseDouble(values[2]), Double.parseDouble(values[3])));
 						acc2.add(new Vector3(Double.parseDouble(values[4]), Double.parseDouble(values[5]), Double.parseDouble(values[6])));
+						quat.add(new Quaternion(Double.parseDouble(values[7]), Double.parseDouble(values[8]), Double.parseDouble(values[9]),  Double.parseDouble(values[10])));
 						
 						//do another fetch
 						fetchData(index);
@@ -217,12 +222,13 @@ public class PreProcessing extends PApplet{
 		{
 			DataStorage.AddSampleF((double)sampleIndex, mDataLoad.acc1.get(itrb).x, mDataLoad.acc1.get(itrb).y, mDataLoad.acc1.get(itrb).z,
 					mDataLoad.acc2.get(itrb).x, mDataLoad.acc2.get(itrb).y, mDataLoad.acc2.get(itrb).z, 
-					0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+					mDataLoad.quat.get(itrb).x, mDataLoad.quat.get(itrb).y, mDataLoad.quat.get(itrb).z, mDataLoad.quat.get(itrb).w, 0.0, 0.0);
 		}
 		
 		//clear acc1 and acc2
 		mDataLoad.acc1.clear();
 		mDataLoad.acc2.clear();
+		mDataLoad.quat.clear();
 		
 		//get new data for next index
 		sampleIndex++;

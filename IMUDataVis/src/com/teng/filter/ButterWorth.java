@@ -62,12 +62,12 @@ public class ButterWorth {
 			//ccof.add(0.136728735997320);
 			//ccof.add(0.136728735997320);
 			
-			//10hz cutoff, low pass
+			//10hz cutoff, low pass  55hz
 			dcof.add(1.0);
-			dcof.add(-0.324919696232906);
+			dcof.add(-0.217536684561449);
 			
-			ccof.add(0.337540151883547);
-			ccof.add(0.337540151883547);
+			ccof.add(0.391231657719275);
+			ccof.add(0.391231657719275);
 			
 			bandType = BandType.low;
 		}
