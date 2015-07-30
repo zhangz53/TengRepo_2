@@ -228,7 +228,7 @@ class SerialDataCapture{
                 					double aroundXRad_Acc1 = quat1.getAngleAroundRad(xAxis);
                 					double orthoMovementAcc1 = -acc1.y * Math.sin(aroundXRad_Acc1) + acc1.z * Math.cos(aroundXRad_Acc1);
                 					
-                					//acc2.Set(acc1.x, 0, orthoMovementAcc1);
+                					acc2.Set(acc1.x, 0, orthoMovementAcc1);
                 					
                 					//System.out.println(aroundXRad_Acc1);
                 					
@@ -329,7 +329,7 @@ public class v4RealTimePlot extends PApplet{
 		windowWidth = 1500;
 		windowHeight = 1200;  //split into two
 		widthSeg = windowWidth / mSerial.logSize;
-		heightThreshold = 10;  //+ - 10
+		heightThreshold = 5;  //+ - 10
 		heightSeg = (windowHeight/2) / (2 * heightThreshold);
 		
 		size(windowWidth, windowHeight);
