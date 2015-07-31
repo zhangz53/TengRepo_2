@@ -130,7 +130,7 @@ class SerialDataCapture{
                     	{
                     		//System.out.print(outputString);
                     		//System.out.println(outputString.length());  // for quaternions should equal to 109, for acc should equal to 55
-                    		if(outputString.length() == 126 && outputString != null)  
+                    		if(outputString.length() == 91 && outputString != null)    //126
                     		{
                     			//decode the hex
                     			String[] outPutStringArr = outputString.split(",");
@@ -177,7 +177,7 @@ class SerialDataCapture{
                 				}*/
                     			
                     			//this is for accelerometers
-                    			if(outPutStringArr.length == 15)
+                    			if(outPutStringArr.length == 11)
                     			{
                     				acc1.Set(decodeFloat(outPutStringArr[0])/100.0,
                     						decodeFloat(outPutStringArr[1])/100.0, 
@@ -189,6 +189,7 @@ class SerialDataCapture{
                     				
                     				//System.out.println(acc2.z);
                     				
+                    				/*
                     				Quaternion tempQuat = new Quaternion();                					
                 					tempQuat.Set(decodeFloat(outPutStringArr[7]),  	//x 
                 							decodeFloat(outPutStringArr[8]),    	//y
@@ -207,7 +208,17 @@ class SerialDataCapture{
                 					tempQuat2.Nor();
                 					quat2.Set(tempQuat2);
                     				
+                					*/
+                    				
+                    				Quaternion tempQuat2 = new Quaternion();                					
+                					tempQuat2.Set(decodeFloat(outPutStringArr[7]),  	//x 
+                							decodeFloat(outPutStringArr[8]),    	//y
+                							decodeFloat(outPutStringArr[9]), 		//z
+                							decodeFloat(outPutStringArr[6]));		//w
                 					
+                					tempQuat2.Nor();
+                					quat2.Set(tempQuat2);
+                    				
                     				//apply filters
                     				//low pass, to remove noise
                 					//acc1.Set(mButter.applyButterWorth(1, 1, acc1));
@@ -225,10 +236,10 @@ class SerialDataCapture{
                 					//System.out.println(aroundXRad);
                 					
                 					//get around z for watch acc1
-                					double aroundXRad_Acc1 = quat1.getAngleAroundRad(xAxis);
-                					double orthoMovementAcc1 = -acc1.y * Math.sin(aroundXRad_Acc1) + acc1.z * Math.cos(aroundXRad_Acc1);
+                					//double aroundXRad_Acc1 = quat1.getAngleAroundRad(xAxis);
+                					//double orthoMovementAcc1 = -acc1.y * Math.sin(aroundXRad_Acc1) + acc1.z * Math.cos(aroundXRad_Acc1);
                 					
-                					acc2.Set(acc1.x, 0, orthoMovementAcc1);
+                					//acc2.Set(acc1.x, 0, orthoMovementAcc1);
                 					
                 					//System.out.println(aroundXRad_Acc1);
                 					

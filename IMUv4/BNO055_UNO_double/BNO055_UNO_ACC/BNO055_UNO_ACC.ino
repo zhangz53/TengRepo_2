@@ -464,7 +464,7 @@ void freeCubeAllDoubleRF()
   BNO055_3_vec_1(LIA_DATA_X_LSB, &a2[0]);
   
   //read quat
-  BNO055_4_vec(QUA_DATA_W_LSB, &q1[0]);
+  //BNO055_4_vec(QUA_DATA_W_LSB, &q1[0]);
   BNO055_4_vec_1(QUA_DATA_W_LSB, &q2[0]);
   
   /*
@@ -485,8 +485,8 @@ void freeCubeAllDoubleRF()
   q[3] =  q1[1] * q2[2] - q1[2] * q2[1] + q1[3] * q2[0] + q1[0] * q2[3];
   */
   
-  freeIMUOut_allDoubleRF(&a1[0], &a2[0], &q1[0], &q2[0]);
-  //freeIMUOut_threeDoubleRF(&a1[0], &a2[0], &q2[0]);
+  //freeIMUOut_allDoubleRF(&a1[0], &a2[0], &q1[0], &q2[0]);
+  freeIMUOut_threeDoubleRF(&a1[0], &a2[0], &q2[0]);
   
 }
 

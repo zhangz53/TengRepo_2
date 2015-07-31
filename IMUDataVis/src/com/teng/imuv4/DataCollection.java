@@ -138,13 +138,13 @@ class SerialDataCap{
                     	{
                     		//System.out.print(outputString);
                     		//System.out.println(outputString.length());  // for quaternions should equal to 109, for acc should equal to 55
-                    		if(outputString.length() == 126 && outputString != null)  
+                    		if(outputString.length() == 91 && outputString != null)  
                     		{
                     			//decode the hex
                     			String[] outPutStringArr = outputString.split(",");
                     			
                     			//this is for accelerometers
-                    			if(outPutStringArr.length == 15)
+                    			if(outPutStringArr.length == 11)
                     			{
                     				acc1.Set(decodeFloat(outPutStringArr[0])/100.0,
                     						decodeFloat(outPutStringArr[1])/100.0, 
@@ -154,6 +154,7 @@ class SerialDataCap{
                     						decodeFloat(outPutStringArr[4])/100.0, 
                     						decodeFloat(outPutStringArr[5])/100.0);
                     				
+                    				/*
                     				Quaternion tempQuat = new Quaternion();                					
                 					tempQuat.Set(decodeFloat(outPutStringArr[7]),  	//x 
                 							decodeFloat(outPutStringArr[8]),    	//y
@@ -171,7 +172,16 @@ class SerialDataCap{
                 					
                 					tempQuat2.Nor();
                 					quat2.Set(tempQuat2);
+                					*/
+                    				Quaternion tempQuat2 = new Quaternion();                					
+                					tempQuat2.Set(decodeFloat(outPutStringArr[7]),  	//x 
+                							decodeFloat(outPutStringArr[8]),    	//y
+                							decodeFloat(outPutStringArr[9]), 		//z
+                							decodeFloat(outPutStringArr[6]));		//w
                 					
+                					tempQuat2.Nor();
+                					quat2.Set(tempQuat2);
+                    				
                     				
                     				if(isFirstTen)
                     				{
@@ -211,11 +221,11 @@ class SerialDataCap{
                         					
                         					
                         					//for acc1/watch
-                        					double aroundXRad_Acc1 = quat1.getAngleAroundRad(xAxis);
-                        					double orthoMovementAcc1 = -acc1.y * Math.sin(aroundXRad_Acc1) + acc1.z * Math.cos(aroundXRad_Acc1);
+                        					//double aroundXRad_Acc1 = quat1.getAngleAroundRad(xAxis);
+                        					//double orthoMovementAcc1 = -acc1.y * Math.sin(aroundXRad_Acc1) + acc1.z * Math.cos(aroundXRad_Acc1);
                         					
                         					
-                        					DataStorage.AddSampleF(sampleCount, acc1.x, acc1.y, orthoMovementAcc1, acc2.x, alongMovementAcc2, orthoMovementAcc2,
+                        					DataStorage.AddSampleF(sampleCount, acc1.x, acc1.y, acc1.z, acc2.x, alongMovementAcc2, orthoMovementAcc2,
                             						 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
                         				}
                     				}
