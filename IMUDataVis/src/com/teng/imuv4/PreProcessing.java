@@ -32,7 +32,7 @@ class DataLoad{
 		//quat = new ArrayList<Quaternion>();
 		
 		//read the csv file
-		String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\formal_algorithm\\7\\8_testfilter.csv";
+		String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\formal_algorithm\\11\\8_testfilter.csv";
 		try {
 			br = new BufferedReader(new FileReader(dataFile));
 		} catch (FileNotFoundException e) {
