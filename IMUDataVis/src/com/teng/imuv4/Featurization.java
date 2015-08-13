@@ -25,8 +25,8 @@ public class Featurization {
 	public ArrayList<Quaternion> quats;
 	public Vector3 xAxis;
 	
-	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\formal_algorithm\\12\\h_n_0.csv";
-	private int directionIndex = 0; //1:vertical, 0:horizontal
+	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\0process.csv";
+	private int directionIndex = 1; //1:vertical, 0:horizontal
 	private double rLabel = -1.0;
 	private int accIndex = 2;
 	
