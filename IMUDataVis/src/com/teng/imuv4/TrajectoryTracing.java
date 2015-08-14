@@ -6,6 +6,7 @@ import gnu.io.SerialPort;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 
 import processing.core.PApplet;
 
@@ -19,7 +20,10 @@ class SerialDataAcc {
 	private static String outputString = new String();
 	public static Quaternion quat;
 	public static Vector3 acc;
-	public static double stamp = 0.0151;  //in seconds
+	public static double stamp = 0;  //in seconds
+	public static double prevStamp = 0;
+	public static double curStamp = 0;
+	public static boolean isFirstFrame = true;
 	
 	public static Vector3 pos;      //space pos
 	public static Vector3 velocity;	//space speed
@@ -27,6 +31,18 @@ class SerialDataAcc {
 	public static Matrix4 mMatrix;	//space rotation matrix
 	public static Vector3 filter_velocity;	//space speed
 	public static Vector3 filter_pos;	//space acc
+	public static Vector3 xAxis;
+	
+	//
+	public static int outwardsCount = 0;
+	public static double prevDistance = 0;
+	public static int inwardsCount = 0;
+	public static boolean isMovingOutwards = false;
+	
+	public static int logSize = 65*2; //250hz for 5 secs
+	public static ArrayList<Vector3> accLog;
+	public static ArrayList<Vector3> velLog;
+	public static ArrayList<Vector3> posLog;
 	
 	
 	public static ButterWorth mButterHp;
@@ -50,9 +66,14 @@ class SerialDataAcc {
 		velocity = new Vector3(); velocity.Set(Vector3.Zero);
 		linAcc = new Vector3(); linAcc.Set(Vector3.Zero);
 		mMatrix = new Matrix4();
+		xAxis = new Vector3(1.0, 0, 0);
 		
 		filter_velocity = new Vector3(); filter_velocity.Set(Vector3.Zero);
 		filter_pos = new Vector3(); filter_pos.Set(Vector3.Zero);
+		
+		accLog = new ArrayList<Vector3>();
+		velLog = new ArrayList<Vector3>();
+		posLog = new ArrayList<Vector3>();
 		
 		mButterHp = new ButterWorth(ButterWorth.BandType.high);
 		//create data set for velocity and pos
@@ -145,10 +166,9 @@ class SerialDataAcc {
                 				if(outPutStringArr.length == 11)
                 				{
                 					//set acc
-                					acc.Set(decodeFloat(outPutStringArr[0]) / 100.0, 
-                							decodeFloat(outPutStringArr[1]) / 100.0, 
-                							decodeFloat(outPutStringArr[2]) / 100.0);
-                					
+                					acc.Set(decodeFloat(outPutStringArr[3]) / 100.0, 
+                							decodeFloat(outPutStringArr[4]) / 100.0, 
+                							decodeFloat(outPutStringArr[5]) / 100.0);
                 					
                 					//set quat
                 					Quaternion tempQuat = new Quaternion();
@@ -160,9 +180,21 @@ class SerialDataAcc {
                 					tempQuat.Nor();
                 					quat.Set(tempQuat);
                 					
+                					curStamp = System.currentTimeMillis() / 1000.0;
+                					if(isFirstFrame)
+                					{
+                						prevStamp = curStamp;
+                						isFirstFrame = false;
+                					}else
+                					{
+                						stamp = curStamp - prevStamp;
+                						//do the calculations
+                    					getWorldPos(acc, quat, stamp);
+                    					
+                    					prevStamp = curStamp;
+                					}
+                						
                 					
-                					//do the calculations
-                					getWorldPos(acc, quat);
                 				}
                     		}
                     		
@@ -195,10 +227,11 @@ class SerialDataAcc {
 		return Float.intBitsToFloat(intbits);
 	}
 	
-	static void getWorldPos(Vector3 ac, Quaternion qu)  //no filters at the moment, need to implement good filters, todo task
+	static void getWorldPos(Vector3 ac, Quaternion qu, double duration)  //no filters at the moment, need to implement good filters, todo task
 	{
 		//add filters?
 		
+		/*
 		mMatrix.Set(qu);
 		linAcc.Set(ac);
 		linAcc.Mul(mMatrix.inv());
@@ -209,6 +242,79 @@ class SerialDataAcc {
 		
 		pos.Add(filter_velocity.scl(stamp));
 		filter_pos.Set(mButterHp.applyButterWorth(2, 1, pos));
+		*/
+		
+		//get around x
+		double aroundXRad_Acc = qu.getAngleAroundRad(xAxis);
+		double alongMovementAcc = ac.y * Math.cos(aroundXRad_Acc) + ac.z * Math.sin(aroundXRad_Acc);
+		double orthoMovementAcc = -ac.y * Math.sin(aroundXRad_Acc) + ac.z * Math.cos(aroundXRad_Acc);
+	
+		linAcc.Set(0.0, alongMovementAcc, 0.0);
+		velocity.Add(linAcc.scl(duration));
+		filter_velocity.Set(mButterHp.applyButterWorth(1, 1, velocity));
+		
+		//System.out.println(filter_velocity.y);
+		
+		
+		pos.Add(filter_velocity.scl(duration));
+		filter_pos.Set(mButterHp.applyButterWorth(2, 1, pos));
+		
+		//heuristic: forwards gestures, that keeps moving away from (0,0,0)
+		testMoveOutwards(filter_pos, 20);
+		
+		//log data
+		Vector3 temp1 = new Vector3();
+		temp1.Set(linAcc);
+		accLog.add(temp1);
+		Vector3 temp2 = new Vector3();
+		temp2.Set(filter_velocity);
+		velLog.add(temp2);
+		Vector3 temp3 = new Vector3();
+		temp3.Set(filter_pos);
+		posLog.add(temp3);
+		
+		if(accLog.size() > logSize)
+		{
+			accLog.remove(0);
+		}
+		
+		if(velLog.size() > logSize)
+		{
+			velLog.remove(0);
+		}
+
+		if(posLog.size() > logSize)
+		{
+			posLog.remove(0);
+		}
+	}
+	
+	static void testMoveOutwards(Vector3 position, int validFrameNumber)
+	{
+		double distanceToZero2 = position.len2();
+		
+		if(distanceToZero2 < prevDistance)
+		{
+			inwardsCount++;
+			
+			if(inwardsCount == validFrameNumber)
+			{
+				inwardsCount = 0;
+				
+				//print the value
+				//System.out.println("distance: " + Math.sqrt(distanceToZero2));
+			}
+		}else
+		{
+			inwardsCount = 0;
+		}
+		
+		prevDistance = distanceToZero2;
+	}
+	
+	static void reset()
+	{
+		
 	}
 	
 }
@@ -218,6 +324,12 @@ public class TrajectoryTracing extends PApplet{
 	public SerialDataAcc mSerialDataAcc;
 	
 	boolean ready4Interpolate = false;
+	
+	public double widthSeg;
+	public double heightSeg;
+	public double heightThreshold;
+	public int windowWidth;
+	public int windowHeight;
 	
 	public void setup()
 	{
@@ -230,9 +342,13 @@ public class TrajectoryTracing extends PApplet{
 			e.printStackTrace();
 		}
 		
+		windowWidth = 1500;
+		windowHeight = 1200;  //split into two
+		widthSeg = windowWidth / mSerialDataAcc.logSize;
+		heightThreshold = 0.5;  //+ - 10
+		heightSeg = (windowHeight/2) / (2 * heightThreshold);
 		
-		
-		size(1000, 1000, P3D);
+		size(windowWidth, windowHeight, P3D);
 		background(250);
 		
 		camera(500.0f, 200.0f, 1000.0f, 500.0f, 500.0f, 0.0f, 0.0f, 1.0f, 0.0f);
@@ -263,6 +379,7 @@ public class TrajectoryTracing extends PApplet{
 		background(250);
 		
 		//coordinates
+		/*
 		{
 			pushMatrix();
 			translate(width/2, height*3/5, 0);
@@ -279,16 +396,16 @@ public class TrajectoryTracing extends PApplet{
 				line(-350, itry, 0, 350, itry, 0);
 			}
 			popMatrix();
-		}
+		}*/
 		
 		//cube
 		{
 			pushMatrix();				
 			fill(200, 10, 50);
 			lights();
-			//translate(width/2 - (float)mSerialDataAcc.pos.y*100.0f, height*3/5 -  (float)mSerialDataAcc.pos.z*100.0f  ,  (float)mSerialDataAcc.pos.x*100.0f);
+			translate(width/2 - (float)mSerialDataAcc.filter_pos.y*1000.0f, height*3/5 -  (float)mSerialDataAcc.filter_pos.z*1000.0f  ,  (float)mSerialDataAcc.filter_pos.x*1000.0f);
 			
-			translate(width/2 , height*3/5 , 0f);
+			//translate(width/2 , height*3/5 , 0f);
 			
 			//apply rotation matrix
 			
@@ -303,6 +420,42 @@ public class TrajectoryTracing extends PApplet{
 			popMatrix();
 		}
 		
+		
+		//signal
+		{
+			pushMatrix();	
+			ArrayList<Vector3> signalList = mSerialDataAcc.posLog;
+			int acc1Size = signalList.size();  //since it's not in the same thread, size could be larger than the logsize
+			if(acc1Size > mSerialDataAcc.logSize)
+			{
+				acc1Size = mSerialDataAcc.logSize;
+			}
+			
+			if(acc1Size > 10)
+			{
+				for(int itra = 0; itra < (acc1Size-1); itra ++)
+				{
+					stroke(255, 0, 0);  //x
+					line((float)(windowWidth - acc1Size * widthSeg + itra * widthSeg), 
+							 (float)(windowHeight * 3 / 4 + signalList.get(itra).x * heightSeg), 
+							 (float)(windowWidth - acc1Size * widthSeg + (itra + 1) * widthSeg), 
+							 (float)(windowHeight * 3 / 4 + signalList.get(itra + 1).x * heightSeg));
+					
+					stroke(0, 255, 0);  //y
+					line((float)(windowWidth - acc1Size * widthSeg + itra * widthSeg), 
+							 (float)(windowHeight * 3 / 4 + signalList.get(itra).y *10 * heightSeg),
+							 (float)(windowWidth - acc1Size * widthSeg + (itra + 1) * widthSeg), 
+							 (float)(windowHeight * 3 / 4 + signalList.get(itra + 1).y *10 * heightSeg));
+					
+					stroke(0, 0, 255);  //z
+					line((float)(windowWidth - acc1Size * widthSeg + itra * widthSeg), 
+							 (float)(windowHeight * 3 / 4 + signalList.get(itra).z * heightSeg), 
+							 (float)(windowWidth - acc1Size * widthSeg + (itra + 1) * widthSeg), 
+							 (float)(windowHeight * 3 / 4 + signalList.get(itra + 1).z * heightSeg));
+				}
+			}
+			popMatrix();
+		}
 		
 		/*
 		background(250);
