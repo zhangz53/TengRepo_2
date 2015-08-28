@@ -24,8 +24,8 @@ class SerialPortReader
 	
 	//data log
 	public static double sampleCount = 0.0;
-	public static int sampleNum = 30;  //has to be mapped with the number chosen in PreProcessing
-	private static int movingWindowSize = 30;  //decide frequency to examine the windowed data
+	public static int sampleNum = 8;  //has to be mapped with the number chosen in PreProcessing
+	private static int movingWindowSize = 8;  //decide frequency to examine the windowed data
 	private static int movingCount = 0;
 	
 	public static ArrayList<Vector3> dataset_acc1;
@@ -121,7 +121,7 @@ class SerialPortReader
                     	{
                     		//System.out.print(outputString);
                     		//System.out.println(outputString.length());  // for quaternions should equal to 109, for acc should equal to 55
-                    		if(outputString.length() == 55 && outputString != null)  
+                    		if(outputString.length() == 91 && outputString != null)  
                     		{
                     			//decode the hex
                     			String[] outPutStringArr = outputString.split(",");

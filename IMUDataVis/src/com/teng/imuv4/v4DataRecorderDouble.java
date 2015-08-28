@@ -26,6 +26,9 @@ public class v4DataRecorderDouble {
 	
 	public static Vector3 geoAcc;
 	public static double stamp;
+	public static double curStamp;
+	public static double prevStamp;
+	public static boolean isFirstFrame = true;
 	public static double typeValue = 1.0;
 	
 	//filters
@@ -125,13 +128,13 @@ public class v4DataRecorderDouble {
                     	{
                     		//System.out.print(outputString);
                     		//System.out.println(outputString.length());  // for quaternions should equal to 109, for acc should equal to 55
-                    		if(outputString.length() == 91 && outputString != null)  
+                    		if(outputString.length() == 100 && outputString != null)  //64
                     		{
                     			//decode the hex
                     			String[] outPutStringArr = outputString.split(",");
                     			
                     			//this is for accelerometers
-                    			if(outPutStringArr.length == 11)
+                    			if(outPutStringArr.length == 12)
                     			{
                     				acc1.Set(decodeFloat(outPutStringArr[0])/100.0,
                     						decodeFloat(outPutStringArr[1])/100.0, 
@@ -141,6 +144,14 @@ public class v4DataRecorderDouble {
                     						decodeFloat(outPutStringArr[4])/100.0, 
                     						decodeFloat(outPutStringArr[5])/100.0);
                     				
+                    				
+                    				stamp = decodeFloat(outPutStringArr[10]) / 1000.0; 
+                    				
+                    				DataStorage.AddSampleF(stamp, acc1.x, acc1.y, acc1.z, acc2.x, acc2.y, acc2.z,
+                        						0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+
+                					
+                					
                     				//filters
                     				//remove noise
                     				
@@ -148,8 +159,7 @@ public class v4DataRecorderDouble {
                     				//remove dc shift
                     				
                     				//record
-                    				DataStorage.AddSampleF(1.0, acc1.x, acc1.y, acc1.z, acc2.x, acc2.y, acc2.z,
-                    						0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+                    				
                     			}
                     			
                     		}
@@ -185,7 +195,7 @@ public class v4DataRecorderDouble {
 	
 	public static final void main(String args[]) throws Exception{
 		v4DataRecorderDouble recorder = new v4DataRecorderDouble();
-		recorder.connect("COM11");
+		recorder.connect("COM2");
 		
 		System.out.println("Recording... Press to Stop");
 		System.in.read();

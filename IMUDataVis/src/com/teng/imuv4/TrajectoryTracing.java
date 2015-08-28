@@ -231,11 +231,12 @@ class SerialDataAcc {
 	{
 		//add filters?
 		
-		/*
-		mMatrix.Set(qu);
-		linAcc.Set(ac);
-		linAcc.Mul(mMatrix.inv());
 		
+		//mMatrix.Set(qu);
+		//linAcc.Set(ac);
+		//linAcc.Mul(mMatrix.inv());
+		 
+		/*
 		velocity.Add(linAcc.scl(stamp));
 		//apply high pass filter
 		filter_velocity.Set(mButterHp.applyButterWorth(1, 1, velocity));
@@ -249,6 +250,11 @@ class SerialDataAcc {
 		double alongMovementAcc = ac.y * Math.cos(aroundXRad_Acc) + ac.z * Math.sin(aroundXRad_Acc);
 		double orthoMovementAcc = -ac.y * Math.sin(aroundXRad_Acc) + ac.z * Math.cos(aroundXRad_Acc);
 	
+		//compare on y, so different
+		//System.out.println("from inv matrix: " + linAcc.y + ",   from angle: " + alongMovementAcc);
+		
+		
+		
 		linAcc.Set(0.0, alongMovementAcc, 0.0);
 		velocity.Add(linAcc.scl(duration));
 		filter_velocity.Set(mButterHp.applyButterWorth(1, 1, velocity));

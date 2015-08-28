@@ -30,7 +30,7 @@ class SerialDataCapture{
 	//public static 
 	
 	//data log for plot
-	public static int logSize = 65*2; //250hz for 5 secs
+	public static int logSize = 100*5; //250hz for 5 secs
 	public static ArrayList<Vector3> acc1Log;
 	public static ArrayList<Vector3> acc2Log;
 	
@@ -130,7 +130,7 @@ class SerialDataCapture{
                     	{
                     		//System.out.print(outputString);
                     		//System.out.println(outputString.length());  // for quaternions should equal to 109, for acc should equal to 55
-                    		if(outputString.length() == 91 && outputString != null)    //126
+                    		if(outputString.length() == 100 && outputString != null)    //126
                     		{
                     			//decode the hex
                     			String[] outPutStringArr = outputString.split(",");
@@ -177,7 +177,7 @@ class SerialDataCapture{
                 				}*/
                     			
                     			//this is for accelerometers
-                    			if(outPutStringArr.length == 11)
+                    			if(outPutStringArr.length == 12)
                     			{
                     				acc1.Set(decodeFloat(outPutStringArr[0])/100.0,
                     						decodeFloat(outPutStringArr[1])/100.0, 
@@ -331,7 +331,7 @@ public class v4RealTimePlot extends PApplet{
 	{
 		mSerial = new SerialDataCapture();
 		try {
-			mSerial.connect("COM11");
+			mSerial.connect("COM2");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

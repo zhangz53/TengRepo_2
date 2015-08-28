@@ -20,7 +20,8 @@ public class v4DataRecorder {
 	private static String outputString = new String();
 	public static Quaternion quat;
 	private static Matrix4 mMatrix;
-	public static Vector3 acc;
+	public static Vector3 acc1;
+	public static Vector3 acc2;
 	public static Vector3 geoAcc;
 	public static double stamp;
 	
@@ -53,7 +54,8 @@ public class v4DataRecorder {
 		super();
 		quat = new Quaternion();
 		mMatrix = new Matrix4();
-		acc = new Vector3();
+		acc1 = new Vector3();
+		acc2 = new Vector3();
 		geoAcc = new Vector3();
 		mLinVel = new Vector3();
 		mLinVelPrev = new Vector3(); mLinVelPrev.Set(0, 0, 0);
@@ -136,13 +138,14 @@ public class v4DataRecorder {
                     	{
                     		//System.out.print(outputString);
                     		//System.out.println(outputString.length());  //should equal to 73
-                    		if(outputString.length() == 73 && outputString != null)
+                    		if(outputString.length() == 55 && outputString != null)
                     		{
                     			//decode the hex
                     			String[] outPutStringArr = outputString.split(",");
-                				if(outPutStringArr.length == 9)
+                				if(outPutStringArr.length == 7)
                 				{
                 					//set quat
+                					/*
                 					Quaternion tempQuat = new Quaternion();
                 					tempQuat.Set(decodeFloat(outPutStringArr[1]),  	//x 
                 							decodeFloat(outPutStringArr[2]),    	//y
@@ -151,15 +154,21 @@ public class v4DataRecorder {
                 					
                 					tempQuat.Nor();
                 					quat.Set(tempQuat);
+                					*/
+                					
                 					
                 					//set acc
-                					acc.Set(decodeFloat(outPutStringArr[4]) / 100.0, 
+                					acc1.Set(decodeFloat(outPutStringArr[4]) / 100.0, 
                 							decodeFloat(outPutStringArr[5]) / 100.0, 
                 							decodeFloat(outPutStringArr[6]) / 100.0);
+                					
+                					
                 					
                 					//set the time stamp
                 					stamp = decodeFloat(outPutStringArr[7]) / 1000.0;  //s
                 					
+                					
+                					/*
                 					////////////////////////////////////////////////////////////////////////////////////filter
                 					//filter the acc data lp
             						xValuesAcc.add(acc);
@@ -264,7 +273,9 @@ public class v4DataRecorder {
             						pY =  yValuesPos.get(yValuesPos.size() - 1).y;
             						pZ =  yValuesPos.get(yValuesPos.size() - 1).z;
             						//
-            						//DataStorage.AddSample(stamp, vX, vY, vZ, pX, pY, pZ, geoAcc.x, geoAcc.y, geoAcc.z);
+            						*/
+            						 
+            						DataStorage.AddSample(stamp, vX, vY, vZ, pX, pY, pZ, geoAcc.x, geoAcc.y, geoAcc.z);
                 				}
                     		}
                     		

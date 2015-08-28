@@ -138,13 +138,13 @@ class SerialDataCap{
                     	{
                     		//System.out.print(outputString);
                     		//System.out.println(outputString.length());  // for quaternions should equal to 109, for acc should equal to 55
-                    		if(outputString.length() == 91 && outputString != null)  
+                    		if(outputString.length() == 100 && outputString != null)  
                     		{
                     			//decode the hex
                     			String[] outPutStringArr = outputString.split(",");
                     			
                     			//this is for accelerometers
-                    			if(outPutStringArr.length == 11)
+                    			if(outPutStringArr.length == 12)
                     			{
                     				acc1.Set(decodeFloat(outPutStringArr[0])/100.0,
                     						decodeFloat(outPutStringArr[1])/100.0, 
@@ -182,6 +182,8 @@ class SerialDataCap{
                 					tempQuat2.Nor();
                 					quat2.Set(tempQuat2);
                     				
+                					stamp = decodeFloat(outPutStringArr[10]) / 1000.0; 
+                					
                     				
                     				if(isFirstTen)
                     				{
@@ -214,9 +216,9 @@ class SerialDataCap{
                         					
                         					//do the first feature selection here
                         					//for acc2/ring
-                        					double aroundXRad_Acc2 = quat2.getAngleAroundRad(xAxis);
-                        					double alongMovementAcc2 = acc2.y * Math.cos(aroundXRad_Acc2) + acc2.z * Math.sin(aroundXRad_Acc2);
-                        					double orthoMovementAcc2 = -acc2.y * Math.sin(aroundXRad_Acc2) + acc2.z * Math.cos(aroundXRad_Acc2);
+                        					//double aroundXRad_Acc2 = quat2.getAngleAroundRad(xAxis);
+                        					//double alongMovementAcc2 = acc2.y * Math.cos(aroundXRad_Acc2) + acc2.z * Math.sin(aroundXRad_Acc2);
+                        					//double orthoMovementAcc2 = -acc2.y * Math.sin(aroundXRad_Acc2) + acc2.z * Math.cos(aroundXRad_Acc2);
                         					
                         					
                         					
@@ -225,8 +227,8 @@ class SerialDataCap{
                         					//double orthoMovementAcc1 = -acc1.y * Math.sin(aroundXRad_Acc1) + acc1.z * Math.cos(aroundXRad_Acc1);
                         					
                         					
-                        					DataStorage.AddSampleF(sampleCount, acc1.x, acc1.y, acc1.z, acc2.x, alongMovementAcc2, orthoMovementAcc2,
-                            						 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+                        					DataStorage.AddSampleF(sampleCount, acc1.x, acc1.y, acc1.z, acc2.x, acc2.y, acc2.z,
+                            						 quat2.x, quat2.y, quat2.z, quat2.w, stamp, 0.0);
                         				}
                     				}
                     				
@@ -338,7 +340,7 @@ public class DataCollection extends PApplet{
 	{
 		mSerial = new SerialDataCap();
 		try {
-			mSerial.connect("COM11");
+			mSerial.connect("COM2");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

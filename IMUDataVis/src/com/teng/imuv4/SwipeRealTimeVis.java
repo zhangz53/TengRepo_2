@@ -23,9 +23,16 @@ class DataSerialP {
 	public static Vector3 acc2;
 	public static ArrayList<Vector3> dataset_acc1;
 	public static ArrayList<Vector3> dataset_acc2;
+	public static ArrayList<Quaternion> dataset_quat2;
+	public static ArrayList<Vector3> dataset_aroundAxisAngles;
+	
 	public static double typeValue = 0.0;
 	public static boolean isRecording = false;
 	public static boolean dataTrained = false;
+	
+	public static Vector3 xAxis;
+	public static Vector3 yAxis;
+	public static Vector3 zAxis;
 	
 	//knn sample
 	//public static ArrayList<kNNSample> kNNSamples;  
@@ -37,8 +44,8 @@ class DataSerialP {
 	public static ArrayList<Double> dataset_quat_predictions; 
 	
 	
-	public static int sampleNum = 32;  //has to be mapped with the number chosen in PreProcessing
-	private static int movingWindowSize = 32;  //decide frequency to examine the windowed data
+	public static int sampleNum = 8;  //has to be mapped with the number chosen in PreProcessing
+	private static int movingWindowSize = 8;  //decide frequency to examine the windowed data
 	private static int movingCount = 0;
 	
 	
@@ -63,8 +70,14 @@ class DataSerialP {
 		acc2 = new Vector3();
 		dataset_acc1 = new ArrayList<Vector3>();
 		dataset_acc2 = new ArrayList<Vector3>();
+		dataset_quat2 = new ArrayList<Quaternion>();
+		dataset_aroundAxisAngles = new ArrayList<Vector3>();
 		
-		predictSVM = new PredictSVM("C:\\Users\\Teng\\Desktop\\dataset\\626-keyboardonwrist\\rbf_model_pilot.model", "C:\\Users\\Teng\\Desktop\\dataset\\626-keyboardonwrist\\range");
+		xAxis = new Vector3(1.0, 0, 0);
+		yAxis = new Vector3(0.0, 1.0, 0);
+		zAxis = new Vector3(0.0, 0.0, 1.0);
+		
+		predictSVM = new PredictSVM("C:\\Users\\Teng\\Documents\\TestDataFolder\\test\\rbf_model_pilot.model", "C:\\Users\\Teng\\Documents\\TestDataFolder\\test\\range");
 		
 		instance = this;
 	}
@@ -169,14 +182,26 @@ class DataSerialP {
                 					tempQuat.Nor();
                 					quat3.Set(tempQuat);
                 					
+                					
+                					double aroundXRad_Acc2 = quat3.getAngleAroundRad(xAxis);
+                					double aroundYRad_Acc2 = quat3.getAngleAroundRad(yAxis);
+            						double aroundZRad_Acc2 = quat3.getAngleAroundRad(zAxis);
+            						
+                					double alongMovementAcc = acc2.y * Math.cos(aroundXRad_Acc2) + acc2.z * Math.sin(aroundXRad_Acc2);
+                					double orthoMovementAcc = -acc2.y * Math.sin(aroundXRad_Acc2) + acc2.z * Math.cos(aroundXRad_Acc2);
+                					
                 					//save for test data sample
                     				dataset_acc1.add(new Vector3(acc1));
-                    				dataset_acc2.add(new Vector3(acc2));
+                    				dataset_acc2.add(new Vector3(acc2.x, alongMovementAcc, orthoMovementAcc));
+                    				dataset_quat2.add(new Quaternion(quat3));
+                    				dataset_aroundAxisAngles.add(new Vector3(aroundXRad_Acc2, aroundYRad_Acc2, aroundZRad_Acc2));
                     				
                     				if(dataset_acc1.size() > sampleNum)
                     				{
                     					dataset_acc1.remove(0);
                     					dataset_acc2.remove(0);
+                    					dataset_quat2.remove(0);
+                    					dataset_aroundAxisAngles.remove(0);
                     					
                     					movingCount++;
                     					
@@ -187,11 +212,15 @@ class DataSerialP {
                     						//System.out.println(" " + dataset_acc2.size());
                     						if(dataset_acc1.size() == sampleNum && dataset_acc2.size() == sampleNum)
                     						{	
-                    							predictValue = predictSVM.predictWithDefaultModel(dataset_acc1);	
+                    							predictValue = predictSVM.predictSwipeStartEndWithDefaultModel(dataset_acc2, dataset_quat2, dataset_aroundAxisAngles);	
                     							
-                    						
-                    							System.out.println(" " + predictValue);
-                    							                    							
+                    							if(predictValue == 2){
+                    								//System.out.println(" " + predictValue);
+                    								System.out.println("swipe end");
+                    							}else if(predictValue == 1){
+                    								//System.out.println(" " + predictValue);
+                    								System.out.println("swipe start");
+                    							}
                     							movingCount = 0;
                     						}
                     						

@@ -272,7 +272,7 @@ public class PredictSVM {
 	        nodes[i-1] = node;
 	    }
 
-	    int totalClasses = 2;  //5       
+	    int totalClasses = 3;  //5       
 	    int[] labels = new int[totalClasses];
 	    svm.svm_get_labels(linear_model,labels);
 
@@ -343,6 +343,14 @@ public class PredictSVM {
 		return predictValue;
 	}
 	
+	//this is for swipe start/end
+	public double predictSwipeStartEndWithDefaultModel(ArrayList<Vector3> ac, ArrayList<Quaternion> quat, ArrayList<Vector3> ang)
+	{
+		double[] testData = calculateFeatures_SwipeStartEnd(ac, quat, ang);
+		double predictValue = predictWithDefaultModel(testData);
+		return predictValue;
+	}
+	
 	public double[] predictWithDefaultModel_Prob(ArrayList<Vector3> dataset)
 	{
 		double[] testData = calculateFeatures(dataset);
@@ -375,6 +383,131 @@ public class PredictSVM {
 	    
 	    return v;
 	}
+	
+	public double[] calculateFeatures_SwipeStartEnd(ArrayList<Vector3> ac,  ArrayList<Quaternion> quat, ArrayList<Vector3> ang)
+	{
+		ArrayList<Vector3> absAc = ac;//featurization.toAbsList(ac);
+		
+		double[] means1 = featurization.meanAxes(absAc);
+		double[] middles = featurization.middleAxes(absAc);
+		ArrayList<Vector3> firstHalf = new ArrayList<Vector3>();
+		ArrayList<Vector3> secondHalf = new ArrayList<Vector3>();
+		
+		int acSize = ac.size();
+		int halfSize = (int)(acSize / 2);
+		for(int ith = 0; ith <= halfSize; ith++)
+		{
+			firstHalf.add(ac.get(ith));
+		}
+		
+		for(int ith = (halfSize+1); ith < acSize; ith++)
+		{
+			secondHalf.add(ac.get(ith));
+		}
+		
+		double[] firstMeans = featurization.meanAxes(firstHalf);
+		double[] secondMeans = featurization.meanAxes(secondHalf);
+		
+		double ft1 = Math.abs(firstMeans[0]) > Math.abs(secondMeans[0]) ? 1.0 : -1.0;
+		double ft2 = Math.abs(firstMeans[1]) > Math.abs(secondMeans[1]) ? 1.0 : -1.0;
+		double ft3 = Math.abs(firstMeans[2]) > Math.abs(secondMeans[2]) ? 1.0 : -1.0;
+		
+		double ft4 = middles[0];
+		double ft5 = middles[1];
+		double ft6 = middles[2];
+		
+		double ft7 = firstMeans[0];
+		double ft8 = firstMeans[1];
+		double ft9 = firstMeans[2];
+		
+		double ft10 = secondMeans[0];
+		double ft11 = secondMeans[1];
+		double ft12 = secondMeans[2];
+		
+		double f1 = means1[0];
+		double f2 = means1[1];
+		double f3 = means1[2];
+		
+		//feature 14-19: standard dev of acc1 and acc2
+		double[] stdvs1 = featurization.stdvAxes(absAc, means1);
+		double f4 = stdvs1[0];
+		double f5 = stdvs1[1];
+		double f6 = stdvs1[2];
+		
+		//feature 20-25: skewness of acc1 and acc2
+		double[] skews1 = featurization.skewnessAxes(absAc, means1, stdvs1);
+		double f7 = skews1[0];
+		double f8 = skews1[1];
+		double f9 = skews1[2];
+		
+		
+		//feature 26-31: kurtosis of acc1 and acc2
+		double[] kurs1 = featurization.kurtosisAxes(absAc, means1, stdvs1);
+		double f10 = kurs1[0];
+		double f11 = kurs1[1];
+		double f12 = kurs1[2];
+		
+		featurization.getDisplacement(absAc);
+		Vector3 diffPeak = featurization.largestNeighbourAbsDiff(absAc);
+		
+		//frequency, taken care of mean
+		//signal sub by mean
+		ArrayList<Vector3> groundAc = new ArrayList<Vector3>();
+		
+		for(int itra = 0; itra < ac.size(); itra++)
+		{
+			Vector3 temp = new Vector3();
+			temp.Set(absAc.get(itra));
+			temp.Sub(means1[0], means1[1], means1[2]);  //remove the means
+			groundAc.add(temp);
+		}
+		
+		
+		double[][] freqs = featurization.freq(groundAc);   //3 by fftBins/2 array
+		//feature X frequencies
+		double[] freqX = freqs[0];
+		//feature Y frequencies
+		double[] freqY = freqs[1];
+		//feature Z frequencies
+		double[] freqZ = freqs[2];
+		
+		//feature on quat
+		double[] means2 = featurization.meanQuats(quat);
+		double[] stdvs2 = featurization.stdvQuats(quat, means2);
+		double[] skews2 = featurization.skewnessQuats(quat, means2, stdvs2);
+		double[] kurs2 = featurization.kurtosisQuats(quat, means2, stdvs2);
+		
+		double fq1 = means2[0]; double fq2 = means2[1]; double fq3 = means2[2]; double fq4 = means2[3];   
+		double fq5 = stdvs2[0]; double fq6 = stdvs2[1]; double fq7 = stdvs2[2]; double fq8 = stdvs2[3];
+		double fq9 = skews2[0]; double fq10 = skews2[1]; double fq11 = skews2[2]; double fq12 = skews2[3];
+		double fq13 = kurs2[0]; double fq14 = kurs2[1]; double fq15 = kurs2[2]; double fq16 = kurs2[3];
+		
+		//feature on angles
+		double[] means3 = featurization.meanAxes(ang);
+		double[] stdvs3 = featurization.stdvAxes(ang, means3);
+		double[] skews3 = featurization.skewnessAxes(ang, means3, stdvs3);
+		double[] kurs3 = featurization.kurtosisAxes(ang, means3, stdvs3);
+		
+		double fa1 = means3[0]; double fa2 = means3[1]; double fa3 = means3[2];   
+		double fa4 = stdvs3[0]; double fa5 = stdvs3[1]; double fa6 = stdvs3[2]; 
+		double fa7 = skews3[0]; double fa8 = skews3[1]; double fa9 = skews3[2]; 
+		double fa10 = kurs3[0]; double fa11 = kurs3[1]; double fa12 = kurs3[2]; 
+		
+		double[] features = new double[]{1.0, ft2, diffPeak.y, diffPeak.z, 
+				f2, f5, f6, f3, f8, f9, ft3, f11, f12,
+				ft5, ft6, ft8, ft9, ft11, ft12, fq1, fq2, fq3, fq4, fq5, fq6, fq7, fq8, fq9, 
+				fq10,freqY[1],freqY[2],freqY[3],fq11,fq12,fq13,fq14,fq15,fq16,featurization.filter_pos.y,featurization.filter_pos.z,
+				freqZ[1],freqZ[2],freqZ[3],fa1,fa2,fa3,fa4,fa5,fa6,fa7,fa8,fa9,fa10,fa11,fa12};
+		
+		//need to be scaled
+		for(int itrf = 1; itrf < features.length; itrf++)
+		{
+			features[itrf] =  scaleOutput(features[itrf], itrf);
+		}
+		
+		return features;
+	}
+	
 	
 	//calculate all the needed features and storage them
 	public double[] calculateFeatures(ArrayList<Vector3> ac1, ArrayList<Vector3> ac2)
