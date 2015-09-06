@@ -31,7 +31,7 @@ class DataLoad{
 		quat = new ArrayList<Quaternion>();
 		
 		//read the csv file
-		String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\1439948076523_testfilter.csv";
+		String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\formal_height\\11\\tg8.csv";
 		try {
 			br = new BufferedReader(new FileReader(dataFile));
 		} catch (FileNotFoundException e) {
@@ -92,7 +92,7 @@ public class PreProcessing extends PApplet{
 	public int windowWidth;
 	public int windowHeight;
 	
-	private int sampleNum = 8; // for convenient of fft
+	private int sampleNum = 64; // for convenient of fft
 	private int curMousePos;
 	private int leftBound;
 	private int rightBound;
@@ -107,7 +107,7 @@ public class PreProcessing extends PApplet{
 	{
 		windowWidth = 1500;
 		windowHeight = 1200;  //split into two
-		heightThreshold = 10;  //+ - 10
+		heightThreshold = 5;  //+ - 10
 		heightSeg = (windowHeight/2) / (2 * heightThreshold);
 		
 		size(windowWidth, windowHeight);
@@ -155,23 +155,24 @@ public class PreProcessing extends PApplet{
 				else
 					alpha = 50;
 				
+				/*
 				stroke(255, 0, 0, alpha);  //x
 				line((float)(windowWidth - acc1Size * widthSeg + itra * widthSeg), 
 						 (float)(windowHeight * 3 / 4 + mDataLoad.acc1.get(itra).x * heightSeg),
 						 (float)(windowWidth - acc1Size * widthSeg + (itra + 1) * widthSeg), 
 						 (float)(windowHeight * 3 / 4 + mDataLoad.acc1.get(itra + 1).x * heightSeg));
-				
+				*/
 				stroke(0, 255, 0, alpha);  //y
 				line((float)(windowWidth - acc1Size * widthSeg + itra * widthSeg), 
-						 (float)(windowHeight * 3 / 4 + mDataLoad.acc1.get(itra).y * heightSeg),
+						(float)(windowHeight) - (float)(windowHeight * 3 / 4 + mDataLoad.acc1.get(itra).y * heightSeg),
 						 (float)(windowWidth - acc1Size * widthSeg + (itra + 1) * widthSeg), 
-						 (float)(windowHeight * 3 / 4 + mDataLoad.acc1.get(itra + 1).y * heightSeg));
+						 (float)(windowHeight) - (float)(windowHeight * 3 / 4 + mDataLoad.acc1.get(itra + 1).y * heightSeg));
 				
 				stroke(0, 0, 255, alpha);  //z
 				line((float)(windowWidth - acc1Size * widthSeg + itra * widthSeg), 
-						 (float)(windowHeight * 3 / 4 + mDataLoad.acc1.get(itra).z * heightSeg),
+						(float)(windowHeight) - (float)(windowHeight * 3 / 4 + mDataLoad.acc1.get(itra).z * heightSeg),
 						 (float)(windowWidth - acc1Size * widthSeg + (itra + 1) * widthSeg), 
-						 (float)(windowHeight * 3 / 4 + mDataLoad.acc1.get(itra + 1).z * heightSeg));
+						 (float)(windowHeight) -  (float)(windowHeight * 3 / 4 + mDataLoad.acc1.get(itra + 1).z * heightSeg));
 			}
 
 		}
@@ -186,23 +187,25 @@ public class PreProcessing extends PApplet{
 				else
 					alpha = 50;
 				
+				/*
 				stroke(255, 0, 0, alpha);  //x
 				line((float)(windowWidth - acc2Size * widthSeg + itra * widthSeg), 
-						 (float)(windowHeight * 1 / 4 + mDataLoad.acc2.get(itra).x * heightSeg),
+						(float)(windowHeight) -  (float)(windowHeight * 1 / 4 + mDataLoad.acc2.get(itra).x * heightSeg),
 						 (float)(windowWidth - acc2Size * widthSeg + (itra + 1) * widthSeg), 
-						 (float)(windowHeight * 1 / 4 + mDataLoad.acc2.get(itra + 1).x * heightSeg));
+						 (float)(windowHeight) - (float)(windowHeight * 1 / 4 + mDataLoad.acc2.get(itra + 1).x * heightSeg));
+				*/
 				
 				stroke(0, 255, 0, alpha);  //y
 				line((float)(windowWidth - acc2Size * widthSeg + itra * widthSeg), 
-						 (float)(windowHeight * 1 / 4 + mDataLoad.acc2.get(itra).y * heightSeg),
+						(float)(windowHeight) -  (float)(windowHeight * 1 / 4 + mDataLoad.acc2.get(itra).y * heightSeg),
 						 (float)(windowWidth - acc2Size * widthSeg + (itra + 1) * widthSeg), 
-						 (float)(windowHeight * 1 / 4 + mDataLoad.acc2.get(itra + 1).y * heightSeg));
+						 (float)(windowHeight) - (float)(windowHeight * 1 / 4 + mDataLoad.acc2.get(itra + 1).y * heightSeg));
 				
 				stroke(0, 0, 255, alpha);  //z
 				line((float)(windowWidth - acc2Size * widthSeg + itra * widthSeg), 
-						 (float)(windowHeight * 1 / 4 + mDataLoad.acc2.get(itra).z * heightSeg),
+						(float)(windowHeight) - (float)(windowHeight * 1 / 4 + mDataLoad.acc2.get(itra).z * heightSeg),
 						 (float)(windowWidth - acc2Size * widthSeg + (itra + 1) * widthSeg), 
-						 (float)(windowHeight * 1 / 4 + mDataLoad.acc2.get(itra + 1).z * heightSeg));
+						 (float)(windowHeight) -  (float)(windowHeight * 1 / 4 + mDataLoad.acc2.get(itra + 1).z * heightSeg));
 			}
 		}
 		

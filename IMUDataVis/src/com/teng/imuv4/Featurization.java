@@ -28,16 +28,16 @@ public class Featurization {
 	public Vector3 yAxis;
 	public Vector3 zAxis;
 	
-	private String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\swipe_null_3.csv";
+	private String dataFile;// = "C:\\Users\\Teng\\Documents\\TestDataFolder\\formal_height\\1\\tg0pro.csv";
 	private int directionIndex = 1; //1:vertical, 0:horizontal
-	private double rLabel = 3.0;
+	private double rLabel; // = 0.0;
 	private int accIndex = 2;
 	
 	private int index = 1;  //start from 1
 	
 	//for fft
-	public int fftBins = 8;  //try to change
-	public int Fs = 66;  //about 66hz
+	public int fftBins = 64;///////8;  //try to change
+	public int Fs = 100;  //about 66hz
 	public double Ts = 1.0/Fs;  //about 0.015s
 	public RealDoubleFFT mRealFFT;
 	public double scale;
@@ -89,6 +89,24 @@ public class Featurization {
 		dataStorage = DataStorage.getInstance();
 	}
 	
+	public Featurization(String fileName, int fileIndex, String saveFilename)
+	{
+		
+		dataFile = fileName;
+		rLabel = fileIndex;
+		
+		acc1 = new ArrayList<Vector3>();
+		acc2 = new ArrayList<Vector3>();
+		
+		mRealFFT = new RealDoubleFFT(fftBins);
+		scale =  MEAN_MAX * MEAN_MAX * fftBins * fftBins / 2d;
+		
+		dataStorage = DataStorage.getInstance();
+		dataStorage.clearData();
+		dataStorage.targetFileName = saveFilename;
+		
+	}
+	
 	public Featurization(int purpose)
 	{
 		//to be used by other class
@@ -131,6 +149,7 @@ public class Featurization {
 					if(sIndex == index)
 					{
 						
+						/*
 						acc1.add(new Vector3(Double.parseDouble(values[1]), Double.parseDouble(values[2]), Double.parseDouble(values[3])));
 						
 						//for swipe bumps
@@ -150,6 +169,10 @@ public class Featurization {
     					double orthoMovementAcc = -tempAcc.y * Math.sin(aroundXRad_Acc2) + tempAcc.z * Math.cos(aroundXRad_Acc2);
     					aroundAxisAngles.add(new Vector3(aroundXRad_Acc2, aroundYRad_Acc2, aroundZRad_Acc2));
     					acc2.add(new Vector3(tempAcc.x, alongMovementAcc, orthoMovementAcc));
+						*/
+						
+						//for height
+						acc2.add(new Vector3(Double.parseDouble(values[4]), Double.parseDouble(values[5]), Double.parseDouble(values[6])));
 						
 					}else
 					{
@@ -159,20 +182,24 @@ public class Featurization {
 						
 						if(accIndex == 1){
 							//calculateFeatures(acc1, quats);
-							calculateFeatures_Start_End(acc1, quats, aroundAxisAngles);
+							//calculateFeatures_Start_End(acc1, quats, aroundAxisAngles);
+							calculateFeatures_height(acc1);
 						}else if(accIndex == 2)
 						{
 							//calculateFeatures(acc2, quats);
-							calculateFeatures_Start_End(acc2, quats, aroundAxisAngles);
+							//calculateFeatures_Start_End(acc2, quats, aroundAxisAngles);
+							calculateFeatures_height(acc2);						
 						}
 						
 						//clear the acc and start for index+1
 						acc1.clear();
 						acc2.clear();
-						quats.clear();
-						aroundAxisAngles.clear();
+						//quats.clear();
+						//aroundAxisAngles.clear();
 						index++;
 						
+						
+						/*
 						acc1.add(new Vector3(Double.parseDouble(values[1]), Double.parseDouble(values[2]), Double.parseDouble(values[3])));
 						//acc2.add(new Vector3(Double.parseDouble(values[4]), Double.parseDouble(values[5]), Double.parseDouble(values[6])));
 						//quats.add(new Quaternion(Double.parseDouble(values[7]), Double.parseDouble(values[8]), Double.parseDouble(values[9]), Double.parseDouble(values[10])));
@@ -189,6 +216,10 @@ public class Featurization {
     					double orthoMovementAcc = -tempAcc.y * Math.sin(aroundXRad_Acc2) + tempAcc.z * Math.cos(aroundXRad_Acc2);
     					aroundAxisAngles.add(new Vector3(aroundXRad_Acc2, aroundYRad_Acc2, aroundZRad_Acc2));
     					acc2.add(new Vector3(tempAcc.x, alongMovementAcc, orthoMovementAcc));
+    					*/
+						
+						acc2.add(new Vector3(Double.parseDouble(values[4]), Double.parseDouble(values[5]), Double.parseDouble(values[6])));
+						
 					}
 				}
 				
@@ -199,11 +230,13 @@ public class Featurization {
 			//highPassFilter(acc2);
 			if(accIndex == 1){
 				//calculateFeatures(acc1, quats);
-				calculateFeatures_Start_End(acc1, quats, aroundAxisAngles);
+				//calculateFeatures_Start_End(acc1, quats, aroundAxisAngles);
+				calculateFeatures_height(acc1);
 			}else if(accIndex == 2)
 			{
 				//calculateFeatures(acc2, quats);
-				calculateFeatures_Start_End(acc2, quats, aroundAxisAngles);
+				//calculateFeatures_Start_End(acc2, quats, aroundAxisAngles);
+				calculateFeatures_height(acc2);
 			}
 			
 		} catch (IOException e) {
@@ -317,8 +350,54 @@ public class Featurization {
 	}
 	*/
 	
+	//for study height
+	public void calculateFeatures_height(ArrayList<Vector3> ac)
+	{
+		double[] means = meanAxes(ac);  //not using means cause the offset problem
+		
+		//stdv
+		double[] stdvs = stdvAxes(ac, means);
+		
+		//skewness
+		double[] skews = skewnessAxes(ac, means, stdvs);
+		
+		//kurtosis
+		double[] kurs = kurtosisAxes(ac, means, stdvs);
+		
+		//diff peak
+		Vector3 diffPeaks = largestNeighbourAbsDiff(ac);  //might be most important feature
+		
+		//largest values?
+		
+		//frequency
+		double[][] freqs = freq(ac);   //3 by fftBins/2 array
+		//feature X frequencies
+		///double[] freqX = freqs[0];
+		//feature Y frequencies
+		double[] freqY = freqs[1];
+		//feature Z frequencies
+		double[] freqZ = freqs[2];
+		
+		//save data
+		DataStorage.AddSampleS(rLabel, 
+				stdvs[1], stdvs[2], skews[1], skews[2], kurs[1], kurs[2], diffPeaks.y, diffPeaks.z, 
+				
+				freqY[1], freqY[2], freqY[3], freqY[4],freqY[5], freqY[6], freqY[7], freqY[8], freqY[9], freqY[10], 
+				freqY[11], freqY[12], freqY[13], freqY[14], freqY[15], freqY[16], freqY[17], freqY[18], freqY[19], freqY[20],
+				freqY[21],freqY[22],freqY[23],freqY[24],freqY[25],freqY[26],freqY[27],freqY[28],freqY[29],freqY[30],freqY[31],
+				
+				freqZ[1], freqZ[2], freqZ[3], freqZ[4],freqZ[5], freqZ[6], freqZ[7], freqZ[8], freqZ[9], freqZ[10], 
+				freqZ[11], freqZ[12], freqZ[13], freqZ[14], freqZ[15], freqZ[16], freqZ[17], freqZ[18], freqZ[19], freqZ[20],
+				freqZ[21],freqZ[22],freqZ[23],freqZ[24],freqZ[25],freqZ[26],freqZ[27],freqZ[28],freqZ[29],freqZ[30],freqZ[31],
+				
+				0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,0.0, 0.0,0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0, 0.0, 0.0,0.0, 0.0,0.0, 0.0
+				);
+		
+	}
 	
 	
+	
+	//for start and end
 	public void calculateFeatures_Start_End(ArrayList<Vector3> ac, ArrayList<Quaternion> quat, ArrayList<Vector3> aroundAxisAngs)
 	{
 		//largest peak and their absolute values
@@ -1382,11 +1461,29 @@ public class Featurization {
 		
 	}
 	
-	
+	/*
 	public static final void main(String args[])
 	{
 		Featurization fea = new Featurization();
 		fea.getFeatures();
 		
+	}*/
+	
+	
+	public static final void main(String args[])
+	{
+		String[] filename = new String[]{"p", "pg", "t", "tg"};
+		for(int itrf = 0; itrf < 4; itrf++)
+		{
+			for(int itri = 0; itri < 9; itri++)
+			{
+				String dataFileName = "C:\\Users\\Teng\\Documents\\TestDataFolder\\formal_height\\11\\" + filename[itrf] + String.valueOf(itri) + "pro.csv"; 
+				int fileIndex = itri;
+				String targetName = filename[itrf] + String.valueOf(itri) + "f";
+				
+				Featurization fea = new Featurization(dataFileName, fileIndex, targetName);
+				fea.getFeatures();
+			}
+		}
 	}
 }

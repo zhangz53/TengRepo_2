@@ -334,7 +334,7 @@ public class DataStorage {
 		File dir;
 		dir = new File("C:\\Users\\Teng\\Documents\\TestDataFolder");
 		String time = String.valueOf(System.currentTimeMillis());
-		String filename = time + surfix + ".csv";
+		String filename =  targetFileName + ".csv";   //time + surfix + ".csv";
 		File file = new File(dir, filename);
 		if(!dir.exists())
             dir.mkdir();
@@ -355,5 +355,7 @@ public class DataStorage {
 	}
 	
 	private static DataStorage instance;
+	
+	public String targetFileName;
 	public ArrayList<DataSample> samples;
 }

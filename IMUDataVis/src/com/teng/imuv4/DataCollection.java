@@ -331,7 +331,7 @@ public class DataCollection extends PApplet{
 	public int[] rgb;
 	private int countNumber;
 	private int savedTime;
-	private int oneSecond = 150;   //1 second  //1000
+	private int oneSecond = 100;   //1 second  //1000
 	private int twoSecond = 1500;  //1.5seconds  //1500
 	
 	public int sampleCount = 0;
@@ -401,7 +401,7 @@ public class DataCollection extends PApplet{
 			
 			fill(rgb[0], rgb[1], rgb[2], 150);
 			noStroke();
-			ellipse(500, 500, 200, 200);
+			ellipse(500, 500, 300, 300);
 			
 			textSize(64);
 			fill(250, 250, 250);
