@@ -2,6 +2,7 @@ package com.teng.svm;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
@@ -35,10 +36,15 @@ public class ModifiedSVMTrain {
 	private ArrayList<Double> targetLabels;
 	private ArrayList<Double> predictLabels;
 	
+	FileWriter fileWriter;
+	private static final String COMMA_DELIMITER = ",";
+	private static final String NEW_LINE_SEPARATOR = "\n";
+
+	
 	//temp
 	private double[] steps  = new double[]{0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0};
 	
-	public ModifiedSVMTrain(String filename, String rawname, String accuratename, int participant, int condition, int height)
+	public ModifiedSVMTrain(String filename, String rawfilename, String accuratefilename, int participant, int condition, int height)
 	{
 		targetLabels = new ArrayList<Double>();
 		predictLabels = new ArrayList<Double>();
@@ -52,8 +58,14 @@ public class ModifiedSVMTrain {
 		
 		//output the result
 		saveResult = true;
-		output_result();
+		try {
+			output_result(filename, rawfilename, accuratefilename, participant, condition, height);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
+		saveResult = false;
 	}
 	
 	
@@ -94,7 +106,7 @@ public class ModifiedSVMTrain {
 		cVal = steps[cIndex];
 	}
 	
-	private void output_result(String filename, String resultFile, String rawname, String accuratename, int participant, int condition, int height)
+	private void output_result(String filename, String rawfilename, String accuracyfilename, int participant, int condition, int height) throws IOException
 	{
 		String mArgs[] = new String[]{"-t", String.valueOf(model_type), 
 				"-g", String.valueOf(gVal), 
@@ -112,11 +124,44 @@ public class ModifiedSVMTrain {
 		}
 		
 		//store the raw data
+		int sz1 = targetLabels.size();
+		int sz2 = predictLabels.size();
 		
-		
+		if(sz1 == sz2){
+			fileWriter = new FileWriter(rawfilename, true);
+
+			for(int itrl = 0; itrl < sz1; itrl++)
+			{
+				fileWriter.append(String.valueOf(participant));
+				fileWriter.append(COMMA_DELIMITER);
+				fileWriter.append(String.valueOf(condition));
+				fileWriter.append(COMMA_DELIMITER);
+				fileWriter.append(String.valueOf(height));
+				fileWriter.append(COMMA_DELIMITER);
+				fileWriter.append(String.valueOf(targetLabels.get(itrl)));
+				fileWriter.append(COMMA_DELIMITER);
+				fileWriter.append(String.valueOf(predictLabels.get(itrl)));
+				fileWriter.append(COMMA_DELIMITER);
+				fileWriter.append(NEW_LINE_SEPARATOR);
+			}
+			
+			fileWriter.flush();
+			fileWriter.close();
+		}
+
 		
 		//store the accuracy data
-		
+		fileWriter = new FileWriter(accuracyfilename, true);
+		fileWriter.append(String.valueOf(participant));
+		fileWriter.append(COMMA_DELIMITER);
+		fileWriter.append(String.valueOf(condition));
+		fileWriter.append(COMMA_DELIMITER);
+		fileWriter.append(String.valueOf(height));
+		fileWriter.append(COMMA_DELIMITER);
+		fileWriter.append(String.valueOf(accuracy));
+		fileWriter.append(NEW_LINE_SEPARATOR);
+		fileWriter.flush();
+		fileWriter.close();
 	}
 	
 	private static svm_print_interface svm_print_null = new svm_print_interface()
