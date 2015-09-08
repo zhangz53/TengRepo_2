@@ -46,7 +46,7 @@ public class FileManager {
 		
 		//read files
 		//file 1
-		String targetDir = "C:\\Users\\Teng\\Documents\\TestDataFolder\\formal_height\\4\\features\\";
+		String targetDir = "C:\\Users\\Teng\\Documents\\TestDataFolder\\formal_height\\12\\features\\";
 		String file1 = targetDir + file1name + "f.csv";
 		String file2 = targetDir + file2name + "f.csv";
 		

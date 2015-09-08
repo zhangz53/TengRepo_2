@@ -31,7 +31,7 @@ class DataLoad{
 		quat = new ArrayList<Quaternion>();
 		
 		//read the csv file
-		String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\formal_height\\4\\tg8.csv";
+		String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\formal_height\\12\\tg8.csv";
 		try {
 			br = new BufferedReader(new FileReader(dataFile));
 		} catch (FileNotFoundException e) {

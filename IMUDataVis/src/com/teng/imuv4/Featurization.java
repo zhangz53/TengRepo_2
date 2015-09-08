@@ -1477,7 +1477,7 @@ public class Featurization {
 		{
 			for(int itri = 0; itri < 9; itri++)
 			{
-				String dataFileName = "C:\\Users\\Teng\\Documents\\TestDataFolder\\formal_height\\4\\" + filename[itrf] + String.valueOf(itri) + "pro.csv"; 
+				String dataFileName = "C:\\Users\\Teng\\Documents\\TestDataFolder\\formal_height\\12\\" + filename[itrf] + String.valueOf(itri) + "pro.csv"; 
 				int fileIndex = itri;
 				String targetName = filename[itrf] + String.valueOf(itri) + "f";
 				

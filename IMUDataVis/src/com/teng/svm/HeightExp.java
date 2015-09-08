@@ -16,7 +16,7 @@ public class HeightExp {
 	public void runExp()
 	{		
 		
-		for(int itrp = 1; itrp < 12; itrp++)   //1-11, 12 not done
+		for(int itrp = 1; itrp < 13; itrp++)  //1 - 12
 		{
 			for(int itrf = 0; itrf < 4; itrf++)
 			{
