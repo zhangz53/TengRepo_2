@@ -1,6 +1,8 @@
 package com.teng.hci.tabletdemos;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -8,8 +10,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
+import java.io.IOException;
+
 
 public class MenuActivity extends ActionBarActivity {
+
+    private int taskIndex;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,8 +26,8 @@ public class MenuActivity extends ActionBarActivity {
         videoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent videoIntent = new Intent(MenuActivity.this, VideoActivity.class);
-                MenuActivity.this.startActivity(videoIntent);
+                taskIndex = 1;
+                new AsyncCaller().execute();
             }
         });
 
@@ -29,8 +35,8 @@ public class MenuActivity extends ActionBarActivity {
         musicButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent musicIntent = new Intent(MenuActivity.this, MusicActivity.class);
-                MenuActivity.this.startActivity(musicIntent);
+                taskIndex = 2;
+                new AsyncCaller().execute();
             }
         });
 
@@ -38,12 +44,10 @@ public class MenuActivity extends ActionBarActivity {
         bookButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent bookIntent = new Intent(MenuActivity.this, BookActivity.class);
-                MenuActivity.this.startActivity(bookIntent);
-                //MenuActivity.this.finish();
+                taskIndex = 3;
+                new AsyncCaller().execute();
             }
         });
-
 
     }
 
@@ -67,5 +71,53 @@ public class MenuActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private class AsyncCaller extends AsyncTask<Void, Void, Void>
+    {
+        ProgressDialog pdLoading = new ProgressDialog(MenuActivity.this);
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            pdLoading.setMessage("\tConnecting via Bluetooth...");
+            pdLoading.show();
+        }
+        @Override
+        protected Void doInBackground(Void... params) {
+            BluetoothReceiver.getInstance().activity = MenuActivity.this;
+            try {
+                BluetoothReceiver.OpenBT();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+            pdLoading.dismiss();
+            Intent mainIntent;
+            switch (taskIndex)
+            {
+                case 1:
+                    mainIntent = new Intent(MenuActivity.this,VideoActivity.class);
+                    break;
+                case 2:
+                    mainIntent = new Intent(MenuActivity.this,MusicActivity.class);
+                    break;
+                case 3:
+                    mainIntent = new Intent(MenuActivity.this,BookActivity.class);
+                    break;
+                default:
+                    mainIntent = new Intent(MenuActivity.this,BookActivity.class);
+                    break;
+            }
+            MenuActivity.this.startActivity(mainIntent);
+        }
+
     }
 }

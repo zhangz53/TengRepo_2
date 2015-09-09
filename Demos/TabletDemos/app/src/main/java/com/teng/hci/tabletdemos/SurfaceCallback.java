@@ -1,6 +1,7 @@
 package com.teng.hci.tabletdemos;
 
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
@@ -27,12 +28,13 @@ public class SurfaceCallback implements SurfaceHolder.Callback {
 
         if ( invalidSurface && ( ! invalidSurfaceAccepted ) ) return;
 
-        VideoActivity.getSharedInstance().mediaPlayer.setDisplay(holder);
+        //VideoActivity.getSharedInstance().mediaPlayer.setDisplay(holder);
 
+        /*
         if(VideoActivity.getSharedInstance().position > 0){
-            VideoActivity.getSharedInstance().play(VideoActivity.getSharedInstance().position);
+            VideoActivity.getSharedInstance().play(VideoActivity.getSharedInstance().position, R.raw.video_04);
             VideoActivity.getSharedInstance().position = 0;
-        }
+        }*/
     }
 
     @Override
@@ -46,6 +48,7 @@ public class SurfaceCallback implements SurfaceHolder.Callback {
 
             VideoActivity.getSharedInstance().mediaPlayer.stop();
             VideoActivity.getSharedInstance().mediaPlayer.release();
+            VideoActivity.getSharedInstance().mediaPlayer = null;
         }
     }
 }

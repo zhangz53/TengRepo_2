@@ -2,13 +2,16 @@ package com.teng.hci.tabletdemos;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -17,7 +20,10 @@ import android.widget.ProgressBar;
 
 import com.teng.hci.tabletdemos.util.SystemUiHider;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Random;
 
 
 /**
@@ -60,6 +66,19 @@ public class VideoActivity extends Activity {
     public static int duration;
     public static int position;
 
+    private static String delims = ",";
+
+    //video clips
+    private static int[] clips = new int[]{
+            R.raw.video_01,
+            R.raw.video_02,
+            R.raw.video_03,
+            R.raw.video_04,
+            R.raw.video_05
+    };
+    private static int clipIndex = 0;
+    private static int clipSum = 5;
+
     public static VideoActivity instance;
     public static VideoActivity getSharedInstance()
     {
@@ -70,6 +89,7 @@ public class VideoActivity extends Activity {
         return instance;
     }
 
+    private DataThread dataLogThread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,27 +105,89 @@ public class VideoActivity extends Activity {
         surfaceView.getHolder().setKeepScreenOn(true);
         surfaceView.getHolder().addCallback(new SurfaceCallback());
 
-        play(0);
+        //play(0, clips[clipIndex]);
+        dataLogThread = new DataThread();
+        dataLogThread.start();
 
+    }
+
+    private static class DataThread extends Thread{
+        private boolean mRunning = false;
+        @Override
+        public void run() {
+            mRunning = true;
+            while (mRunning) {
+                dataLog();
+            }
+        }
+
+        public void close() {
+            mRunning = false;
+        }
+    }
+
+    private static void dataLog()
+    {
+        try {
+            Thread.sleep(10);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        String[] tokens = BluetoothReceiver.getInstance().serialData.split(delims);
+        //Log.d("serial", "" + tokens.length);
+        if(tokens.length == 2)
+        {
+            int cmd = Integer.parseInt(tokens[0]);
+            if(cmd == 1)
+            {
+                //next video
+                clipIndex++;
+                if(clipIndex == clipSum)
+                    clipIndex = 0;
+
+                VideoActivity.getSharedInstance().SwitchChannel(clips[clipIndex]);
+            }else if(cmd == 2)
+            {
+                //previous video
+            }else if(cmd == 3)
+            {
+                //increase volume
+            }else if(cmd == 4)
+            {
+                //decrease volume
+            }
+
+            BluetoothReceiver.getInstance().serialData = "empty";
+        }
     }
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
+    }
 
+    public void SwitchChannel(int videoClip)
+    {
+        Random rand = new Random();
+        int tempPos = rand.nextInt(15000);
+        play(tempPos, videoClip);
     }
 
     //media play
-    public void play(int position){
+    public void play(int position, int videoClip){
+
         try{
             mediaPlayer.reset();
-            mediaPlayer = MediaPlayer.create(this, R.raw.vid);
+            mediaPlayer = MediaPlayer.create(VideoActivity.this, videoClip);
+            //mediaPlayer.setDataSource(this, Uri.parse(Environment.getExternalStorageDirectory().getPath() + "/demos/video_01.mp4"));
             if(mediaPlayer != null)
             {
                 mediaPlayer.stop();
             }
-            //mediaPlayer.setDisplay(surfaceView.getHolder());  //problem
-            mediaPlayer.prepare();
+            mediaPlayer.setDisplay(surfaceView.getHolder());  //problem
+            mediaPlayer.prepareAsync();
             mediaPlayer.setOnPreparedListener(new PrepareListener(position));
         }catch (IllegalArgumentException e) {
             // TODO Auto-generated catch block
@@ -116,10 +198,10 @@ public class VideoActivity extends Activity {
         } catch (IllegalStateException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        } catch (IOException e) {
+        } /*catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        }
+        }*/
     }
 
     private final class PrepareListener implements MediaPlayer.OnPreparedListener {
@@ -148,6 +230,20 @@ public class VideoActivity extends Activity {
     protected void onPause()
     {
         super.onPause();
+
+        dataLogThread.close();
+
+        try {
+            BluetoothReceiver.CloseBT();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        if(mediaPlayer!=null)
+        {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
     }
 
     @Override
