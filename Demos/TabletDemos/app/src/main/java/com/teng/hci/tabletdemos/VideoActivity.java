@@ -170,11 +170,17 @@ public class VideoActivity extends Activity {
         super.onPostCreate(savedInstanceState);
     }
 
-    public void SwitchChannel(int videoClip)
+    public void SwitchChannel(final int videoClip)
     {
-        Random rand = new Random();
-        int tempPos = rand.nextInt(15000);
-        play(tempPos, videoClip);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Random rand = new Random();
+                int tempPos = rand.nextInt(15000);
+                play(tempPos, videoClip);
+            }
+        });
+
     }
 
     //media play

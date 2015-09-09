@@ -51,10 +51,15 @@ public class MusicActivity extends Activity implements MediaPlayer.OnCompletionL
     private MusicUtilities utils;
     private int seekForwardTime = 5000; // 5000 milliseconds
     private int seekBackwardTime = 5000; // 5000 milliseconds
-    public int currentSongIndex = 0;
     private boolean isShuffle = false;
     private boolean isRepeat = false;
     public ArrayList<HashMap<String, String>> songsList = new ArrayList<HashMap<String, String>>();
+
+    private static String delims = ",";
+    private static int musicIndex = 0;
+    private static int musicSum;
+
+    private DataThread3 datalogThread3;
 
 
     public static MusicActivity instance;
@@ -109,9 +114,10 @@ public class MusicActivity extends Activity implements MediaPlayer.OnCompletionL
 
         // Getting all songs list
         songsList = songManager.getPlayList();
+        musicSum = songsList.size();
 
         // By default play first song
-        playSong(0);
+        playSong(musicIndex);
 
         /**
          * Play button click event
@@ -186,20 +192,20 @@ public class MusicActivity extends Activity implements MediaPlayer.OnCompletionL
 
         /**
          * Next button click event
-         * Plays next song by taking currentSongIndex + 1
+         * Plays next song by taking musicIndex + 1
          * */
         btnNext.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View arg0) {
                 // check if next song is there or not
-                if(currentSongIndex < (songsList.size() - 1)){
-                    playSong(currentSongIndex + 1);
-                    currentSongIndex = currentSongIndex + 1;
+                if(musicIndex < (songsList.size() - 1)){
+                    playSong(musicIndex + 1);
+                    musicIndex = musicIndex + 1;
                 }else{
                     // play first song
                     playSong(0);
-                    currentSongIndex = 0;
+                    musicIndex = 0;
                 }
 
             }
@@ -207,19 +213,19 @@ public class MusicActivity extends Activity implements MediaPlayer.OnCompletionL
 
         /**
          * Back button click event
-         * Plays previous song by currentSongIndex - 1
+         * Plays previous song by musicIndex - 1
          * */
         btnPrevious.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View arg0) {
-                if(currentSongIndex > 0){
-                    playSong(currentSongIndex - 1);
-                    currentSongIndex = currentSongIndex - 1;
+                if(musicIndex > 0){
+                    playSong(musicIndex - 1);
+                    musicIndex = musicIndex - 1;
                 }else{
                     // play last song
                     playSong(songsList.size() - 1);
-                    currentSongIndex = songsList.size() - 1;
+                    musicIndex = songsList.size() - 1;
                 }
 
             }
@@ -286,6 +292,9 @@ public class MusicActivity extends Activity implements MediaPlayer.OnCompletionL
             }
         });
 
+        datalogThread3 = new DataThread3();
+        datalogThread3.start();
+
     }
 
     @Override
@@ -303,10 +312,123 @@ public class MusicActivity extends Activity implements MediaPlayer.OnCompletionL
                                     int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if(resultCode == 100){
-            currentSongIndex = data.getExtras().getInt("songIndex");
+            musicIndex = data.getExtras().getInt("songIndex");
             // play selected song
-            playSong(currentSongIndex);
+            playSong(musicIndex);
         }
+
+    }
+
+
+    private static class DataThread3 extends Thread
+    {
+        private boolean mRunning3 = false;
+        @Override
+        public void run(){
+            mRunning3 = true;
+            while(mRunning3){
+                dataLog3();
+            }
+        }
+        public void close() {
+            mRunning3 = false;
+        }
+    }
+
+    private static void dataLog3(){
+        try {
+            Thread.sleep(10);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        String[] tokens = BluetoothReceiver.getInstance().serialData.split(delims);
+        //Log.d("serial", "" + tokens.length);
+        if(tokens.length == 2)
+        {
+            int cmd = Integer.parseInt(tokens[0]);
+            if(cmd == 1)
+            {
+                MusicActivity.getSharedInstance().nextSong();
+            }else if(cmd == 2)
+            {
+                //previous video
+            }else if(cmd == 3)
+            {
+                //increase volume
+            }else if(cmd == 4)
+            {
+                //decrease volume
+            }
+
+            BluetoothReceiver.getInstance().serialData = "empty";
+        }
+    }
+
+
+    public void nextSong()
+    {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if(musicIndex < (songsList.size() - 1)){
+                    playSong(musicIndex + 1);
+                    musicIndex = musicIndex + 1;
+                }else{
+                    // play first song
+                    playSong(0);
+                    musicIndex = 0;
+                }
+            }
+        });
+
+
+    }
+
+    public void previousSong()
+    {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if(musicIndex > 0){
+                    playSong(musicIndex - 1);
+                    musicIndex = musicIndex - 1;
+                }else{
+                    // play last song
+                    playSong(songsList.size() - 1);
+                    musicIndex = songsList.size() - 1;
+                }
+            }
+        });
+
+
+    }
+
+    public void playOrPause()
+    {
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // check for already playing
+                if(mp.isPlaying()){
+                    if(mp!=null){
+                        mp.pause();
+                        // Changing button image to play button
+                        btnPlay.setImageResource(R.drawable.btn_play);
+                    }
+                }else{
+                    // Resume song
+                    if(mp!=null){
+                        mp.start();
+                        // Changing button image to pause button
+                        btnPlay.setImageResource(R.drawable.btn_pause);
+                    }
+                }
+            }
+        });
+
 
     }
 
@@ -315,6 +437,7 @@ public class MusicActivity extends Activity implements MediaPlayer.OnCompletionL
      * @param songIndex - index of song
      * */
     public void  playSong(int songIndex){
+        //mHandler.removeCallbacks(mUpdateTimeTask);
         // Play song
         try {
             mp.reset();
@@ -417,21 +540,21 @@ public class MusicActivity extends Activity implements MediaPlayer.OnCompletionL
         // check for repeat is ON or OFF
         if(isRepeat){
             // repeat is on play same song again
-            playSong(currentSongIndex);
+            playSong(musicIndex);
         } else if(isShuffle){
             // shuffle is on - play a random song
             Random rand = new Random();
-            currentSongIndex = rand.nextInt((songsList.size() - 1) - 0 + 1) + 0;
-            playSong(currentSongIndex);
+            musicIndex = rand.nextInt((songsList.size() - 1) - 0 + 1) + 0;
+            playSong(musicIndex);
         } else{
             // no repeat or shuffle ON - play next song
-            if(currentSongIndex < (songsList.size() - 1)){
-                playSong(currentSongIndex + 1);
-                currentSongIndex = currentSongIndex + 1;
+            if(musicIndex < (songsList.size() - 1)){
+                playSong(musicIndex + 1);
+                musicIndex = musicIndex + 1;
             }else{
                 // play first song
                 playSong(0);
-                currentSongIndex = 0;
+                musicIndex = 0;
             }
         }
     }
@@ -439,17 +562,13 @@ public class MusicActivity extends Activity implements MediaPlayer.OnCompletionL
     @Override
     public void onDestroy(){
         super.onDestroy();
-        if(mp != null) {
-            mp.release();
-            mp = null;
-        }
     }
 
     @Override
     public void onPause(){
         super.onPause();
 
-
+        datalogThread3.close();
 
         try {
             BluetoothReceiver.CloseBT();
@@ -459,6 +578,7 @@ public class MusicActivity extends Activity implements MediaPlayer.OnCompletionL
         }
 
         if(mp != null) {
+            mHandler.removeCallbacks(mUpdateTimeTask);
             mp.release();
             mp = null;
         }
