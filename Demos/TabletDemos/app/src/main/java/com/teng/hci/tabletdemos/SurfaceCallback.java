@@ -28,7 +28,7 @@ public class SurfaceCallback implements SurfaceHolder.Callback {
 
         if ( invalidSurface && ( ! invalidSurfaceAccepted ) ) return;
 
-        //VideoActivity.getSharedInstance().mediaPlayer.setDisplay(holder);
+        VideoActivity.getSharedInstance().mediaPlayer.setDisplay(holder);
 
         /*
         if(VideoActivity.getSharedInstance().position > 0){

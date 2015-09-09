@@ -23,6 +23,7 @@ import com.teng.hci.tabletdemos.util.SystemUiHider;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 
 
@@ -62,22 +63,17 @@ public class VideoActivity extends Activity {
     private SystemUiHider mSystemUiHider;
 
     public static MediaPlayer mediaPlayer;
+    private static VideoManager videoManager;
+    public ArrayList<HashMap<String, String>> videosList = new ArrayList<HashMap<String, String>>();
+
     private static SurfaceView surfaceView;
     public static int duration;
     public static int position;
 
     private static String delims = ",";
 
-    //video clips
-    private static int[] clips = new int[]{
-            R.raw.video_01,
-            R.raw.video_02,
-            R.raw.video_03,
-            R.raw.video_04,
-            R.raw.video_05
-    };
     private static int clipIndex = 0;
-    private static int clipSum = 5;
+    private static int clipSum;
 
     public static VideoActivity instance;
     public static VideoActivity getSharedInstance()
@@ -100,10 +96,16 @@ public class VideoActivity extends Activity {
 
         //video surface view
         mediaPlayer = new MediaPlayer();
+        videoManager = new VideoManager();
+        videosList = videoManager.getPlayList();
+        clipSum = videosList.size();
+
         surfaceView = (SurfaceView)findViewById(R.id.surfaceview);
         surfaceView.getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         surfaceView.getHolder().setKeepScreenOn(true);
         surfaceView.getHolder().addCallback(new SurfaceCallback());
+
+        play(0, clipIndex);
 
         //play(0, clips[clipIndex]);
         dataLogThread = new DataThread();
@@ -147,7 +149,7 @@ public class VideoActivity extends Activity {
                 if(clipIndex == clipSum)
                     clipIndex = 0;
 
-                VideoActivity.getSharedInstance().SwitchChannel(clips[clipIndex]);
+                VideoActivity.getSharedInstance().SwitchChannel(clipIndex);
             }else if(cmd == 2)
             {
                 //previous video
@@ -176,17 +178,17 @@ public class VideoActivity extends Activity {
     }
 
     //media play
-    public void play(int position, int videoClip){
+    public void play(int position, int videoClipIndex){
 
         try{
             mediaPlayer.reset();
-            mediaPlayer = MediaPlayer.create(VideoActivity.this, videoClip);
-            //mediaPlayer.setDataSource(this, Uri.parse(Environment.getExternalStorageDirectory().getPath() + "/demos/video_01.mp4"));
-            if(mediaPlayer != null)
-            {
-                mediaPlayer.stop();
-            }
-            mediaPlayer.setDisplay(surfaceView.getHolder());  //problem
+            //mediaPlayer = MediaPlayer.create(VideoActivity.this, videoClip);
+            mediaPlayer.setDataSource(videosList.get(videoClipIndex).get("videoPath"));
+            //if(mediaPlayer != null)
+            //{
+              //  mediaPlayer.stop();
+            //}
+            //mediaPlayer.setDisplay(surfaceView.getHolder());  //problem
             mediaPlayer.prepareAsync();
             mediaPlayer.setOnPreparedListener(new PrepareListener(position));
         }catch (IllegalArgumentException e) {
@@ -198,10 +200,9 @@ public class VideoActivity extends Activity {
         } catch (IllegalStateException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        } /*catch (IOException e) {
-            // TODO Auto-generated catch block
+        } catch (IOException e) {
             e.printStackTrace();
-        }*/
+        }
     }
 
     private final class PrepareListener implements MediaPlayer.OnPreparedListener {
