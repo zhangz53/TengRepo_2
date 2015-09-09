@@ -50,7 +50,7 @@ public class BookActivity extends Activity implements ViewSwitcher.ViewFactory{
 
     private static String delims = ",";
 
-    private DataThread dataLogThread;
+    private DataThread2 dataLogThread2;
 
     public static BookActivity instance;
     public static BookActivity getSharedInstance()
@@ -74,18 +74,18 @@ public class BookActivity extends Activity implements ViewSwitcher.ViewFactory{
 
         imageSwitcher.setImageResource(R.drawable.recipe_01);
 
-        dataLogThread = new DataThread();
-        dataLogThread.start();
+        dataLogThread2 = new DataThread2();
+        dataLogThread2.start();
 
     }
 
-    private static class DataThread extends Thread{
+    private static class DataThread2 extends Thread{
         private boolean mRunning = false;
         @Override
         public void run() {
             mRunning = true;
             while (mRunning) {
-                dataLog();
+                dataLog2();
             }
         }
 
@@ -94,7 +94,7 @@ public class BookActivity extends Activity implements ViewSwitcher.ViewFactory{
         }
     }
 
-    private static void dataLog()
+    private static void dataLog2()
     {
         try {
             Thread.sleep(10);
@@ -166,7 +166,7 @@ public class BookActivity extends Activity implements ViewSwitcher.ViewFactory{
     {
         super.onPause();
 
-        dataLogThread.close();
+        dataLogThread2.close();
 
         try {
             BluetoothReceiver.CloseBT();
