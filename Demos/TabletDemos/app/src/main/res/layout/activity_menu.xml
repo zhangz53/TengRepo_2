@@ -9,26 +9,26 @@
         android:layout_height="wrap_content" />
 
     <Button
-        android:layout_width="200dp"
-        android:layout_height="50dp"
+        android:layout_width="300dp"
+        android:layout_height="60dp"
         android:layout_marginTop="100dp"
         android:layout_marginLeft="200dp"
         android:text="Video"
         android:id="@+id/videoBtn" />
 
     <Button
-        android:layout_width="200dp"
-        android:layout_height="50dp"
-        android:layout_marginTop="250dp"
+        android:layout_width="300dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="200dp"
         android:layout_marginLeft="200dp"
         android:text="Music"
         android:id="@+id/musicBtn"
         />
 
     <Button
-        android:layout_width="200dp"
-        android:layout_height="50dp"
-        android:layout_marginTop="400dp"
+        android:layout_width="300dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="300dp"
         android:layout_marginLeft="200dp"
         android:text="Book"
         android:id="@+id/bookBtn"

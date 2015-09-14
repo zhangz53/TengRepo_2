@@ -331,7 +331,7 @@ public class v4RealTimePlot extends PApplet{
 	{
 		mSerial = new SerialDataCapture();
 		try {
-			mSerial.connect("COM2");
+			mSerial.connect("COM4");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

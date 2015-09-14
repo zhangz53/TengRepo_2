@@ -51,7 +51,7 @@ public class Featurization {
 	public Vector3 filter_velocity;
 	public Vector3 filter_pos;
 	public Matrix4 mMatrix;
-	public static double stamp = 0.0151;  //in seconds
+	public static double stamp = 0.01;  //in seconds
 	
 	//for filter
 	public ButterWorth mButterHp;
@@ -97,13 +97,27 @@ public class Featurization {
 		
 		acc1 = new ArrayList<Vector3>();
 		acc2 = new ArrayList<Vector3>();
+		xAxis = new Vector3(1.0, 0, 0);
+		yAxis = new Vector3(0.0, 1.0, 0);
+		zAxis = new Vector3(0.0, 0.0, 1.0);
+		aroundAxisAngles = new ArrayList<Vector3>();
 		
 		mRealFFT = new RealDoubleFFT(fftBins);
 		scale =  MEAN_MAX * MEAN_MAX * fftBins * fftBins / 2d;
 		
+		mButterHp = new ButterWorth(ButterWorth.BandType.high);
+		mButterHp.createDataSet(); 
+		mButterHp.createDataSet(); 
+		pos = new Vector3();
+		velocity = new Vector3();
+		linAcc = new Vector3();
+		filteredAcc = new Vector3();
+		filter_velocity = new Vector3();
+		filter_pos = new Vector3();
+		mMatrix = new Matrix4();
+		
 		dataStorage = DataStorage.getInstance();
 		dataStorage.clearData();
-		dataStorage.targetFileName = saveFilename;
 		
 	}
 	
@@ -112,6 +126,10 @@ public class Featurization {
 		//to be used by other class
 		mRealFFT = new RealDoubleFFT(fftBins);
 		scale =  MEAN_MAX * MEAN_MAX * fftBins * fftBins / 2d;
+		
+		xAxis = new Vector3(1.0, 0, 0);
+		yAxis = new Vector3(0.0, 1.0, 0);
+		zAxis = new Vector3(0.0, 0.0, 1.0);
 		
 		pos = new Vector3();
 		velocity = new Vector3();
@@ -172,7 +190,25 @@ public class Featurization {
 						*/
 						
 						//for height
-						acc2.add(new Vector3(Double.parseDouble(values[4]), Double.parseDouble(values[5]), Double.parseDouble(values[6])));
+						//acc2.add(new Vector3(Double.parseDouble(values[4]), Double.parseDouble(values[5]), Double.parseDouble(values[6])));
+						
+						
+						//for chopping board
+						Vector3 tempAcc = new Vector3(Double.parseDouble(values[1]), Double.parseDouble(values[2]), Double.parseDouble(values[3]));
+						
+						Quaternion tempQuat = new Quaternion(Double.parseDouble(values[7]), Double.parseDouble(values[8]), Double.parseDouble(values[9]), Double.parseDouble(values[10]));
+						double aroundXRad = tempQuat.getAngleAroundRad(xAxis);
+						double aroundYRad = tempQuat.getAngleAroundRad(yAxis);
+						double aroundZRad = tempQuat.getAngleAroundRad(zAxis);
+						
+						//when chopping on board, mainly rotation around Y, having effect on z and x
+						double fixedX = tempAcc.x * Math.cos(aroundYRad) + tempAcc.z * Math.sin(aroundYRad);
+						double fixedZ = -tempAcc.x * Math.sin(aroundYRad) + tempAcc.z  * Math.cos(aroundYRad);
+						double fixedY = tempAcc.y;
+						
+						acc1.add(new Vector3(fixedX, fixedY, fixedZ));
+						aroundAxisAngles.add(new Vector3(aroundXRad, aroundYRad, aroundZRad));
+					
 						
 					}else
 					{
@@ -180,6 +216,7 @@ public class Featurization {
 						//calculateFeatures(acc1, acc2);
 						//highPassFilter(acc2);
 						
+						/*
 						if(accIndex == 1){
 							//calculateFeatures(acc1, quats);
 							//calculateFeatures_Start_End(acc1, quats, aroundAxisAngles);
@@ -189,13 +226,15 @@ public class Featurization {
 							//calculateFeatures(acc2, quats);
 							//calculateFeatures_Start_End(acc2, quats, aroundAxisAngles);
 							calculateFeatures_height(acc2);						
-						}
+						}*/
+						
+						calculateFeatures_cutting_board(acc1, aroundAxisAngles);
 						
 						//clear the acc and start for index+1
 						acc1.clear();
 						acc2.clear();
 						//quats.clear();
-						//aroundAxisAngles.clear();
+						aroundAxisAngles.clear();
 						index++;
 						
 						
@@ -218,8 +257,24 @@ public class Featurization {
     					acc2.add(new Vector3(tempAcc.x, alongMovementAcc, orthoMovementAcc));
     					*/
 						
-						acc2.add(new Vector3(Double.parseDouble(values[4]), Double.parseDouble(values[5]), Double.parseDouble(values[6])));
+						//acc2.add(new Vector3(Double.parseDouble(values[4]), Double.parseDouble(values[5]), Double.parseDouble(values[6])));
 						
+						
+						//for chopping board
+						Vector3 tempAcc = new Vector3(Double.parseDouble(values[1]), Double.parseDouble(values[2]), Double.parseDouble(values[3]));
+						
+						Quaternion tempQuat = new Quaternion(Double.parseDouble(values[7]), Double.parseDouble(values[8]), Double.parseDouble(values[9]), Double.parseDouble(values[10]));
+						double aroundXRad = tempQuat.getAngleAroundRad(xAxis);
+						double aroundYRad = tempQuat.getAngleAroundRad(yAxis);
+						double aroundZRad = tempQuat.getAngleAroundRad(zAxis);
+						
+						//when chopping on board, mainly rotation around Y, having effect on z and x
+						double fixedX = tempAcc.x * Math.cos(aroundYRad) + tempAcc.z * Math.sin(aroundYRad);
+						double fixedZ = -tempAcc.x * Math.sin(aroundYRad) + tempAcc.z  * Math.cos(aroundYRad);
+						double fixedY = tempAcc.y;
+						
+						acc1.add(new Vector3(fixedX, fixedY, fixedZ));
+						aroundAxisAngles.add(new Vector3(aroundXRad, aroundYRad, aroundZRad));
 					}
 				}
 				
@@ -228,6 +283,9 @@ public class Featurization {
 			//the last one
 			//calculateFeatures(acc1, acc2);
 			//highPassFilter(acc2);
+			
+			/*
+			
 			if(accIndex == 1){
 				//calculateFeatures(acc1, quats);
 				//calculateFeatures_Start_End(acc1, quats, aroundAxisAngles);
@@ -238,13 +296,16 @@ public class Featurization {
 				//calculateFeatures_Start_End(acc2, quats, aroundAxisAngles);
 				calculateFeatures_height(acc2);
 			}
+			*/
+			
+			calculateFeatures_cutting_board(acc1, aroundAxisAngles);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		dataStorage.saves();
+		dataStorage.savess();
 	}
 	
 	/*
@@ -391,6 +452,70 @@ public class Featurization {
 				freqZ[21],freqZ[22],freqZ[23],freqZ[24],freqZ[25],freqZ[26],freqZ[27],freqZ[28],freqZ[29],freqZ[30],freqZ[31],
 				
 				0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,0.0, 0.0,0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0, 0.0, 0.0,0.0, 0.0,0.0, 0.0
+				);
+		
+	}
+	
+	//for demo chopping board
+	public void calculateFeatures_cutting_board(ArrayList<Vector3> ac, ArrayList<Vector3> aroundAxisAngles)
+	{
+		double[] means = meanAxes(ac);  //not using means cause the offset problem
+		
+		//stdv
+		double[] stdvs = stdvAxes(ac, means);
+		
+		//skewness
+		double[] skews = skewnessAxes(ac, means, stdvs);
+		
+		//kurtosis
+		double[] kurs = kurtosisAxes(ac, means, stdvs);
+		
+		//diff peak
+		Vector3 diffPeaks = largestNeighbourAbsDiff(ac);  //might be most important feature
+		
+		//largest values?
+		
+		//velocity values
+		getDisplacement(ac);
+		
+		
+		//frequency
+		double[][] freqs = freq(ac);   //3 by fftBins/2 array
+		//feature X frequencies
+		double[] freqX = freqs[0];
+		//feature Y frequencies
+		double[] freqY = freqs[1];
+		//feature Z frequencies
+		double[] freqZ = freqs[2];
+		
+		//features on around x angles
+		double[] means3 = meanAxes(aroundAxisAngles);
+		double[] stdvs3 = stdvAxes(aroundAxisAngles, means3);
+		double[] skews3 = skewnessAxes(aroundAxisAngles, means3, stdvs3);
+		double[] kurs3 = kurtosisAxes(aroundAxisAngles, means3, stdvs3);
+		
+		//save data
+		DataStorage.AddSampleSS(rLabel, 
+				stdvs[0], stdvs[1], stdvs[2], skews[0], skews[1], skews[2], kurs[0], kurs[1], kurs[2], diffPeaks.x, diffPeaks.y, diffPeaks.z, //12
+				
+				//features on around y
+				means3[1], stdvs3[1], skews3[1], kurs3[1],   //4
+				
+				//velocity features, to tell direction
+				filter_velocity.x, filter_velocity.y, filter_velocity.z,    //3
+				
+				freqX[1], freqX[2], freqX[3], freqX[4],freqX[5], freqX[6], freqX[7], freqX[8], freqX[9], freqX[10], 
+				freqX[11], freqX[12], freqX[13], freqX[14], freqX[15], freqX[16], freqX[17], freqX[18], freqX[19], freqX[20],
+				freqX[21],freqX[22],freqX[23],freqX[24],freqX[25],freqX[26],freqX[27],freqX[28],freqX[29],freqX[30],freqX[31],
+				
+				freqY[1], freqY[2], freqY[3], freqY[4],freqY[5], freqY[6], freqY[7], freqY[8], freqY[9], freqY[10], 
+				freqY[11], freqY[12], freqY[13], freqY[14], freqY[15], freqY[16], freqY[17], freqY[18], freqY[19], freqY[20],
+				freqY[21],freqY[22],freqY[23],freqY[24],freqY[25],freqY[26],freqY[27],freqY[28],freqY[29],freqY[30],freqY[31],
+				
+				freqZ[1], freqZ[2], freqZ[3], freqZ[4],freqZ[5], freqZ[6], freqZ[7], freqZ[8], freqZ[9], freqZ[10], 
+				freqZ[11], freqZ[12], freqZ[13], freqZ[14], freqZ[15], freqZ[16], freqZ[17], freqZ[18], freqZ[19], freqZ[20],
+				freqZ[21],freqZ[22],freqZ[23],freqZ[24],freqZ[25],freqZ[26],freqZ[27],freqZ[28],freqZ[29],freqZ[30],freqZ[31]  //3 * 31
+				
 				);
 		
 	}
@@ -1472,6 +1597,7 @@ public class Featurization {
 	
 	public static final void main(String args[])
 	{
+		/*
 		String[] filename = new String[]{"p", "pg", "t", "tg"};
 		for(int itrf = 0; itrf < 4; itrf++)
 		{
@@ -1484,6 +1610,12 @@ public class Featurization {
 				Featurization fea = new Featurization(dataFileName, fileIndex, targetName);
 				fea.getFeatures();
 			}
-		}
+		}*/
+		
+		String dataFileName = "C:\\Users\\Teng\\Desktop\\dataset\\911demos\\raw\\wrist\\random_2_pro.csv";
+		String targetName = "";
+		
+		Featurization fea = new Featurization(dataFileName, 1, targetName);
+		fea.getFeatures();
 	}
 }

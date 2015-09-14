@@ -31,7 +31,7 @@ class DataLoad{
 		quat = new ArrayList<Quaternion>();
 		
 		//read the csv file
-		String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\formal_height\\12\\tg8.csv";
+		String dataFile = "C:\\Users\\Teng\\Desktop\\dataset\\911demos\\raw\\wrist\\random_2.csv";
 		try {
 			br = new BufferedReader(new FileReader(dataFile));
 		} catch (FileNotFoundException e) {
@@ -155,13 +155,13 @@ public class PreProcessing extends PApplet{
 				else
 					alpha = 50;
 				
-				/*
+				
 				stroke(255, 0, 0, alpha);  //x
 				line((float)(windowWidth - acc1Size * widthSeg + itra * widthSeg), 
-						 (float)(windowHeight * 3 / 4 + mDataLoad.acc1.get(itra).x * heightSeg),
+						(float)(windowHeight) -(float)(windowHeight * 3 / 4 + mDataLoad.acc1.get(itra).x * heightSeg),
 						 (float)(windowWidth - acc1Size * widthSeg + (itra + 1) * widthSeg), 
-						 (float)(windowHeight * 3 / 4 + mDataLoad.acc1.get(itra + 1).x * heightSeg));
-				*/
+						 (float)(windowHeight) - (float)(windowHeight * 3 / 4 + mDataLoad.acc1.get(itra + 1).x * heightSeg));
+				
 				stroke(0, 255, 0, alpha);  //y
 				line((float)(windowWidth - acc1Size * widthSeg + itra * widthSeg), 
 						(float)(windowHeight) - (float)(windowHeight * 3 / 4 + mDataLoad.acc1.get(itra).y * heightSeg),

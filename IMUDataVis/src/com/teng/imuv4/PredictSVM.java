@@ -272,7 +272,7 @@ public class PredictSVM {
 	        nodes[i-1] = node;
 	    }
 
-	    int totalClasses = 3;  //5       
+	    int totalClasses = 5;       
 	    int[] labels = new int[totalClasses];
 	    svm.svm_get_labels(linear_model,labels);
 
@@ -347,6 +347,14 @@ public class PredictSVM {
 	public double predictSwipeStartEndWithDefaultModel(ArrayList<Vector3> ac, ArrayList<Quaternion> quat, ArrayList<Vector3> ang)
 	{
 		double[] testData = calculateFeatures_SwipeStartEnd(ac, quat, ang);
+		double predictValue = predictWithDefaultModel(testData);
+		return predictValue;
+	}
+	
+	//this is for chopping board
+	public double predictSwipeChoppingBoard(ArrayList<Vector3> ac, ArrayList<Vector3> ang)
+	{
+		double[] testData = calculateFeatures_ChoppingBoard(ac, ang);
 		double predictValue = predictWithDefaultModel(testData);
 		return predictValue;
 	}
@@ -498,6 +506,71 @@ public class PredictSVM {
 				ft5, ft6, ft8, ft9, ft11, ft12, fq1, fq2, fq3, fq4, fq5, fq6, fq7, fq8, fq9, 
 				fq10,freqY[1],freqY[2],freqY[3],fq11,fq12,fq13,fq14,fq15,fq16,featurization.filter_pos.y,featurization.filter_pos.z,
 				freqZ[1],freqZ[2],freqZ[3],fa1,fa2,fa3,fa4,fa5,fa6,fa7,fa8,fa9,fa10,fa11,fa12};
+		
+		//need to be scaled
+		for(int itrf = 1; itrf < features.length; itrf++)
+		{
+			features[itrf] =  scaleOutput(features[itrf], itrf);
+		}
+		
+		return features;
+	}
+	
+	
+	public double[] calculateFeatures_ChoppingBoard(ArrayList<Vector3> ac, ArrayList<Vector3> aroundAxisAngles)
+	{
+		double[] means = featurization.meanAxes(ac);  //not using means cause the offset problem
+		
+		//stdv
+		double[] stdvs = featurization.stdvAxes(ac, means);
+		
+		//skewness
+		double[] skews = featurization.skewnessAxes(ac, means, stdvs);
+		
+		//kurtosis
+		double[] kurs = featurization.kurtosisAxes(ac, means, stdvs);
+		
+		//diff peak
+		Vector3 diffPeaks = featurization.largestNeighbourAbsDiff(ac);  //might be most important feature
+		
+		featurization.getDisplacement(ac);
+		
+		//frequency
+		double[][] freqs = featurization.freq(ac);   //3 by fftBins/2 array
+		//feature X frequencies
+		double[] freqX = freqs[0];
+		//feature Y frequencies
+		double[] freqY = freqs[1];
+		//feature Z frequencies
+		double[] freqZ = freqs[2];
+		
+		//features on around x angles
+		double[] means3 = featurization.meanAxes(aroundAxisAngles);
+		double[] stdvs3 = featurization.stdvAxes(aroundAxisAngles, means3);
+		double[] skews3 = featurization.skewnessAxes(aroundAxisAngles, means3, stdvs3);
+		double[] kurs3 = featurization.kurtosisAxes(aroundAxisAngles, means3, stdvs3);
+		
+		double[] features = new double[]{1.0, 
+				stdvs[0], stdvs[1], stdvs[2], skews[0], skews[1], skews[2], kurs[0], kurs[1], kurs[2], diffPeaks.x, diffPeaks.y, diffPeaks.z, //12
+				
+				//features on around y
+				means3[1], stdvs3[1], skews3[1], kurs3[1],   //4
+				
+				featurization.filter_velocity.x, featurization.filter_velocity.y, featurization.filter_velocity.z, 
+				
+				freqX[1], freqX[2], freqX[3], freqX[4],freqX[5], freqX[6], freqX[7], freqX[8], freqX[9], freqX[10], 
+				freqX[11], freqX[12], freqX[13], freqX[14], freqX[15], freqX[16], freqX[17], freqX[18], freqX[19], freqX[20],
+				freqX[21],freqX[22],freqX[23],freqX[24],freqX[25],freqX[26],freqX[27],freqX[28],freqX[29],freqX[30],freqX[31],
+				
+				freqY[1], freqY[2], freqY[3], freqY[4],freqY[5], freqY[6], freqY[7], freqY[8], freqY[9], freqY[10], 
+				freqY[11], freqY[12], freqY[13], freqY[14], freqY[15], freqY[16], freqY[17], freqY[18], freqY[19], freqY[20],
+				freqY[21],freqY[22],freqY[23],freqY[24],freqY[25],freqY[26],freqY[27],freqY[28],freqY[29],freqY[30],freqY[31],
+				
+				freqZ[1], freqZ[2], freqZ[3], freqZ[4],freqZ[5], freqZ[6], freqZ[7], freqZ[8], freqZ[9], freqZ[10], 
+				freqZ[11], freqZ[12], freqZ[13], freqZ[14], freqZ[15], freqZ[16], freqZ[17], freqZ[18], freqZ[19], freqZ[20],
+				freqZ[21],freqZ[22],freqZ[23],freqZ[24],freqZ[25],freqZ[26],freqZ[27],freqZ[28],freqZ[29],freqZ[30],freqZ[31]  //3 * 31
+				
+		};
 		
 		//need to be scaled
 		for(int itrf = 1; itrf < features.length; itrf++)
