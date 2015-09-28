@@ -4,12 +4,18 @@ import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import javax.swing.JFrame;
+
 import processing.core.PApplet;
+import processing.core.PImage;
 
 import com.teng.imuv4.PredictSVM;
 import com.teng.math.Quaternion;
@@ -197,8 +203,8 @@ class SensorSerial{
             							movingCount++;
             							if(movingCount == movingWindowSize)
             							{
-            								predictValue = predictSVM.predictSwipeChoppingBoard(dataset_acc, angLog);
-            								
+            								//predictValue = predictSVM.predictSwipeChoppingBoard(dataset_acc, angLog);
+            								predictValue = 1.0;
             								System.out.println(" " + predictValue);
             								
             								if(predictValue != prevValue && prevValue == 1.0)
@@ -272,7 +278,12 @@ public class IMUSensor extends PApplet{
 	public SensorSerial mSerial;
 	
 	//bt sender
-	//DataTransmitterBT bt;
+	DataTransmitterBT bt;
+	
+	//demo scenarios
+	private int demoScenario = 1; //0 - send data to remote device
+									//1 - show data here, museum
+									//2 - soldering tool
 	
 	
 	String command1 = String.valueOf(1) + "," + String.valueOf(1) + "\n";
@@ -287,6 +298,41 @@ public class IMUSensor extends PApplet{
 	public int windowWidth;
 	public int windowHeight;
 	
+	
+	
+	//for image gallery
+	PImage[] images = new PImage[10];
+	int headsToDisplay;
+	int lengthRequired = 10;
+	int [] allowed = {
+	  0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+	};
+
+	// fading stuff
+	PImage oldImage ; // which image
+	float oldImageX ; // its position
+	float oldImageY ;
+	//
+	float fadeStronger ; // this image is getting stronger
+	float fadeWeaker ;  // this one is getting weaker
+	float fadeSpeed = 1.0f; // the speed of the fading
+	//
+	//
+	final int legsFade = 0;     // we need to know which kind of fading we have
+	final int headsFade = 1;
+	final int noneFade = 2;
+	int currentFadingIs = noneFade;
+	//
+	int currentFadingIsNumber = -1;
+	
+	
+	//for video
+	//Movie myMovie;
+	
+	//for solder
+	int imgIndex;
+	float zoom = 1.0f;
+	
 	public void setup()
 	{
 		mSerial = new SensorSerial();
@@ -297,13 +343,61 @@ public class IMUSensor extends PApplet{
 			e.printStackTrace();
 		}
 		
-		//bt = new DataTransmitterBT();
-		//try {
-		//	bt.connect("COM3");
-		//} catch (Exception e) {
-			 //TODO Auto-generated catch block
-		//	e.printStackTrace();
-		//}
+		
+		if(demoScenario == 0){
+			bt = new DataTransmitterBT();
+			try {
+				bt.connect("COM3");
+			} catch (Exception e) {
+				//TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}else if(demoScenario == 1){
+			images [0] = loadImage( "1.jpg");
+			images [1] = loadImage( "2.jpg");
+			images [2] = loadImage( "3.jpg");
+			images [3] = loadImage( "4.jpg");
+			images [4] = loadImage( "5.jpg");
+			images [5] = loadImage( "6.jpg");
+			images [6] = loadImage( "7.jpg");
+			images [7] = loadImage( "8.jpg");
+			images [8] = loadImage( "9.jpg");
+			images [9] = loadImage( "10.jpg");
+			
+			headsToDisplay = allowed[ 0 ] ;
+			  //
+			  //
+			int count = 0; // index
+			for (int i=0; i < 10; i++) {
+			    images [count].resize(1500, 1500);
+			    count++;
+			}
+			
+			//myMovie = new Movie(this, "shell.avi");
+			//myMovie.loop();
+		}else    //2
+		{
+			imgIndex = 0;
+			lengthRequired = 3;
+			allowed = new int[]{
+					  0, 1, 2
+					};
+			fadeSpeed = 10.0f;
+			
+			images [0] = loadImage( "circuit1.png");
+			images [1] = loadImage( "circuit2.jpg");
+			images [2] = loadImage( "circuit3.jpg");
+			
+			headsToDisplay = allowed[ imgIndex ] ;
+			
+			int count = 0; // index
+			for (int i=0; i < 3; i++) {
+			    images [count].resize(1500, 1500);
+			    count++;
+			}
+			
+		}
+		
 		
 		windowWidth = 1500;
 		windowHeight = 1200;  //split into two
@@ -312,13 +406,42 @@ public class IMUSensor extends PApplet{
 		heightSeg = windowHeight / (2 * heightThreshold);
 		
 		size(windowWidth, windowHeight);
-		background(250);
+		//smooth();
+		background(255);
+		
 	}
+	
+	/*
+	void movieEvent(Movie m) {
+		  m.read();
+	}*/
+	
 	
 	public void draw()
 	{
-		background(250);
 		
+		background(50);
+		
+		if(demoScenario == 0){
+			
+			drawSignal(0, 0, windowWidth, windowHeight);
+		}else if(demoScenario == 1 || demoScenario == 2)
+		{
+			
+			//draw image gallary
+			drawImageGallery();
+			
+			
+			//draw video play
+			//drawVideo();
+			
+			drawSignal(0, 600, windowWidth, 600);
+		}
+		
+	}
+	
+	public void drawSignal(int startX, int startY, int subWidth, int subHeight)
+	{	
 		int accSize = mSerial.visAccLog.size();  //since it's not in the same thread, size could be larger than the logsize
 		if(accSize > mSerial.visLogSize)
 		{
@@ -329,7 +452,7 @@ public class IMUSensor extends PApplet{
 		{
 			pushMatrix();
 			noStroke();
-			fill(230);
+			fill(200, 230, 200);
 			
 			for(int itrt = 0; itrt<mSerial.tagIndex.size(); itrt++)
 			{
@@ -338,7 +461,7 @@ public class IMUSensor extends PApplet{
 				float leftY = 0.0f;
 				float rectWidth = (float)(64.0 * widthSeg);
 				float rectHeight = windowHeight;
-				rect(leftX, leftY, rectWidth, rectHeight);
+				rect(leftX * subWidth / windowWidth + startX , leftY * subHeight / windowHeight + startY, rectWidth * subWidth / windowWidth, rectHeight * subHeight / windowHeight);
 			}
 			
 			popMatrix();
@@ -348,29 +471,29 @@ public class IMUSensor extends PApplet{
 		//draw visAccLog
 		{
 			pushMatrix();
-			
+			strokeWeight(4);
 			
 			if(accSize > 10)
 			{
 				for(int itra = 0; itra < (accSize-1); itra ++)
 				{
 					stroke(255, 0, 0);  //x
-					line((float)(windowWidth - accSize * widthSeg + itra * widthSeg), 
-							(float)(windowHeight) - (float)(windowHeight * 1 / 2 + mSerial.visAccLog.get(itra).x * heightSeg),
-							 (float)(windowWidth - accSize * widthSeg + (itra + 1) * widthSeg), 
-							 (float)(windowHeight) - (float)(windowHeight * 1 / 2 + mSerial.visAccLog.get(itra + 1).x * heightSeg));
+					line((float)(windowWidth - accSize * widthSeg + itra * widthSeg) * subWidth / windowWidth + startX, 
+							((float)(windowHeight) - (float)(windowHeight * 1 / 2 + mSerial.visAccLog.get(itra).x * heightSeg)) * subHeight / windowHeight + startY,
+							 (float)(windowWidth - accSize * widthSeg + (itra + 1) * widthSeg) * subWidth / windowWidth + startX, 
+							( (float)(windowHeight) - (float)(windowHeight * 1 / 2 + mSerial.visAccLog.get(itra + 1).x * heightSeg)) * subHeight / windowHeight + startY );
 					
 					stroke(0, 255, 0);  //y
-					line((float)(windowWidth - accSize * widthSeg + itra * widthSeg), 
-							(float)(windowHeight) - (float)(windowHeight * 1 / 2 + mSerial.visAccLog.get(itra).y * heightSeg),
-							 (float)(windowWidth - accSize * widthSeg + (itra + 1) * widthSeg), 
-							 (float)(windowHeight) - (float)(windowHeight * 1 / 2 + mSerial.visAccLog.get(itra + 1).y * heightSeg));
+					line((float)(windowWidth - accSize * widthSeg + itra * widthSeg)* subWidth / windowWidth + startX, 
+							((float)(windowHeight) - (float)(windowHeight * 1 / 2 + mSerial.visAccLog.get(itra).y * heightSeg))* subHeight / windowHeight + startY,
+							 (float)(windowWidth - accSize * widthSeg + (itra + 1) * widthSeg)* subWidth / windowWidth + startX, 
+							 ((float)(windowHeight) - (float)(windowHeight * 1 / 2 + mSerial.visAccLog.get(itra + 1).y * heightSeg)) * subHeight / windowHeight + startY );
 					
 					stroke(0, 0, 255);  //z
-					line((float)(windowWidth - accSize * widthSeg + itra * widthSeg), 
-							(float)(windowHeight) - (float)(windowHeight * 1 / 2 + mSerial.visAccLog.get(itra).z * heightSeg),
-							 (float)(windowWidth - accSize * widthSeg + (itra + 1) * widthSeg), 
-							 (float)(windowHeight) - (float)(windowHeight * 1 / 2 + mSerial.visAccLog.get(itra + 1).z * heightSeg));
+					line((float)(windowWidth - accSize * widthSeg + itra * widthSeg) * subWidth / windowWidth + startX, 
+							((float)(windowHeight) - (float)(windowHeight * 1 / 2 + mSerial.visAccLog.get(itra).z * heightSeg)) * subHeight / windowHeight + startY,
+							 (float)(windowWidth - accSize * widthSeg + (itra + 1) * widthSeg) * subWidth / windowWidth + startX, 
+							 ((float)(windowHeight) - (float)(windowHeight * 1 / 2 + mSerial.visAccLog.get(itra + 1).z * heightSeg)) * subHeight / windowHeight + startY);
 				}
 			}
 			
@@ -378,17 +501,180 @@ public class IMUSensor extends PApplet{
 		}
 	}
 	
+	public void drawImageGallery()
+	{
+		
+		pushMatrix();
+		 scale(zoom);
+		
+		  if (fadeWeaker > 0 && currentFadingIs != noneFade ) {
+		    // show OLD image
+		    tint( 255, fadeWeaker ); // Apply transparency without changing color
+		    image ( oldImage, oldImageX, oldImageY );
+		  }
+		  
+		    if ( ! (currentFadingIs==headsFade && currentFadingIsNumber==0) ) {
+		      tint (255, 255); // means full image without fading
+		      image ( images [ headsToDisplay ], 0, 0 ) ;
+		    }
+		    else {
+		      tint(255, fadeStronger ); // Apply transparency without changing color
+		      // show new image
+		      image ( images [ headsToDisplay  ], 0, 0 ) ;
+		    }
+		    //
+		    //
+		    
+		    
+		  // fading manager
+		  if (currentFadingIs != noneFade) {
+		    fadeStronger += fadeSpeed;
+		    fadeWeaker   -= fadeSpeed;
+		    if (fadeStronger>255) {
+		      fadeStronger=0;
+		      currentFadingIs = noneFade ;
+		    } // if
+		    if (fadeWeaker < 0) {
+		      fadeWeaker  = 255;
+		      currentFadingIs = noneFade ;
+		    } // if
+		  } // if
+		  
+		  popMatrix();
+	}
+	
+	
+	public void showVideo()
+	{
+		URL mediaURL = null;
+		try {
+			mediaURL = new File("C:\\Users\\Teng\\Desktop\\Videos\\shell.avi").toURI().toURL();
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		if(mediaURL != null)
+		{
+			JFrame mediaTest = new JFrame( "Media Tester" );
+           	mediaTest.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+
+           	VideoPlayer mediaPanel = new VideoPlayer( mediaURL );
+           	mediaTest.add( mediaPanel );               
+
+           	mediaTest.setSize( 1280, 960 );
+           	mediaTest.setVisible( true );
+		}
+	}
+	
+	private void switchImage()
+	{
+		oldImage  = images [ headsToDisplay] ; // save old
+        oldImageX = 0;
+        oldImageY = 0;
+        fadeStronger = 0;    // init fading
+        fadeWeaker   = 255;
+        currentFadingIs = headsFade; 
+        currentFadingIsNumber = 0;
+        int newIndex= (int) ( random (allowed[lengthRequired-1]) );
+        headsToDisplay  = allowed[ newIndex ] ;  // new image 
+	}
+	
+	private void nextImage(int index)
+	{
+		oldImage  = images [ headsToDisplay] ; // save old
+        oldImageX = 0;
+        oldImageY = 0;
+        fadeStronger = 0;    // init fading
+        fadeWeaker   = 255;
+        currentFadingIs = headsFade; 
+        currentFadingIsNumber = 0;
+        imgIndex = index;
+        headsToDisplay  = allowed[ imgIndex ] ;  // new image 
+	}
+	
 	
 	public void keyPressed()
 	{
 		if(key == 'q'){
 			mSerial.disConnect();
-			//bt.disConnect();
+			if(demoScenario == 0)
+			{
+				bt.disConnect();
+			}
+			
 			exit();
 		}
 		
-		if(key == 'n'){
-			//bt.sendData(command1);
+		if(key == 'd'){                                 //command 1
+			mSerial.tagIndex.add(0);
+			if(demoScenario == 0)
+			{
+				bt.sendData(command1);
+			}else if(demoScenario == 1)
+			{
+				switchImage();
+			}else if(demoScenario == 2)
+			{
+				nextImage(2);
+			}
+		}
+		
+		if(key == 'a'){                               //command 2
+			mSerial.tagIndex.add(0);
+			if(demoScenario == 0)
+			{
+				bt.sendData(command2);
+			}else if(demoScenario == 1)
+			{
+				showVideo();
+			}else if(demoScenario == 2)
+			{
+				nextImage(0);
+			}
+		}
+		
+		if(key == 'w'){                               //command 3
+			mSerial.tagIndex.add(0);
+			if(demoScenario == 0)
+			{
+				bt.sendData(command3);
+			}else if(demoScenario == 1)
+			{
+				
+			}else if(demoScenario == 2)
+			{
+				zoom += 0.2f;
+			}
+		}
+		
+		if(key == 's'){
+			mSerial.tagIndex.add(0);
+			if(demoScenario == 0)
+			{
+				
+			}else if(demoScenario == 1)
+			{
+				
+			}else if(demoScenario == 2)
+			{
+				nextImage(1);
+			}
+		}
+		
+		if(key == 'x')                               //command 4
+		{
+			mSerial.tagIndex.add(0);
+			if(demoScenario == 0)
+			{
+				bt.sendData(command4);
+			}else if(demoScenario == 1)
+			{
+				
+			}else if(demoScenario == 2)
+			{
+				zoom -= 0.2f;
+			}
 		}
 		
 		if(key == 't'){

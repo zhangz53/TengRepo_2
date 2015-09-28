@@ -11,4 +11,6 @@
     <string name="title_activity_video">VideoActivity</string>
 
     <string name="title_activity_book">BookActivity</string>
+
+    <string name="title_activity_test_full_screen">testFullScreenActivity</string>
 </resources>

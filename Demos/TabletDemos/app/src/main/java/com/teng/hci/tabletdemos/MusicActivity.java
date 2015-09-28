@@ -4,7 +4,9 @@ import com.teng.hci.tabletdemos.util.SystemUiHider;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
@@ -58,6 +60,10 @@ public class MusicActivity extends Activity implements MediaPlayer.OnCompletionL
     private static String delims = ",";
     private static int musicIndex = 0;
     private static int musicSum;
+
+    private int currentVolume;
+    private int maxVolume;
+    private AudioManager audioManager;
 
     private DataThread3 datalogThread3;
 
@@ -119,6 +125,10 @@ public class MusicActivity extends Activity implements MediaPlayer.OnCompletionL
         // By default play first song
         playSong(musicIndex);
 
+        //volume
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
         /**
          * Play button click event
          * plays a song and changes button to pause image
@@ -357,9 +367,12 @@ public class MusicActivity extends Activity implements MediaPlayer.OnCompletionL
             }else if(cmd == 3)
             {
                 //increase volume
+                MusicActivity.getSharedInstance().increaseVolume();
+
             }else if(cmd == 4)
             {
                 //decrease volume
+                MusicActivity.getSharedInstance().decreaseVolume();
             }
 
             BluetoothReceiver.getInstance().serialData = "empty";
@@ -380,6 +393,32 @@ public class MusicActivity extends Activity implements MediaPlayer.OnCompletionL
                     playSong(0);
                     musicIndex = 0;
                 }
+            }
+        });
+
+
+    }
+
+    public void increaseVolume()
+    {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                currentVolume += 2;
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, currentVolume, 0);
+            }
+        });
+
+
+    }
+
+    public void decreaseVolume()
+    {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                currentVolume -= 2;
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, currentVolume, 0);
             }
         });
 

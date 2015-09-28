@@ -31,7 +31,7 @@ class DataLoad{
 		quat = new ArrayList<Quaternion>();
 		
 		//read the csv file
-		String dataFile = "C:\\Users\\Teng\\Desktop\\dataset\\911demos\\raw\\wrist\\random_2.csv";
+		String dataFile = "C:\\Users\\Teng\\Documents\\TestDataFolder\\h2.csv";
 		try {
 			br = new BufferedReader(new FileReader(dataFile));
 		} catch (FileNotFoundException e) {
@@ -47,7 +47,7 @@ class DataLoad{
 			{
 				String[] values = line.split(splitBy);
 				
-				if(values.length == 13)
+				if(values.length == 13)   // 13
 				{
 					double sIndexDouble = Double.parseDouble(values[0]);
 					int sIndex = (int)sIndexDouble;
@@ -57,6 +57,10 @@ class DataLoad{
 						acc1.add(new Vector3(Double.parseDouble(values[1]), Double.parseDouble(values[2]), Double.parseDouble(values[3])));
 						acc2.add(new Vector3(Double.parseDouble(values[4]), Double.parseDouble(values[5]), Double.parseDouble(values[6])));
 						quat.add(new Quaternion(Double.parseDouble(values[7]), Double.parseDouble(values[8]), Double.parseDouble(values[9]),  Double.parseDouble(values[10])));
+						//acc2.add(new Vector3());
+						//quat.add(new Quaternion());
+						
+						
 						
 						//do another fetch
 						fetchData(index);

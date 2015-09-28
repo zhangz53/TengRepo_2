@@ -120,6 +120,12 @@ public class BookActivity extends Activity implements ViewSwitcher.ViewFactory{
             }else if(cmd == 2)
             {
                 //previous video
+                recipeIndex--;
+                if(recipeIndex == -1)
+                    recipeIndex = (recipeSum - 1);
+
+                BookActivity.getSharedInstance().switchImage(recipes[recipeIndex]);
+
             }else if(cmd == 3)
             {
                 //increase volume

@@ -152,7 +152,8 @@ public class VideoActivity extends Activity {
                 VideoActivity.getSharedInstance().SwitchChannel(clipIndex);
             }else if(cmd == 2)
             {
-                //previous video
+                //pause video
+                VideoActivity.getSharedInstance().PauseVideo();
             }else if(cmd == 3)
             {
                 //increase volume
@@ -181,6 +182,22 @@ public class VideoActivity extends Activity {
             }
         });
 
+    }
+
+    public void PauseVideo()
+    {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+
+                if(mediaPlayer.isPlaying()) {
+                    mediaPlayer.pause();
+                }else
+                {
+                    mediaPlayer.start();
+                }
+            }
+        });
     }
 
     //media play

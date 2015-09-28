@@ -138,21 +138,21 @@ class SerialDataCap{
                     	{
                     		//System.out.print(outputString);
                     		//System.out.println(outputString.length());  // for quaternions should equal to 109, for acc should equal to 55
-                    		if(outputString.length() == 73 && outputString != null)  
+                    		if(outputString.length() == 100 && outputString != null)  
                     		{
                     			//decode the hex
                     			String[] outPutStringArr = outputString.split(",");
                     			
                     			//this is for accelerometers
-                    			if(outPutStringArr.length == 9)
+                    			if(outPutStringArr.length == 12)
                     			{
                     				acc1.Set(decodeFloat(outPutStringArr[0])/100.0,
                     						decodeFloat(outPutStringArr[1])/100.0, 
                     						decodeFloat(outPutStringArr[2])/100.0);
                     				
-                    				//acc2.Set(decodeFloat(outPutStringArr[3])/100.0,
-                    					//	decodeFloat(outPutStringArr[4])/100.0, 
-                    					//	decodeFloat(outPutStringArr[5])/100.0);
+                    				acc2.Set(decodeFloat(outPutStringArr[3])/100.0,
+                    						decodeFloat(outPutStringArr[4])/100.0, 
+                    						decodeFloat(outPutStringArr[5])/100.0);
                     				
                     				/*
                     				Quaternion tempQuat = new Quaternion();                					
@@ -173,16 +173,17 @@ class SerialDataCap{
                 					tempQuat2.Nor();
                 					quat2.Set(tempQuat2);
                 					*/
+                    				
                     				Quaternion tempQuat2 = new Quaternion();                					
-                					tempQuat2.Set(decodeFloat(outPutStringArr[4]),  	//x 
-                							decodeFloat(outPutStringArr[5]),    	//y
-                							decodeFloat(outPutStringArr[6]), 		//z
-                							decodeFloat(outPutStringArr[3]));		//w
+                					tempQuat2.Set(decodeFloat(outPutStringArr[7]),  	//x 
+                							decodeFloat(outPutStringArr[8]),    	//y
+                							decodeFloat(outPutStringArr[9]), 		//z
+                							decodeFloat(outPutStringArr[6]));		//w
                 					
                 					tempQuat2.Nor();
                 					quat2.Set(tempQuat2);
                     				
-                					stamp = decodeFloat(outPutStringArr[7]) / 1000.0; 
+                					stamp = decodeFloat(outPutStringArr[10]) / 1000.0; 
                 					
                     				
                     				if(isFirstTen)
@@ -227,7 +228,7 @@ class SerialDataCap{
                         					//double orthoMovementAcc1 = -acc1.y * Math.sin(aroundXRad_Acc1) + acc1.z * Math.cos(aroundXRad_Acc1);
                         					
                         					
-                        					DataStorage.AddSampleF(sampleCount, acc1.x, acc1.y, acc1.z, 0.0, 0.0, 0.0,
+                        					DataStorage.AddSampleF(sampleCount, acc1.x, acc1.y, acc1.z, acc2.x, acc2.y, acc2.z,
                             						 quat2.x, quat2.y, quat2.z, quat2.w, stamp, 0.0);
                         				}
                     				}
@@ -312,8 +313,6 @@ class SerialDataCap{
 					
 				}
 				
-				
-				
 				Vector3 temp = new Vector3();
 				temp.Set(accList.get(itra).x, alongMovementAcc, orthoMovementAcc);
 				resultAccList.add(temp);
@@ -331,7 +330,7 @@ public class DataCollection extends PApplet{
 	public int[] rgb;
 	private int countNumber;
 	private int savedTime;
-	private int oneSecond = 100;   //1 second  //1000
+	private int oneSecond = 200;   //1 second  //1000
 	private int twoSecond = 1500;  //1.5seconds  //1500
 	
 	public int sampleCount = 0;
@@ -340,14 +339,14 @@ public class DataCollection extends PApplet{
 	{
 		mSerial = new SerialDataCap();
 		try {
-			mSerial.connect("COM11");
+			mSerial.connect("COM2");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 		countNumber = 3;
-		indicator = str(countNumber);
+		indicator = "Ready (" +str(countNumber) +")";
 		rgb = new int[]{200, 200, 0};
 		savedTime = millis();
 		size(1000, 1000);
@@ -368,7 +367,7 @@ public class DataCollection extends PApplet{
 				{
 					countNumber = 3;
 					sampleCount++;
-					indicator = str(countNumber);
+					indicator = "Ready (" +str(countNumber) +")";
 					rgb[0] = 200; rgb[1] = 200; rgb[2] = 0;
 					mSerial.isRecording = false;
 					savedTime = millis();
@@ -380,13 +379,14 @@ public class DataCollection extends PApplet{
 					countNumber--;
 					if(countNumber == 0)
 					{
-						indicator = "R";
+						indicator = "Swipe";
 						rgb[0] = 0; rgb[1] = 200; rgb[2] = 0;
 						mSerial.isRecording = true;
 						mSerial.sampleCount++;
 					}else
 					{
-						indicator = str(countNumber);
+						//indicator = str(countNumber);
+						indicator = "Ready (" +str(countNumber) +")";
 					}
 					
 					savedTime = millis();
@@ -401,11 +401,12 @@ public class DataCollection extends PApplet{
 			
 			fill(rgb[0], rgb[1], rgb[2], 150);
 			noStroke();
-			ellipse(500, 500, 300, 300);
+			ellipse(500, 500, 500, 500);
+			
 			
 			textSize(64);
 			fill(250, 250, 250);
-			text(indicator, 480, 525);
+			text(indicator, 425, 525);
 			
 			//counts
 			textSize(64);
