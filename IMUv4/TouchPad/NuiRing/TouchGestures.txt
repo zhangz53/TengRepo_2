@@ -1,0 +1,16 @@
+Gesture numbers sent from NuiRing
+
+Tap:		16
+Tap and Hold:	17
+Double Tap:	32
+
+Swipe Left:	65
+Swipe Right:	97
+Swipe Up:	49
+Swipe Down:	81
+
+
+Swipe Left & Hold:	66
+Swipe Right & Hold:	98
+Swipe Up & Hold:	50
+Swipe Down & Hold:	82

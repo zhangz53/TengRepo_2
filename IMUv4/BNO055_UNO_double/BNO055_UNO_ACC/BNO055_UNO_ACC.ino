@@ -289,8 +289,8 @@ void loop()
  
  //acc data from both sensor
  //freeCubeAccDoubleRF();
- //freeCubeAllDoubleRF();
- freeCubeAllDouble();
+ freeCubeAllDoubleRF();
+ //freeCubeAllDouble();
  
  //   linearAcc();
  //  gravityVec();
