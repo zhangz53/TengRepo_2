@@ -213,7 +213,7 @@ public class MainActivity extends Activity
             {
                 predictValue = predictSVM.predictWearSwipe(dataset_acc);
 
-                //upate the ui
+                //update the ui
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
