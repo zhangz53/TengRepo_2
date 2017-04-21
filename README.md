@@ -1,2 +1,4 @@
-# GraspGesture
-Double IMU ring project
+# Passture
+Related codes to the Passture project
+
+#
