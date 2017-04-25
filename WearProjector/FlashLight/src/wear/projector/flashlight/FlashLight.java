@@ -15,11 +15,13 @@ public class FlashLight extends PApplet{
 	private ArrayList<int[]> targets;
 	private int targetW = 200;
 	private int targetH = 200;
+	private int targetCount = 10;
 	
-	
-	private int windowX = 0;
-	private int windowY = 0;
+	private float windowX = 0;
+	private float windowY = 0;
 	private int moveStep = 100;
+	
+	private float smooth_alpha = 0.05f;
 	
 	public void settings(){
 		print("hello\n");
@@ -39,7 +41,7 @@ public class FlashLight extends PApplet{
 		
 		targets = new ArrayList<int[]>();
 		//generate random targets
-		for(int itrt = 0; itrt < 10; itrt++)
+		for(int itrt = 0; itrt < targetCount; itrt++)
 		{
 			int rx = (int)random(mapW);
 			int ry = (int)random(mapH);
@@ -54,23 +56,18 @@ public class FlashLight extends PApplet{
     	
     	fill(200, 0, 0, 150);
     	noStroke();
-    	for(int itrt = 0; itrt < 10; itrt++)
+    	for(int itrt = 0; itrt < targetCount; itrt++)
 		{
 			int tx = targets.get(itrt)[0];
 			int ty = targets.get(itrt)[1];
 			
-			//if(tx > windowX && ty > windowY && tx < (windowX + windowW) && ty < (windowY + windowH))
-			//{
-				//draw the target
-				
-			//}
-			
 			ellipse(tx - windowX, ty - windowY, targetW, targetH);
 		}
     	
-    	//determine windowX and windowY
-    	windowX = mouseX * (int)scaleIndex;
-    	windowY = mouseY * (int)scaleIndex;
+    	//smooth
+    	windowX = (smooth_alpha * (mouseX * scaleIndex)) + (1.0f - smooth_alpha) * windowX;
+    	windowY = (smooth_alpha * (mouseY * scaleIndex)) + (1.0f - smooth_alpha) * windowY;
+    			
     	if(windowX < 0)
 		{
 			windowX = 0;
@@ -104,8 +101,13 @@ public class FlashLight extends PApplet{
     	//draw overview targets
     	fill(200, 0, 0, 150);
     	noStroke();
-    	
-    	
+    	for(int itrt = 0; itrt < targetCount; itrt++)
+    	{
+    		float tx = 1.0f * targets.get(itrt)[0];
+			float ty = 1.0f * targets.get(itrt)[1];
+			
+			ellipse(9.0f * windowW / 10.0f - 100 + ((tx) / mapW) * (1.0f *windowW/10.0f) , 100 + ((ty) / mapH) * windowH / 10.0f , targetW / (10.0f * scaleIndex), targetH / (10.0f * scaleIndex));	
+    	}
     	
     	
     }
