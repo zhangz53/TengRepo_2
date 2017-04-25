@@ -10,6 +10,7 @@ public class FlashLight extends PApplet{
 	private int mapH;
 	private int windowW;
 	private int windowH;
+	private float scaleIndex = 5.0f;
 	
 	private ArrayList<int[]> targets;
 	private int targetW = 200;
@@ -32,8 +33,8 @@ public class FlashLight extends PApplet{
     	
     	windowW = width;
 		windowH = height;
-		mapW = 10 * windowW;
-		mapH = 10 * windowH;
+		mapW = (int)scaleIndex * windowW;
+		mapH = (int)scaleIndex * windowH;
 		//print(" "+ windowSizeW);
 		
 		targets = new ArrayList<int[]>();
@@ -67,6 +68,25 @@ public class FlashLight extends PApplet{
 			ellipse(tx - windowX, ty - windowY, targetW, targetH);
 		}
     	
+    	//determine windowX and windowY
+    	windowX = mouseX * (int)scaleIndex;
+    	windowY = mouseY * (int)scaleIndex;
+    	if(windowX < 0)
+		{
+			windowX = 0;
+		}else if((windowX + windowW) > mapW)
+		{
+			windowX = mapW - windowW;
+		}
+    	
+    	if(windowY < 0 )
+		{
+			windowY = 0;
+		}else if((windowY + windowH) > mapH)
+		{
+			windowY = mapH - windowH;
+		}
+    	
     	//draw flashing boarder
     	stroke(200, 0 , 0, 150);
     	strokeWeight(10);
@@ -78,8 +98,8 @@ public class FlashLight extends PApplet{
     	stroke(100, 100, 100, 150);
     	noFill();
     	strokeWeight(2);
-    	rect(9*windowW / 10.0f - 100, 100, windowW/10.0f, windowH/10.0f);
-    	rect(9*windowW / 10.0f - 100 + (float)(windowX * 1.0f / mapW) * (windowW/10.0f), 100 + (float)(windowY * 1.0f/ mapH) * windowH / 10.0f, windowW/100.0f, windowH/100.0f);
+    	rect(9.0f * windowW / 10.0f - 100, 100, 1.0f *windowW/10.0f, 1.0f * windowH/10.0f);
+    	rect(9.0f * windowW / 10.0f - 100 + (float)(windowX * 1.0f / mapW) * (1.0f *windowW/10.0f), 100 + (float)(windowY * 1.0f/ mapH) * windowH / 10.0f, windowW/(10.0f * scaleIndex), windowH/(10.0f*scaleIndex));
     	
     	//draw overview targets
     	fill(200, 0, 0, 150);
