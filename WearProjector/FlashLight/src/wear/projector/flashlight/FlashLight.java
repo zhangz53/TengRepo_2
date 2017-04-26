@@ -21,7 +21,10 @@ public class FlashLight extends PApplet{
 	private float windowY = 0;
 	private int moveStep = 100;
 	
-	private float smooth_alpha = 0.05f;
+	private float smooth_alpha = 0.1f;  //the smaller, the smoother, the more latent
+	
+	private float cursorX;
+	private float cursorY;
 	
 	public void settings(){
 		print("hello\n");
@@ -32,6 +35,7 @@ public class FlashLight extends PApplet{
 
     public void setup(){
     	background(255);
+    	noCursor();
     	
     	windowW = width;
 		windowH = height;
@@ -64,10 +68,17 @@ public class FlashLight extends PApplet{
 			ellipse(tx - windowX, ty - windowY, targetW, targetH);
 		}
     	
+    	
+    	//for the cursor move
+    	cursorX = windowW / 2;
+    	cursorY = windowH / 2;
+    	drawCursor(cursorX, cursorY, 100);
+    	
     	//smooth
     	windowX = (smooth_alpha * (mouseX * scaleIndex)) + (1.0f - smooth_alpha) * windowX;
     	windowY = (smooth_alpha * (mouseY * scaleIndex)) + (1.0f - smooth_alpha) * windowY;
-    			
+    	
+    	//for the window move		
     	if(windowX < 0)
 		{
 			windowX = 0;
@@ -109,6 +120,17 @@ public class FlashLight extends PApplet{
 			ellipse(9.0f * windowW / 10.0f - 100 + ((tx) / mapW) * (1.0f *windowW/10.0f) , 100 + ((ty) / mapH) * windowH / 10.0f , targetW / (10.0f * scaleIndex), targetH / (10.0f * scaleIndex));	
     	}
     	
+    	
+    }
+    
+    public void drawCursor(float cx, float cy, float sz)
+    {
+    	stroke(100);
+    	strokeWeight(5);
+    	//horizontal
+    	line(cx - sz/2, cy, cx + sz/2, cy);
+    	//vertical
+    	line(cx, cy - sz/2, cx, cy + sz/2);
     	
     }
 	
