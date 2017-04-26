@@ -16,6 +16,7 @@ public class FlashLight extends PApplet{
 	private int targetW = 200;
 	private int targetH = 200;
 	private int targetCount = 10;
+	private int selectedTargetIndex = -1;
 	
 	private float windowX = 0;
 	private float windowY = 0;
@@ -58,12 +59,29 @@ public class FlashLight extends PApplet{
     public void draw(){
     	background(255);
     	
-    	fill(200, 0, 0, 150);
+    	selectedTargetIndex = -1;
     	noStroke();
     	for(int itrt = 0; itrt < targetCount; itrt++)
 		{
 			int tx = targets.get(itrt)[0];
 			int ty = targets.get(itrt)[1];
+			
+			//detect target selection
+			if(cursorX > (tx - windowX - targetW/ 2) 
+					&& cursorX < (tx - windowX + targetW / 2)
+					&& cursorY > (ty - windowY - targetH / 2)
+					&& cursorY < (ty - windowY + targetH / 2))
+			{
+				selectedTargetIndex = itrt;
+			}
+			
+			if(itrt == selectedTargetIndex)
+			{
+				fill(0, 200, 0, 150);
+			}else
+			{
+				fill(200, 0, 0, 150);
+			}
 			
 			ellipse(tx - windowX, ty - windowY, targetW, targetH);
 		}
@@ -94,6 +112,9 @@ public class FlashLight extends PApplet{
 		{
 			windowY = mapH - windowH;
 		}
+    	
+    	
+    	
     	
     	//draw flashing boarder
     	stroke(200, 0 , 0, 150);
