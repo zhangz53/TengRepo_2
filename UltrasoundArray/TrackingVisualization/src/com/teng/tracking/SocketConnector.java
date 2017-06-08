@@ -33,7 +33,7 @@ public class SocketConnector {
     
     public void Destroy()
 	{
-		if (serverSocket != null) {
+		if (serverSocket != null && printStream != null && serverSocket!= null) {
             try {
             	printStream.close();
                 serverSocket.close();
