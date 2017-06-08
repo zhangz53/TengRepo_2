@@ -1,50 +1,70 @@
 package com.teng.tracking;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Random;
-
 import processing.core.PApplet;
 
 public class TrackingVisualization extends PApplet{
 	
 	float xOrigin=0;
 	float yOrigin=0;
+	float zOrigin=0;
 	float t=0;
-
+	int screenWidth;
+	int screenHeight;
+	
 	ArrayList<Particle> particles = new ArrayList<Particle>();
 	
+	public static TrackingVisualization instance;
+	public static TrackingVisualization getInstance()
+	{
+		if(instance == null)
+		{
+			instance = new TrackingVisualization();
+		}
+		return instance;
+	}
+	
+	private SocketConnector socketConnector;
+	
 	public void settings(){
-		size(1000, 1000, "processing.opengl.PGraphics3D");
+		fullScreen("processing.opengl.PGraphics3D");
     }
 
     public void setup(){
-    	
+    	instance = this;
     	smooth();
     	background(0);
-    //	camera(500.0f, 500.0f, 1000.0f, 500.0f, 500.0f, 0.0f, 0.0f, 1.0f, 0.0f);
     	
-    	//test
-    	Random rand = new Random();
-    	for(int itr = 0; itr < 1000; itr++)
-    	{
-    		float dx = rand.nextFloat() * 500;
-    		float dy = rand.nextFloat() * 500;
-    		float dz = rand.nextFloat() * 500;
-    		Particle p = new Particle(10, dx, dy, dz);
-    		particles.add(p);
-    	}
+    	screenWidth = width;
+    	screenHeight = height;
+    	xOrigin = screenWidth / 2.0f;
+    	yOrigin = screenHeight * 1.0f;
+    	
+    	camera(800.0f, 500.0f, 1000.0f, screenWidth / 2.0f, screenHeight / 2.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+    	
+    	try {
+			socketConnector = new SocketConnector();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	
+    	println("" + socketConnector.getIpAddress());
     }
     
     public void draw(){	  
-    	
-    	translate(0,200,0);
-    	translate(0, 250, 0);
-    	rotateX(radians(25));
-    	translate(0, -450, 0);
-    	    
     	background(0);
     	lights();
     	directionalLight(175, 175, 175, 0, 1, 0);
+    	
+    	//reference coordinates
+    	stroke(204, 102, 0);
+    	strokeWeight(4);
+    	line(xOrigin, yOrigin, zOrigin, 1000, yOrigin, zOrigin);
+    	line(xOrigin, yOrigin, zOrigin, xOrigin, 0, zOrigin);
+    	line(xOrigin, yOrigin, zOrigin, xOrigin, yOrigin, -1000);
+    	
     	
     	for(int itrp = 0; itrp < particles.size(); itrp++)
     	{
@@ -57,12 +77,19 @@ public class TrackingVisualization extends PApplet{
             popMatrix();
     	}
     	
-    	
     }
     
+    public void addParticle(float px, float py, float pz)
+    {
+    	//need some transformation
+    	
+    	Particle pp = new Particle(10, px, py, pz);
+    	particles.add(pp);
+    }
     
     public void keyPressed() {
     	if (key == 'q') {
+    		socketConnector.Destroy();
     	    exit();
     	}
     }
