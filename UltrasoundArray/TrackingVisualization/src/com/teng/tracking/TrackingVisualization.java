@@ -64,8 +64,7 @@ public class TrackingVisualization extends PApplet{
     	line(xOrigin, yOrigin, zOrigin, 1000, yOrigin, zOrigin);
     	line(xOrigin, yOrigin, zOrigin, xOrigin, 0, zOrigin);
     	line(xOrigin, yOrigin, zOrigin, xOrigin, yOrigin, -1000);
-    	
-    	
+    
     	for(int itrp = 0; itrp < particles.size(); itrp++)
     	{
     		Particle par = particles.get(itrp);
