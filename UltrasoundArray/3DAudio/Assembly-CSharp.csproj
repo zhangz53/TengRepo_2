@@ -154,6 +154,12 @@
      <Compile Include="Assets\GoogleVR\Scripts\Utilities\GvrMathHelpers.cs" />
      <Compile Include="Assets\GoogleVR\Scripts\Utilities\GvrUIHelpers.cs" />
      <Compile Include="Assets\GoogleVR\Scripts\Video\GvrVideoPlayerTexture.cs" />
+     <Compile Include="Assets\OptiTrack\Plugins\Managed\NatNetLib\Client.cs" />
+     <Compile Include="Assets\OptiTrack\Plugins\Managed\NatNetLib\Native.cs" />
+     <Compile Include="Assets\OptiTrack\Scripts\OptitrackHmd.cs" />
+     <Compile Include="Assets\OptiTrack\Scripts\OptitrackRigidBody.cs" />
+     <Compile Include="Assets\OptiTrack\Scripts\OptitrackSkeletonAnimator.cs" />
+     <Compile Include="Assets\OptiTrack\Scripts\OptitrackStreamingClient.cs" />
      <Compile Include="Assets\Scripts\BallMoveSimulation.cs" />
      <Compile Include="Assets\Scripts\PlaneMoveSimulation.cs" />
      <None Include="Assets\GoogleVR\Distortion\GvrDistortion.cginc" />
@@ -161,12 +167,14 @@
      <None Include="Assets\GoogleVR\Shaders\GvrUIOverlayFont.shader" />
      <None Include="Assets\GoogleVR\Shaders\GvrAdditiveOverlay.shader" />
      <None Include="Assets\GoogleVR\Demos\Environment\DemoEnvUnlitGrayscale.shader" />
+     <None Include="Assets\OptiTrack\README_OptiTrack_Unity.txt" />
      <None Include="Assets\GoogleVR\Shaders\GvrUnlitTransparentOverlay.shader" />
      <None Include="Assets\GoogleVR\Shaders\GvrUnlitTransparentOverlayColor.shader" />
      <None Include="Assets\GoogleVR\Demos\Shaders\GVRDemo\GVRDemoAmbientOcclusion.shader" />
      <None Include="Assets\GoogleVR\Shaders\GvrUnlitTextureOverlay.shader" />
      <None Include="Assets\Plugins\Android\proguard-gvr.txt" />
      <None Include="Assets\Plugins\Android\AndroidManifest-Daydream.xml" />
+     <None Include="Assets\OptiTrack\Editor\Materials\MarkerShader.shader" />
      <None Include="Assets\GoogleVR\Demos\Shaders\GVRDemo\GVRDemoUnlitGrayscaleToColor.shader" />
      <None Include="Assets\GoogleVR\Shaders\GvrReticleShader.shader" />
      <None Include="Assets\GoogleVR\Shaders\GvrUIOverlay.shader" />
