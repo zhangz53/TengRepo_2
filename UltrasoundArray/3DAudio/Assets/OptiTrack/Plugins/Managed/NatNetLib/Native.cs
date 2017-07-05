@@ -5,7 +5,8 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-
+using UnityEngine;
+using UnityEditor;
 using NaturalPoint.NatNetLib;
 
 
@@ -325,9 +326,28 @@ namespace NaturalPoint.NatNetLib
     [UnmanagedFunctionPointer( NatNetConstants.NatNetLibCallingConvention )]
     internal delegate void NatNetFrameReceivedCallback( IntPtr pFrameOfMocapData, IntPtr pUserData );
 
-
+	//[InitializeOnLoad]
     internal static class NativeMethods
     {
+
+    //    static NativeMethods()
+    //    {
+    //        var currentPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
+    //        var dataPath = Application.dataPath;
+    //        var dllPath = dataPath + "/OptiTrack/Plugins/x86_64"; 
+    //        //Debug.Log("current data path is " + currentPath);
+
+
+    //        if (currentPath != null && currentPath.Contains(dllPath) == false)
+				//Environment.SetEnvironmentVariable("PATH", currentPath + ":"
+					//+ dllPath, EnvironmentVariableTarget.Process);
+
+        //    //Debug.Log("current path is " + Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process));
+        //}
+
+
+
+
         [DllImport( NatNetConstants.NatNetLibDllBaseName, CallingConvention = NatNetConstants.NatNetLibCallingConvention )]
         public static extern void NatNet_GetVersion( [In, Out, MarshalAs( UnmanagedType.LPArray, SizeConst=4 )] Byte[] version );
 
