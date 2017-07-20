@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio for Mac
+# Visual Studio 2017
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DAudio", "3DAudio.csproj", "{BA62965E-4333-4864-EFEF-0060EE4186E2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DAudio.Editor", "3DAudio.Editor.csproj", "{6F3C917B-968A-A1E4-6CA8-DC74164F6926}"
